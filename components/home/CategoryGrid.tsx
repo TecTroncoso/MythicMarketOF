@@ -1,7 +1,8 @@
 import { CATEGORY_ICONS, GAME_CATEGORIES } from "@/lib/home-data";
 
-// Paleta de la barra de categorías.
-const MAGENTA = "#e879f9";
+// Efecto de luz de neón real aplicado a todos los SVGs de categoría.
+const NEON_GLOW =
+  "drop-shadow(0 0 2px #ffffff) drop-shadow(0 0 6px #d946ef) drop-shadow(0 0 12px rgba(168, 85, 247, 0.8))";
 
 export function CategoryGrid() {
   return (
@@ -11,15 +12,14 @@ export function CategoryGrid() {
         return (
           <button
             key={category.name}
-            className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all group bg-[#0C012D] border border-[#1F044E] hover:border-[#9E40C0] hover:shadow-[0_0_12px_rgba(158,64,192,0.35)]"
+            className="group flex flex-col items-center justify-center min-w-[85px] h-[85px] p-2 rounded-2xl transition-all duration-[250ms] ease-out bg-[rgba(12,1,45,0.75)] backdrop-blur-[10px] border-[1.5px] border-[rgba(168,85,247,0.45)] shadow-[0_0_12px_rgba(168,85,247,0.15),inset_0_0_8px_rgba(168,85,247,0.05)] hover:border-[#d946ef] hover:shadow-[0_0_20px_rgba(217,70,239,0.5)] hover:-translate-y-[3px]"
           >
             <Icon
-              className="w-6 h-6 group-hover:scale-110 transition-transform"
-              style={{ color: MAGENTA, filter: "drop-shadow(0 0 6px rgba(158, 64, 192, 0.6))" }}
+              className="w-8 h-8 mb-2 text-[#e879f9] group-hover:scale-110 transition-transform"
+              strokeWidth={2}
+              style={{ filter: NEON_GLOW }}
             />
-            <span
-              className="text-[10px] font-bold uppercase tracking-wide text-[#f1f5f9] group-hover:text-white transition-colors"
-            >
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#ede9fe]">
               {category.name}
             </span>
           </button>
