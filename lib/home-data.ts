@@ -7,9 +7,9 @@ import {
   Gem,
   Ghost,
   Headset,
-  Lock,
   MountainSnow,
   ShieldCheck,
+  ShoppingBag,
   Skull,
   Sword,
   Target,
@@ -20,7 +20,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { SteeringWheelIcon, VrHeadsetIcon } from "@/components/home/category-icons";
+import { SteeringWheelIcon, SupportDialIcon, VrHeadsetIcon } from "@/components/home/category-icons";
 import type { ComponentType, SVGProps } from "react";
 
 // Cualquier icono de categoría: lucide o SVG personalizado con la misma API.
@@ -168,7 +168,7 @@ export const BEST_SELLERS: Product[] = [
 ];
 
 export type TrustItem = {
-  icon: LucideIcon;
+  icon: CategoryIcon;
   title: string;
   subtitle: string;
 };
@@ -176,8 +176,8 @@ export type TrustItem = {
 export const TRUST_ITEMS: TrustItem[] = [
   { icon: ShieldCheck, title: "MILES DE PRODUCTOS", subtitle: "A LOS MEJORES PRECIOS" },
   { icon: Truck, title: "ENVÍO INSTANTÁNEO", subtitle: "RECIBE AL MOMENTO" },
-  { icon: Lock, title: "PAGOS SEGUROS", subtitle: "MÚLTIPLES MÉTODOS" },
-  { icon: Headset, title: "SOPORTE 24/7", subtitle: "SIEMPRE PARA TI" },
+  { icon: ShoppingBag, title: "PAGOS SEGUROS", subtitle: "MÚLTIPLES MÉTODOS" },
+  { icon: SupportDialIcon, title: "SOPORTE 24/7", subtitle: "SIEMPRE PARA TI" },
   { icon: Users, title: "COMUNIDAD GAMER", subtitle: "ÚNETE Y AHORRA" },
 ];
 
