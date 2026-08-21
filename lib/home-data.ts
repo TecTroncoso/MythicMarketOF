@@ -1,0 +1,162 @@
+import {
+  ChevronRight,
+  Crosshair,
+  Gamepad2,
+  Ghost,
+  Headset,
+  Lock,
+  Map,
+  ShieldCheck,
+  Swords,
+  Truck,
+  Trophy,
+  Users,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+
+export type CategoryIconName =
+  | "Crosshair"
+  | "Map"
+  | "Swords"
+  | "Trophy"
+  | "Gamepad2"
+  | "Ghost"
+  | "ChevronRight";
+
+export const CATEGORY_ICONS: Record<CategoryIconName, LucideIcon> = {
+  Crosshair,
+  Map,
+  Swords,
+  Trophy,
+  Gamepad2,
+  Ghost,
+  ChevronRight,
+};
+
+export type GameCategory = {
+  name: string;
+  icon: CategoryIconName;
+};
+
+export const GAME_CATEGORIES: GameCategory[] = [
+  { name: "ACCIÓN", icon: "Crosshair" },
+  { name: "AVENTURA", icon: "Map" },
+  { name: "RPG", icon: "Swords" },
+  { name: "FPS", icon: "Crosshair" },
+  { name: "DEPORTES", icon: "Trophy" },
+  { name: "INDIE", icon: "Gamepad2" },
+  { name: "TERROR", icon: "Ghost" },
+  { name: "VER MÁS", icon: "ChevronRight" },
+];
+
+export type NavCategory = {
+  label: string;
+  href: string;
+  highlight?: boolean;
+};
+
+export const NAV_CATEGORIES: NavCategory[] = [
+  { label: "Juegos", href: "#" },
+  { label: "Tarjetas regalo", href: "#" },
+  { label: "Suscripciones", href: "#" },
+  { label: "DLC", href: "#" },
+  { label: "Software", href: "#" },
+  { label: "Gaming Points", href: "#" },
+  { label: "Top-Up", href: "/topup/mlbb" },
+  { label: "Ofertas", href: "#", highlight: true },
+];
+
+export type SidebarFeature = {
+  icon: LucideIcon;
+  title: string;
+  color: "neon-pink" | "neon-purple";
+};
+
+export const SIDEBAR_FEATURES: SidebarFeature[] = [
+  { icon: Zap, title: "ENTREGA INSTANTÁNEA", color: "neon-pink" },
+  { icon: ShieldCheck, title: "PAGOS 100% SEGUROS", color: "neon-pink" },
+  { icon: Trophy, title: "PRECIOS IMBATIBLES", color: "neon-purple" },
+];
+
+export type ColorAccent = "neon-pink" | "neon-cyan" | "neon-purple";
+
+export type Product = {
+  id: string;
+  title: string;
+  image: string;
+  imageContain?: boolean;
+  badge: string;
+  badgeClass: string;
+  price: string;
+  originalPrice?: string;
+  accent: ColorAccent;
+  platform: "STEAM" | "TOP-UP";
+  meta?: string;
+  href?: string;
+};
+
+export const BEST_SELLERS: Product[] = [
+  {
+    id: "fc24",
+    title: "EA SPORTS FC™ 24",
+    image: "/images/soccer_cover.png",
+    badge: "-72%",
+    badgeClass: "bg-neon-pink text-black",
+    price: "US$19.99",
+    originalPrice: "US$69.99",
+    accent: "neon-pink",
+    platform: "STEAM",
+  },
+  {
+    id: "cod-mw3",
+    title: "Call of Duty: MWIII",
+    image: "/images/shooter_cover.png",
+    badge: "-45%",
+    badgeClass: "bg-neon-cyan text-black",
+    price: "US$38.99",
+    originalPrice: "US$69.99",
+    accent: "neon-cyan",
+    platform: "STEAM",
+  },
+  {
+    id: "elden-ring",
+    title: "ELDEN RING",
+    image: "/images/fantasy_cover.png",
+    badge: "-34%",
+    badgeClass: "bg-neon-purple text-black",
+    price: "US$39.59",
+    originalPrice: "US$59.99",
+    accent: "neon-purple",
+    platform: "STEAM",
+  },
+  {
+    id: "mlbb-topup",
+    title: "Recarga Mobile Legends",
+    image: "/mlbb-logo.png",
+    imageContain: true,
+    badge: "INSTANT",
+    badgeClass: "bg-blue-600 text-white",
+    price: "Desde US$1.49",
+    accent: "neon-cyan",
+    platform: "TOP-UP",
+    meta: "ID verification active",
+    href: "/topup/mlbb",
+  },
+];
+
+export type TrustItem = {
+  icon: LucideIcon;
+  title: string;
+  subtitle: string;
+};
+
+export const TRUST_ITEMS: TrustItem[] = [
+  { icon: ShieldCheck, title: "MILES DE PRODUCTOS", subtitle: "A LOS MEJORES PRECIOS" },
+  { icon: Truck, title: "ENVÍO INSTANTÁNEO", subtitle: "RECIBE AL MOMENTO" },
+  { icon: Lock, title: "PAGOS SEGUROS", subtitle: "MÚLTIPLES MÉTODOS" },
+  { icon: Headset, title: "SOPORTE 24/7", subtitle: "SIEMPRE PARA TI" },
+  { icon: Users, title: "COMUNIDAD GAMER", subtitle: "ÚNETE Y AHORRA" },
+];
+
+export const FLASH_OFFER_TIMER = { hours: "02", minutes: "45", seconds: "38" };
