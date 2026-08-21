@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-dark: #070913;
+  --color-overlay-dark: #070913;
+  --color-panel-dark: #101223;
+  --color-card-dark: #101223;
+
+  --color-neon-pink: #ff007f;
+  --color-neon-cyan: #00e5ff;
+  --color-neon-purple: #9d00ff;
+
+  --color-border-dark: #1c1f3b;
+  --color-border-mid: #2a2e54;
+
+  --color-text-white: #ffffff;
+  --color-text-gray: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-muted: #9ca3af;
+}
+
+body {
+  background-image: url('/images/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-color: rgba(7, 9, 19, 0.2);
+  z-index: 0;
+  pointer-events: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgba(255, 0, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 255, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+  pointer-events: none;
+}

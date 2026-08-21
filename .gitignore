@@ -1,0 +1,61 @@
+# dependencias
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# producción
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.log
+
+# variables de entorno locales (NUNCA SUBIR)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# entornos virtuales (python)
+venv/
+env/
+.venv/
+
+# scripts locales del usuario
+abrir_proyecto.bat
+
+# IDE y Herramientas locales
+.vscode/
+.atl/
+.idea/
+metadata.json
+
+# sistema operativo
+Thumbs.db
+Desktop.ini
+
+# caches
+.eslintcache
+
+# imágenes temporales en la raíz (assets de trabajo, no usados por la app)
+/ChatGPT Image*.png
+/ultimate-anime-*.jpg
