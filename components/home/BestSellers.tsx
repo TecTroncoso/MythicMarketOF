@@ -15,17 +15,7 @@ export function BestSellers() {
           <h2 className="text-xl font-bold tracking-wider text-white">LOS MÁS VENDIDOS</h2>
         </div>
         <button
-          className="text-xs font-bold uppercase px-4 py-1.5 rounded-lg text-white transition-all hover:scale-[1.03]"
-          style={{
-            backgroundColor: "#0C012D",
-            border: "1px solid #9E40C0",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = "0 0 12px rgba(158, 64, 192, 0.4)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = "none";
-          }}
+          className="text-xs font-bold uppercase px-4 py-1.5 rounded-lg text-white transition-all hover:scale-[1.03] hover:shadow-[0_0_12px_rgba(158,64,192,0.4)] bg-[#0C012D] border border-[#9E40C0]"
         >
           Ver Más
         </button>
