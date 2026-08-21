@@ -1,10 +1,7 @@
 import { CATEGORY_ICONS, GAME_CATEGORIES } from "@/lib/home-data";
 
 // Paleta de la barra de categorías.
-const PURPLE = "#9E40C0";
 const MAGENTA = "#e879f9";
-const CARD_BG = "#0C012D";
-const CARD_BORDER = "#1F044E";
 
 export function CategoryGrid() {
   return (
@@ -14,19 +11,7 @@ export function CategoryGrid() {
         return (
           <button
             key={category.name}
-            className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all group"
-            style={{
-              backgroundColor: CARD_BG,
-              border: `1px solid ${CARD_BORDER}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = PURPLE;
-              e.currentTarget.style.boxShadow = `0 0 12px rgba(158, 64, 192, 0.35)`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = CARD_BORDER;
-              e.currentTarget.style.boxShadow = "none";
-            }}
+            className="flex flex-col items-center justify-center gap-2 p-3 rounded-xl transition-all group bg-[#0C012D] border border-[#1F044E] hover:border-[#9E40C0] hover:shadow-[0_0_12px_rgba(158,64,192,0.35)]"
           >
             <Icon
               className="w-6 h-6 group-hover:scale-110 transition-transform"

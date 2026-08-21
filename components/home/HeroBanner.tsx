@@ -65,14 +65,8 @@ export function HeroBanner() {
           Juegos y tarjetas al mejor precio
         </p>
         <button
-          className="bg-[#0C012D]/80 border-2 text-white px-8 py-3 rounded-full font-bold uppercase tracking-wider transition-all hover:scale-[1.03]"
+          className="bg-[#0C012D]/80 border-2 text-white px-8 py-3 rounded-full font-bold uppercase tracking-wider transition-all hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(158,64,192,0.6)]"
           style={{ borderColor: PURPLE }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = `0 0 20px rgba(158, 64, 192, 0.6)`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = "none";
-          }}
         >
           Comprar Ahora
         </button>
