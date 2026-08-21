@@ -8,21 +8,30 @@ import { TrustBanner } from "@/components/home/TrustBanner";
 
 export default function Home() {
   return (
-    <main className="min-h-screen text-white font-sans selection:bg-neon-pink selection:text-white pb-20 overflow-x-hidden relative z-10">
+    <main className="min-h-screen text-white font-sans selection:bg-neon-pink selection:text-white pb-4 overflow-x-hidden relative z-10">
       <HomeNavbar />
       <CategoryBar />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <HomeSidebar />
+      {/* Contenedor unificado: mismo ancho para juegos, más vendidos y footer */}
+      <div className="w-full max-w-[1400px] mx-auto px-4">
+        {/* Zona superior: sidebar + hero + categorías */}
+        <div className="pt-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <HomeSidebar />
 
-        <div className="lg:col-span-3 space-y-8 z-1">
-          <HeroBanner />
-          <CategoryGrid />
-          <BestSellers />
-       </div>
-   </div>
+          <div className="lg:col-span-3 space-y-6 z-1">
+            <HeroBanner />
+            <CategoryGrid />
+          </div>
+        </div>
 
-      <TrustBanner />
- </main>
+        {/* Más vendidos a lo ancho completo del contenedor */}
+        <BestSellers />
+
+        {/* Footer de confianza anclado al final con separación controlada */}
+        <div className="mt-6 pb-4">
+          <TrustBanner />
+        </div>
+      </div>
+    </main>
   );
 }

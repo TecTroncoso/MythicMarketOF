@@ -4,8 +4,8 @@ import { ProductCard } from "./ProductCard";
 
 export function BestSellers() {
   return (
-    <div>
-      <div className="flex items-center justify-between w-full mb-4 px-1">
+    <div className="mb-6">
+      <div className="flex items-center justify-between w-full mb-3 px-1">
         <div className="flex items-center gap-2.5">
           <Zap
             className="w-5 h-5"

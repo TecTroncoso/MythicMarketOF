@@ -38,14 +38,14 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       {/* Barra de precios compacta (sin título) */}
-      <div className="flex items-center justify-between px-3 py-2.5 bg-[#0C012D]">
-        <span className={`${product.badgeClass} font-black text-xs px-2 py-1 rounded-md whitespace-nowrap`}>
+      <div className="flex items-center justify-between px-2.5 py-2 bg-[#0C012D] w-full">
+        <span className={`${product.badgeClass} font-black text-[10px] px-1.5 py-0.5 rounded shrink-0`}>
           {product.badge}
         </span>
-        <div className="flex items-baseline gap-2 min-w-0">
-          <span className="text-sm font-bold text-white whitespace-nowrap">{product.price}</span>
+        <div className="flex items-center gap-1.5 shrink-0 overflow-visible">
+          <span className="text-xs font-bold text-white whitespace-nowrap">{product.price}</span>
           {product.originalPrice && (
-            <span className="text-[11px] text-purple-300/60 line-through whitespace-nowrap">
+            <span className="text-[10px] text-purple-300/50 line-through whitespace-nowrap">
               {product.originalPrice}
             </span>
           )}
