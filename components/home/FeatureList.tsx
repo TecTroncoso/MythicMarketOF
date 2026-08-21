@@ -35,7 +35,7 @@ export function FeatureList() {
         backgroundColor: CARD_BG,
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
-        border: `1.5px solid ${CARD_BORDER}`,
+        border: `2.5px solid ${CARD_BORDER}`,
         boxShadow: "0 0 15px rgba(31, 4, 78, 0.4)",
       }}
     >
