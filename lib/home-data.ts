@@ -2,6 +2,7 @@ import {
   ChevronRight,
   Crosshair,
   Gamepad2,
+  Gem,
   Ghost,
   Headset,
   Lock,
@@ -70,13 +71,13 @@ export const NAV_CATEGORIES: NavCategory[] = [
 export type SidebarFeature = {
   icon: LucideIcon;
   title: string;
-  color: "neon-pink" | "neon-purple";
 };
 
 export const SIDEBAR_FEATURES: SidebarFeature[] = [
-  { icon: Zap, title: "ENTREGA INSTANTÁNEA", color: "neon-pink" },
-  { icon: ShieldCheck, title: "PAGOS 100% SEGUROS", color: "neon-pink" },
-  { icon: Trophy, title: "PRECIOS IMBATIBLES", color: "neon-purple" },
+  { icon: Zap, title: "ENTREGA INSTANTÁNEA" },
+  { icon: Gem, title: "PRECIOS IMBATIBLES" },
+  { icon: ShieldCheck, title: "PAGOS 100% SEGUROS" },
+  { icon: Headset, title: "ATENCIÓN 24/7" },
 ];
 
 export type ColorAccent = "neon-pink" | "neon-cyan" | "neon-purple";
