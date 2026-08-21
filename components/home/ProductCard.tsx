@@ -1,52 +1,55 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Heart } from "lucide-react";
 import type { Product } from "@/lib/home-data";
-
-const ACCENT_HOVER: Record<Product["accent"], string> = {
-  "neon-pink": "hover:border-neon-pink hover:shadow-[0_0_15px_rgba(255,0,255,0.2)] group-hover:text-neon-pink",
-  "neon-cyan": "hover:border-neon-cyan hover:shadow-[0_0_15px_rgba(0,255,255,0.2)] group-hover:text-neon-cyan",
-  "neon-purple":
-    "hover:border-neon-purple hover:shadow-[0_0_15px_rgba(255,170,0,0.2)] group-hover:text-neon-purple",
-};
-
-const PLATFORM_BADGE: Record<Product["platform"], string> = {
-  STEAM: "bg-black/80",
-  "TOP-UP": "bg-black/80 text-neon-cyan",
-};
+import { PLATFORM_ICONS } from "./platform-icons";
 
 export function ProductCard({ product }: { product: Product }) {
-  const cardClassName = `bg-card-dark border border-border-dark rounded-xl overflow-hidden transition-all group block ${ACCENT_HOVER[product.accent]}`;
+  const PlatformIcon = PLATFORM_ICONS[product.platform];
+
+  const cardClassName =
+    "group relative block bg-[#0C012D] border border-[rgba(158,64,192,0.4)] rounded-2xl overflow-hidden shadow-[0_0_12px_rgba(158,64,192,0.15)] transition-all duration-300 hover:border-[#9E40C0] hover:scale-[1.03] hover:shadow-[0_0_20px_rgba(158,64,192,0.4)]";
 
   const content = (
     <>
-      <div className="aspect-[3/4] bg-border-dark relative overflow-hidden">
+      {/* Portada */}
+      <div className="aspect-[3/4] relative overflow-hidden bg-[#0C012D]">
         <Image
           src={product.image}
           alt={product.title}
           fill
           className={`${product.imageContain ? "object-contain p-8" : "object-cover"} group-hover:scale-105 transition-transform duration-500 z-0`}
         />
-        <div className={`absolute inset-0 bg-gradient-to-t from-card-dark via-transparent ${product.imageContain ? "to-card-dark/50" : "to-transparent"} z-10`} />
-        <div className="absolute bottom-2 left-2 z-20 flex gap-1">
-          <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${PLATFORM_BADGE[product.platform]}`}>
-            {product.platform}
-          </span>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0C012D] via-transparent to-transparent z-10 pointer-events-none" />
+
+        {/* Botón de favoritos (arriba a la derecha) */}
+        <span
+          className="absolute top-2.5 right-2.5 z-20 text-slate-300/90 hover:text-pink-500 hover:scale-110 transition-all cursor-pointer"
+          aria-label={`Agregar ${product.title} a favoritos`}
+        >
+          <Heart className="w-[18px] h-[18px]" />
+        </span>
+
+        {/* Badge de plataforma (abajo a la izquierda) */}
+        <span className="absolute bottom-2 left-2 z-20 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md flex items-center gap-1.5">
+          <PlatformIcon className="w-3 h-3 text-slate-200" />
+          <span className="text-[10px] font-bold uppercase text-slate-200">{product.platform}</span>
+        </span>
       </div>
-      <div className="p-3">
-        <h3 className={`font-bold text-sm mb-2 truncate transition-colors ${ACCENT_HOVER[product.accent]}`}>
-          {product.title}
-        </h3>
-        <div className="flex items-center gap-2">
-          <span className={`${product.badgeClass} font-black text-xs px-1.5 py-0.5 rounded`}>
-            {product.badge}
-          </span>
-          <span className="font-bold">{product.price}</span>
+
+      {/* Barra de precios compacta (sin título) */}
+      <div className="flex items-center justify-between px-3 py-2.5 bg-[#0C012D]">
+        <span className={`${product.badgeClass} font-black text-xs px-2 py-1 rounded-md whitespace-nowrap`}>
+          {product.badge}
+        </span>
+        <div className="flex items-baseline gap-2 min-w-0">
+          <span className="text-sm font-bold text-white whitespace-nowrap">{product.price}</span>
+          {product.originalPrice && (
+            <span className="text-[11px] text-purple-300/60 line-through whitespace-nowrap">
+              {product.originalPrice}
+            </span>
+          )}
         </div>
-        {product.originalPrice && (
-          <div className="text-xs text-gray-500 line-through mt-0.5">{product.originalPrice}</div>
-        )}
-        {product.meta && <div className="text-[10px] text-green-400 mt-1">{product.meta}</div>}
       </div>
     </>
   );

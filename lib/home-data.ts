@@ -103,6 +103,8 @@ export const SIDEBAR_FEATURES: SidebarFeature[] = [
 
 export type ColorAccent = "neon-pink" | "neon-cyan" | "neon-purple";
 
+export type Platform = "STEAM" | "TOP-UP" | "PS5" | "XBOX" | "EPIC GAMES";
+
 export type Product = {
   id: string;
   title: string;
@@ -113,7 +115,7 @@ export type Product = {
   price: string;
   originalPrice?: string;
   accent: ColorAccent;
-  platform: "STEAM" | "TOP-UP";
+  platform: Platform;
   meta?: string;
   href?: string;
 };
@@ -124,7 +126,7 @@ export const BEST_SELLERS: Product[] = [
     title: "EA SPORTS FC™ 24",
     image: "/images/soccer_cover.png",
     badge: "-72%",
-    badgeClass: "bg-neon-pink text-black",
+    badgeClass: "bg-[#9E40C0] text-white",
     price: "US$19.99",
     originalPrice: "US$69.99",
     accent: "neon-pink",
@@ -135,7 +137,7 @@ export const BEST_SELLERS: Product[] = [
     title: "Call of Duty: MWIII",
     image: "/images/shooter_cover.png",
     badge: "-45%",
-    badgeClass: "bg-neon-cyan text-black",
+    badgeClass: "bg-[#9E40C0] text-white",
     price: "US$38.99",
     originalPrice: "US$69.99",
     accent: "neon-cyan",
@@ -146,7 +148,7 @@ export const BEST_SELLERS: Product[] = [
     title: "ELDEN RING",
     image: "/images/fantasy_cover.png",
     badge: "-34%",
-    badgeClass: "bg-neon-purple text-black",
+    badgeClass: "bg-[#9E40C0] text-white",
     price: "US$39.59",
     originalPrice: "US$59.99",
     accent: "neon-purple",
@@ -158,12 +160,34 @@ export const BEST_SELLERS: Product[] = [
     image: "/mlbb-logo.png",
     imageContain: true,
     badge: "INSTANT",
-    badgeClass: "bg-blue-600 text-white",
+    badgeClass: "bg-[#9E40C0] text-white",
     price: "Desde US$1.49",
     accent: "neon-cyan",
     platform: "TOP-UP",
     meta: "ID verification active",
     href: "/topup/mlbb",
+  },
+  {
+    id: "spider-man-2",
+    title: "Marvel's Spider-Man 2",
+    image: "/images/hero_cover.png",
+    badge: "-29%",
+    badgeClass: "bg-[#9E40C0] text-white",
+    price: "US$49.99",
+    originalPrice: "US$69.99",
+    accent: "neon-pink",
+    platform: "PS5",
+  },
+  {
+    id: "fortnite",
+    title: "Fortnite — V-Bucks",
+    image: "/images/fortnite_cover.png",
+    badge: "-15%",
+    badgeClass: "bg-[#9E40C0] text-white",
+    price: "US$10.19",
+    originalPrice: "US$11.99",
+    accent: "neon-cyan",
+    platform: "EPIC GAMES",
   },
 ];
 
