@@ -1,38 +1,53 @@
 import {
+  CarFront,
+  Castle,
   ChevronRight,
   Crosshair,
+  Ellipsis,
   Gamepad2,
   Gem,
   Ghost,
+  Glasses,
   Headset,
   Lock,
-  Map,
+  MountainSnow,
   ShieldCheck,
+  Skull,
   Swords,
+  Target,
   Truck,
   Trophy,
   Users,
+  Volleyball,
   Zap,
   type LucideIcon,
 } from "lucide-react";
 
 export type CategoryIconName =
   | "Crosshair"
-  | "Map"
+  | "MountainSnow"
   | "Swords"
-  | "Trophy"
+  | "Target"
+  | "Castle"
+  | "Volleyball"
+  | "CarFront"
   | "Gamepad2"
-  | "Ghost"
-  | "ChevronRight";
+  | "Skull"
+  | "Glasses"
+  | "Ellipsis";
 
 export const CATEGORY_ICONS: Record<CategoryIconName, LucideIcon> = {
   Crosshair,
-  Map,
+  MountainSnow,
   Swords,
-  Trophy,
+  Target,
+  Castle,
+  Volleyball,
+  CarFront,
   Gamepad2,
-  Ghost,
-  ChevronRight,
+  Skull,
+  Glasses,
+  Ellipsis,
 };
 
 export type GameCategory = {
@@ -42,13 +57,16 @@ export type GameCategory = {
 
 export const GAME_CATEGORIES: GameCategory[] = [
   { name: "ACCIÓN", icon: "Crosshair" },
-  { name: "AVENTURA", icon: "Map" },
+  { name: "AVENTURA", icon: "MountainSnow" },
   { name: "RPG", icon: "Swords" },
-  { name: "FPS", icon: "Crosshair" },
-  { name: "DEPORTES", icon: "Trophy" },
+  { name: "FPS", icon: "Target" },
+  { name: "ESTRATEGIA", icon: "Castle" },
+  { name: "DEPORTES", icon: "Volleyball" },
+  { name: "CARRERAS", icon: "CarFront" },
   { name: "INDIE", icon: "Gamepad2" },
-  { name: "TERROR", icon: "Ghost" },
-  { name: "VER MÁS", icon: "ChevronRight" },
+  { name: "TERROR", icon: "Skull" },
+  { name: "VR", icon: "Glasses" },
+  { name: "VER MÁS", icon: "Ellipsis" },
 ];
 
 export type NavCategory = {

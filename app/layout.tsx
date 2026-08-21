@@ -1,6 +1,14 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
+import { Sedgwick_Ave_Display } from 'next/font/google';
 import { WhatsAppWidget } from '@/components/WhatsAppWidget';
 import './globals.css'; // Global styles
+
+// Fuente display estilo brush para títulos del hero.
+const displayFont = Sedgwick_Ave_Display({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display',
+});
 
 export const metadata: Metadata = {
   title: 'Mythic Market | Recarga Diamantes Mobile Legends',
@@ -26,9 +34,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className={displayFont.variable}>
       <body suppressHydrationWarning>
         {children}
         <WhatsAppWidget />
