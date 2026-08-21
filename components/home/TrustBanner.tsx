@@ -14,7 +14,7 @@ const BADGE_CLIP = "polygon(12px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)";
 
 export function TrustBanner() {
   return (
-    <div className="max-w-7xl mx-auto px-4 mt-12">
+    <>
       {/* Barra con chaflanes tecnológicos (borde neón por doble capa) */}
       <div
         className="relative"
@@ -69,7 +69,7 @@ export function TrustBanner() {
           <GameOnBadge />
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
