@@ -1,5 +1,4 @@
 import {
-  CarFront,
   Castle,
   ChevronRight,
   Crosshair,
@@ -7,13 +6,12 @@ import {
   Gamepad2,
   Gem,
   Ghost,
-  Glasses,
   Headset,
   Lock,
   MountainSnow,
   ShieldCheck,
   Skull,
-  Swords,
+  Sword,
   Target,
   Truck,
   Trophy,
@@ -22,31 +20,36 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { SteeringWheelIcon, VrHeadsetIcon } from "@/components/home/category-icons";
+import type { ComponentType, SVGProps } from "react";
+
+// Cualquier icono de categoría: lucide o SVG personalizado con la misma API.
+export type CategoryIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
 export type CategoryIconName =
   | "Crosshair"
   | "MountainSnow"
-  | "Swords"
+  | "Sword"
   | "Target"
   | "Castle"
   | "Volleyball"
-  | "CarFront"
+  | "SteeringWheel"
   | "Gamepad2"
   | "Skull"
-  | "Glasses"
+  | "VrHeadset"
   | "Ellipsis";
 
-export const CATEGORY_ICONS: Record<CategoryIconName, LucideIcon> = {
+export const CATEGORY_ICONS: Record<CategoryIconName, CategoryIcon> = {
   Crosshair,
   MountainSnow,
-  Swords,
+  Sword,
   Target,
   Castle,
   Volleyball,
-  CarFront,
+  SteeringWheel: SteeringWheelIcon,
   Gamepad2,
   Skull,
-  Glasses,
+  VrHeadset: VrHeadsetIcon,
   Ellipsis,
 };
 
@@ -58,14 +61,14 @@ export type GameCategory = {
 export const GAME_CATEGORIES: GameCategory[] = [
   { name: "ACCIÓN", icon: "Crosshair" },
   { name: "AVENTURA", icon: "MountainSnow" },
-  { name: "RPG", icon: "Swords" },
+  { name: "RPG", icon: "Sword" },
   { name: "FPS", icon: "Target" },
   { name: "ESTRATEGIA", icon: "Castle" },
   { name: "DEPORTES", icon: "Volleyball" },
-  { name: "CARRERAS", icon: "CarFront" },
+  { name: "CARRERAS", icon: "SteeringWheel" },
   { name: "INDIE", icon: "Gamepad2" },
   { name: "TERROR", icon: "Skull" },
-  { name: "VR", icon: "Glasses" },
+  { name: "VR", icon: "VrHeadset" },
   { name: "VER MÁS", icon: "Ellipsis" },
 ];
 
