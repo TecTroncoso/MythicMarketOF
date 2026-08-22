@@ -294,29 +294,33 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <>
       {/* ================= HERO 2 COLUMNAS ================= */}
-      <section className="relative overflow-hidden w-full min-h-[460px] lg:min-h-[520px] flex items-center bg-[#070417]">
-        {/* Capa 1: imagen del personaje (z-0) */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <Image
-            src="/images/personaje.png"
-            alt=""
-            fill
-            className="object-cover object-[center_right] opacity-85"
-            priority
-          />
-        </div>
-        {/* Capa 2: degradados de iluminación y fundido (z-1) */}
-        <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-r from-[#070417] via-[#070417]/50 to-transparent" />
-        <div className="absolute bottom-0 inset-x-0 h-24 z-[1] pointer-events-none bg-gradient-to-t from-[#070417] to-transparent" />
-        {/* Resplandor púrpura sutil detrás de la tarjeta (z-0) */}
-        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-purple-600/25 blur-[100px] rounded-full pointer-events-none z-0" />
-        {/* Resplandor difuminado detrás del título */}
-        <div className="absolute -top-16 left-1/4 w-[420px] h-[420px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none z-0" />
+      <section
+        className="relative w-full bg-[#070417] overflow-hidden py-6 lg:py-10 border-b border-purple-950/40"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse at top, rgba(126, 34, 206, 0.2), transparent 55%), linear-gradient(#070417, #070417)",
+        }}
+      >
+        {/* Resplandor violeta directo detrás del personaje */}
+        <div className="absolute top-1/2 right-[30%] -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/30 blur-[130px] rounded-full pointer-events-none z-0" />
+        {/* Personaje en el centro-derecha, detrás del espacio entre texto y tarjeta */}
+        <Image
+          src="/images/personaje.png"
+          alt=""
+          width={900}
+          height={1400}
+          priority
+          className="absolute top-0 right-[15%] lg:right-[22%] h-full w-auto max-w-none object-contain pointer-events-none z-0 opacity-90"
+        />
+        {/* Fundido lateral izquierdo para máxima legibilidad del texto */}
+        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#070417] via-[#070417]/80 to-transparent pointer-events-none z-0" />
+        {/* Fundido inferior suave hacia la sección de diamantes */}
+        <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#070417] to-transparent pointer-events-none z-0" />
 
-        {/* Capa 3: todo el contenido visible (z-10) */}
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-          {/* Columna izquierda: identidad del juego */}
-          <div className="lg:col-span-3">
+        {/* Contenido centrado */}
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
+          {/* Columna izquierda: texto + rating + pills + badges */}
+          <div className="lg:col-span-7 flex flex-col gap-4 z-10">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
                 <Image
@@ -387,11 +391,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
 
           {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
-          <div className="lg:col-span-2 lg:sticky lg:top-24">
-            <div
-              className="rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.18)]"
-              style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
-            >
+          <div className="lg:col-span-5 flex justify-end z-10 relative">
+            <div className="w-full max-w-md bg-[#0c0721]/90 border border-purple-500/30 backdrop-blur-md rounded-2xl p-6 shadow-[0_0_25px_rgba(147,51,234,0.15)] relative">
+              {/* Botón flotante de favoritos */}
+              <div className="absolute -top-3 right-4 bg-[#140c34] border border-purple-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1 text-xs text-purple-300">
+                🤍 10114
+              </div>
               {/* Línea de brillo superior */}
               <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]" />
 
