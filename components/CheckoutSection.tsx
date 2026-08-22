@@ -621,81 +621,57 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       {/* ================= BANNER DE BENEFICIOS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
-        <div
-          className="relative rounded-2xl p-6 md:p-8 overflow-hidden"
-          style={{ backgroundColor: CARD_BG, border: "1px solid rgba(168, 85, 247, 0.25)" }}
-        >
-          {/* Esquinas sutilmente decoradas estilo HUD */}
-          <span className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-[#a855f7]/50 rounded-tl-2xl pointer-events-none" />
-          <span className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-[#a855f7]/50 rounded-tr-2xl pointer-events-none" />
-          <span className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-[#a855f7]/50 rounded-bl-2xl pointer-events-none" />
-          <span className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-[#a855f7]/50 rounded-br-2xl pointer-events-none" />
+        <div className="bg-[#100b2b] border border-purple-500/30 rounded-2xl p-6 relative flex flex-col lg:flex-row items-center justify-between gap-6 shadow-[0_0_25px_rgba(147,51,234,0.15)]">
+          {/* Lado izquierdo: título */}
+          <h3 className="text-xl lg:text-2xl font-black text-white max-w-[260px] uppercase leading-tight">
+            ¿Por qué recargar con <span className="text-purple-400">Mythic Market?</span>
+          </h3>
 
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-6 gap-8 items-center">
-            {/* Título a la izquierda */}
-            <div className="lg:col-span-2">
-              <h3 className="text-xl md:text-2xl font-black uppercase leading-snug tracking-wide text-white">
-                ¿Por qué recargar con{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#38bdf8]">
-                  Mythic Market?
-                </span>
-              </h3>
-            </div>
-
-            {/* 4 columnas de beneficios */}
-            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: BadgeCheck,
-                  title: "Oficial y seguro",
-                  desc: "Recargas 100% autorizadas",
-                },
-                {
-                  icon: Gem,
-                  title: "Mejores precios",
-                  desc: "Precios competitivos con cashback",
-                },
-                {
-                  icon: Zap,
-                  title: "Entrega instantánea",
-                  desc: "Diamantes en minutos",
-                },
-                {
-                  icon: Headset,
-                  title: "Soporte 24/7",
-                  desc: "Atención personalizada",
-                },
-              ].map((feature) => (
-                <div key={feature.title} className="flex flex-col items-center text-center gap-3">
-                  <feature.icon
-                    className="w-8 h-8 text-[#a855f7]"
-                    style={{ filter: "drop-shadow(0 0 8px rgba(168, 85, 247, 0.55))" }}
-                  />
-                  <div>
-                    <div className="font-black text-xs uppercase tracking-wider text-white mb-1">
-                      {feature.title}
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed">{feature.desc}</p>
-                  </div>
+          {/* Lado derecho: 4 columnas de beneficios con separadores sutiles */}
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-purple-500/20 flex-1 w-full text-center md:text-left">
+            {[
+              {
+                icon: BadgeCheck,
+                title: "Oficial y seguro",
+                desc: "Recargas 100% autorizadas",
+              },
+              {
+                icon: Gem,
+                title: "Mejores precios",
+                desc: "Precios competitivos con cashback",
+              },
+              {
+                icon: Zap,
+                title: "Entrega instantánea",
+                desc: "Diamantes en minutos",
+              },
+              {
+                icon: Headset,
+                title: "Soporte 24/7",
+                desc: "Atención personalizada",
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="flex flex-col items-center md:items-start py-3 md:py-0 md:px-4">
+                <feature.icon className="text-purple-400 mb-2 h-6 w-6 inline-block" />
+                <div className="text-xs font-bold text-purple-300 uppercase tracking-wide">
+                  {feature.title}
                 </div>
-              ))}
-            </div>
+                <p className="text-[11px] text-slate-400 mt-1">{feature.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ================= FOOTER DE MÉTODOS DE PAGO SEGUROS ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 pb-4">
-        <div
-          className="rounded-2xl px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-5"
-          style={{ backgroundColor: "#0d0824", border: "1px solid rgba(168, 85, 247, 0.25)" }}
-        >
-          {/* Izquierda: métodos de pago */}
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 whitespace-nowrap">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 pb-4">
+        <div className="mt-4 bg-[#0d0824] border border-purple-500/25 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Izquierda: pasarelas de pago (título arriba, logos abajo) */}
+          <div className="flex flex-col gap-2.5">
+            <span className="text-xs font-extrabold text-purple-400 tracking-wider uppercase">
               Métodos de pago seguros
             </span>
-            <div className="flex flex-wrap justify-center items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               {[
                 { label: "Mercado Pago", logo: "/logos/mercadopago.svg" },
                 { label: "PayPal", logo: "/logos/paypal.svg" },
@@ -704,45 +680,53 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               ].map((method) => (
                 <span
                   key={method.label}
-                  className="flex items-center gap-1.5 bg-white rounded-lg px-2.5 py-1.5"
+                  className="flex items-center gap-1.5 bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200"
                   title={method.label}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={method.logo} alt={method.label} className="h-4 w-auto object-contain" />
-                  <span className="text-[10px] font-semibold text-gray-700 whitespace-nowrap">
-                    {method.label}
-                  </span>
+                  <span className="whitespace-nowrap">{method.label}</span>
                 </span>
               ))}
               {/* Badges de texto para medios sin logo propio */}
-              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-black italic text-blue-900 tracking-wide">
+              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 italic font-black tracking-wide">
                 VISA
               </span>
-              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-black text-red-600 tracking-wide">
+              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 tracking-wide">
                 Mastercard
               </span>
-              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-amber-600 tracking-wide">
+              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 tracking-wide">
                 ₿ Crypto
               </span>
             </div>
           </div>
 
-          {/* Derecha: compra protegida */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-xs font-black uppercase tracking-wider text-emerald-400">
-                Compra protegida
+          {/* Línea divisoria vertical */}
+          <div className="hidden lg:block w-px h-12 bg-purple-500/20 mx-2" />
+
+          {/* Derecha: compra protegida (título arriba, sellos abajo) */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-extrabold text-purple-400 tracking-wider uppercase">
+              Compra protegida
+            </span>
+            <div className="flex items-center gap-5">
+              <div className="flex items-center gap-2">
+                <Lock className="text-amber-400 text-lg w-5 h-5 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-300 leading-tight">
+                  Conexión SSL
+                  <br />
+                  <span className="text-slate-400 font-normal">Segura</span>
+                </span>
               </div>
-              <div className="text-[11px] text-slate-400">Conexión SSL Segura</div>
-              <div className="text-[11px] text-slate-400">Encriptación de Datos</div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="text-amber-400 text-lg w-5 h-5 shrink-0" />
+                <span className="text-[11px] font-semibold text-slate-300 leading-tight">
+                  Encriptación
+                  <br />
+                  <span className="text-slate-400 font-normal">de Datos</span>
+                </span>
+              </div>
             </div>
-            <ShieldCheck
-              className="w-6 h-6 text-emerald-400/70 hidden sm:block"
-              style={{ filter: "drop-shadow(0 0 6px rgba(52, 211, 153, 0.45))" }}
-            />
           </div>
         </div>
       </section>

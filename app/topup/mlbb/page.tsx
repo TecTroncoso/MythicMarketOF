@@ -15,46 +15,50 @@ export default function MobileLegendsStore() {
       {/* Checkout premium: hero 2 columnas + tarjeta flotante + grid de diamantes */}
       <CheckoutSection />
 
-      {/* FAQ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
-        <div
-          className="rounded-2xl p-6 md:p-8"
-          style={{ backgroundColor: "#110c2c", border: `1px solid ${CARD_BORDER}` }}
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <HelpCircle className="w-7 h-7 text-[#a855f7]" />
-            <h3 className="text-xl md:text-2xl font-black text-white">Preguntas Frecuentes</h3>
+      {/* SECCIÓN FAQ TEMPORALMENTE OCULTA (el código se conserva para el futuro) */}
+      {false && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
+          <div
+            className="rounded-2xl p-6 md:p-8"
+            style={{ backgroundColor: "#110c2c", border: `1px solid ${CARD_BORDER}` }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <HelpCircle className="w-7 h-7 text-[#a855f7]" />
+              <h3 className="text-xl md:text-2xl font-black text-white">Preguntas Frecuentes</h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
+                <h4 className="font-bold mb-2 text-white">¿Cuánto tiempo tarda en llegar mi recarga?</h4>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Las recargas se procesan de forma instantánea. Generalmente, los diamantes o pases se reflejarán en tu cuenta de Mobile Legends en menos de 5 minutos una vez confirmado el pago.
+                </p>
+              </div>
+
+              <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
+                <h4 className="font-bold mb-2 text-white">¿Es seguro proveer mi User ID y Zone ID?</h4>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Sí, es un proceso 100% seguro. Solo utilizamos tu User ID y Zone ID para conectarnos con los servidores oficiales y enviar los diamantes directamente a tu cuenta. <strong className="text-gray-300">Nunca te pediremos tu contraseña.</strong>
+                </p>
+              </div>
+
+              <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
+                <h4 className="font-bold mb-2 text-white">¿Qué métodos de pago aceptan?</h4>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Aceptamos una gran variedad de métodos de pago seguros, incluyendo tarjetas de crédito, débito, PayPal, y opciones de pago locales dependiendo de tu región, garantizando tu comodidad y seguridad.
+                </p>
+              </div>
+            </div>
           </div>
+        </section>
+      )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
-              <h4 className="font-bold mb-2 text-white">¿Cuánto tiempo tarda en llegar mi recarga?</h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Las recargas se procesan de forma instantánea. Generalmente, los diamantes o pases se reflejarán en tu cuenta de Mobile Legends en menos de 5 minutos una vez confirmado el pago.
-              </p>
-            </div>
-
-            <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
-              <h4 className="font-bold mb-2 text-white">¿Es seguro proveer mi User ID y Zone ID?</h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Sí, es un proceso 100% seguro. Solo utilizamos tu User ID y Zone ID para conectarnos con los servidores oficiales y enviar los diamantes directamente a tu cuenta. <strong className="text-gray-300">Nunca te pediremos tu contraseña.</strong>
-              </p>
-            </div>
-
-            <div className="bg-[#0a061e] rounded-xl p-5 border border-[rgba(147,51,234,0.25)]">
-              <h4 className="font-bold mb-2 text-white">¿Qué métodos de pago aceptan?</h4>
-              <p className="text-gray-400 text-sm leading-relaxed">
-                Aceptamos una gran variedad de métodos de pago seguros, incluyendo tarjetas de crédito, débito, PayPal, y opciones de pago locales dependiendo de tu región, garantizando tu comodidad y seguridad.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Reseñas */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
-        <ReviewsSectionLoader />
-      </section>
+      {/* SECCIÓN RESEÑAS TEMPORALMENTE OCULTA (el código se conserva para el futuro) */}
+      {false && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-10">
+          <ReviewsSectionLoader />
+        </section>
+      )}
     </main>
   );
 }
