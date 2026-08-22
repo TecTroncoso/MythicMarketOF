@@ -307,7 +307,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         {/* Resplandor morado muy tenue centrado */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
         {/* Fundido lateral izquierdo para que el texto sea 100% legible */}
-        <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#060314] via-[#060314]/90 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r from-[#060314] via-[#060314]/70 to-transparent pointer-events-none z-0" />
         {/* Fundido inferior hacia el catálogo */}
         <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
 
@@ -315,14 +315,14 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
 
           {/* Personaje en el hueco central: su borde derecho termina ANTES de la tarjeta de checkout */}
-          <div className="hidden lg:block absolute -top-12 right-[400px] xl:right-[470px] pointer-events-none z-0 w-[620px] xl:w-[740px] h-[540px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]">
+          <div className="hidden lg:block absolute -top-8 right-[380px] xl:right-[450px] pointer-events-none z-0 w-[680px] xl:w-[800px] h-[560px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_92%)]">
             <Image
               src="/images/personaje.png"
               alt="Personaje Mobile Legends"
               width={1200}
               height={1600}
               priority
-              className="w-full h-full object-contain object-top opacity-95 scale-110 drop-shadow-[0_0_30px_rgba(147,51,234,0.4)]"
+              className="w-full h-full object-contain object-top opacity-100 scale-110 drop-shadow-[0_0_35px_rgba(147,51,234,0.45)]"
             />
           </div>
 
