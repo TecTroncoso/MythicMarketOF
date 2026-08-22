@@ -294,255 +294,257 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <>
       {/* ================= HERO 2 COLUMNAS ================= */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-        {/* Resplandor difuminado detrás del título */}
-        <div className="absolute -top-16 left-1/4 w-[420px] h-[420px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
-        {/* Resplandor difuminado detrás de la tarjeta de checkout */}
-        <div className="absolute top-24 right-0 w-[380px] h-[380px] bg-fuchsia-600/10 blur-[120px] rounded-full pointer-events-none" />
-        {/* Personaje gaming de fondo (capa absoluta) */}
-        <div className="absolute inset-0 -z-10 w-full h-full pointer-events-none">
+      <section className="relative overflow-hidden w-full min-h-[460px] lg:min-h-[520px] flex items-center bg-[#070417]">
+        {/* Capa 1: imagen del personaje (z-0) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <Image
             src="/images/personaje.png"
             alt=""
             fill
-            className="object-cover object-right lg:object-center"
+            className="object-cover object-[center_right] opacity-85"
             priority
           />
         </div>
-        {/* Fundido hacia abajo: conecta suavemente con la sección de diamantes */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#070417] via-[#070417]/70 to-transparent" />
-        {/* Fundido lateral izquierdo: legibilidad total del texto y badges */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#070417] via-[#070417]/80 to-transparent" />
+        {/* Capa 2: degradados de iluminación y fundido (z-1) */}
+        <div className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-r from-[#070417] via-[#070417]/50 to-transparent" />
+        <div className="absolute bottom-0 inset-x-0 h-24 z-[1] pointer-events-none bg-gradient-to-t from-[#070417] to-transparent" />
+        {/* Resplandor púrpura sutil detrás de la tarjeta (z-0) */}
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-purple-600/25 blur-[100px] rounded-full pointer-events-none z-0" />
+        {/* Resplandor difuminado detrás del título */}
+        <div className="absolute -top-16 left-1/4 w-[420px] h-[420px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none z-0" />
 
-        {/* Columna izquierda: identidad del juego */}
-        <div className="lg:col-span-3 relative z-10">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
-              <Image
-                src="/mlbb-logo.png"
-                alt="Mobile Legends: Bang Bang"
-                width={160}
-                height={160}
-                sizes="(max-width: 768px) 112px, 144px"
-                className="w-full h-auto drop-shadow-[0_0_25px_rgba(168,85,247,0.45)]"
-                priority
-                fetchPriority="high"
-              />
-            </div>
-            <div className="text-center sm:text-left">
-              <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3">
-                Top Up{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]">
-                  Mobile Legends
-                </span>{" "}
-                Diamonds Global
-              </h1>
-              {/* Calificación */}
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
-                <div className="flex items-center gap-0.5">
-                  {[0, 1, 2, 3, 4].map((star) => (
-                    <Star key={star} className="w-4 h-4 text-amber-400" fill="currentColor" />
-                  ))}
-                </div>
-                <span className="text-sm font-bold text-white">4.68 / 5</span>
-              </div>
-              {/* Pills de características */}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#d9b8fe] text-xs font-bold">
-                  <Globe className="w-3 h-3" /> Global
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 border border-[#38bdf8]/40 text-[#7dd3fc] text-xs font-bold">
-                  <Zap className="w-3 h-3" /> Instant delivery
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d946ef]/15 border border-[#d946ef]/40 text-[#f0abfc] text-xs font-bold">
-                  <BadgeCheck className="w-3 h-3" /> Official Top-up
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Barra de confianza: una sola barra alargada con icono a la izquierda y textos a la derecha */}
-          <div className="mt-8 bg-[#110c2c]/70 border border-purple-500/20 backdrop-blur-md rounded-2xl p-3.5 flex items-center justify-between divide-x divide-purple-500/20">
-            {[
-              { icon: ShieldCheck, tint: "text-emerald-400", title: "100% Safe", sub: "Secure top-up" },
-              { icon: Zap, tint: "text-[#38bdf8]", title: "Instant delivery", sub: "1-5 min" },
-              { icon: Crown, tint: "text-amber-400", title: "Official Partner", sub: "Moonton" },
-              { icon: Headset, tint: "text-[#a855f7]", title: "24/7 Support", sub: "We're here!" },
-            ].map((badge) => (
-              <div key={badge.title} className="flex items-center gap-3 px-3 first:pl-1 last:pr-1">
-                <badge.icon
-                  className={`w-6 h-6 shrink-0 ${badge.tint}`}
-                  style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }}
+        {/* Capa 3: todo el contenido visible (z-10) */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+          {/* Columna izquierda: identidad del juego */}
+          <div className="lg:col-span-3">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
+                <Image
+                  src="/mlbb-logo.png"
+                  alt="Mobile Legends: Bang Bang"
+                  width={160}
+                  height={160}
+                  sizes="(max-width: 768px) 112px, 144px"
+                  className="w-full h-auto drop-shadow-[0_0_25px_rgba(168,85,247,0.45)]"
+                  priority
+                  fetchPriority="high"
                 />
-                <div className="leading-tight">
-                  <div className="text-xs font-bold uppercase tracking-wider text-white whitespace-nowrap">
-                    {badge.title}
+              </div>
+              <div className="text-center sm:text-left">
+                <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3">
+                  Top Up{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]">
+                    Mobile Legends
+                  </span>{" "}
+                  Diamonds Global
+                </h1>
+                {/* Calificación */}
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
+                  <div className="flex items-center gap-0.5">
+                    {[0, 1, 2, 3, 4].map((star) => (
+                      <Star key={star} className="w-4 h-4 text-amber-400" fill="currentColor" />
+                    ))}
                   </div>
-                  <div className="text-[11px] text-slate-400 whitespace-nowrap">{badge.sub}</div>
+                  <span className="text-sm font-bold text-white">4.68 / 5</span>
+                </div>
+                {/* Pills de características */}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#d9b8fe] text-xs font-bold">
+                    <Globe className="w-3 h-3" /> Global
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 border border-[#38bdf8]/40 text-[#7dd3fc] text-xs font-bold">
+                    <Zap className="w-3 h-3" /> Instant delivery
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d946ef]/15 border border-[#d946ef]/40 text-[#f0abfc] text-xs font-bold">
+                    <BadgeCheck className="w-3 h-3" /> Official Top-up
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
-        <div className="lg:col-span-2 lg:sticky lg:top-24 relative z-10">
-          <div
-            className="rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.18)]"
-            style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
-          >
-            {/* Línea de brillo superior */}
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]" />
-
-            <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white mb-5">
-              <UserRound className="w-4 h-4 text-[#d946ef]" />
-              Select Your Account
-            </h3>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="mlbb-zone-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 flex items-center gap-1">
-                  Zone ID <span className="text-[#d946ef]">*</span>
-                  <span title="Lo encontrás junto a tu User ID en el perfil del juego" className="cursor-help">
-                    <HelpCircle className="w-3.5 h-3.5 text-gray-500 hover:text-[#a855f7] transition-colors" />
-                  </span>
-                </label>
-                <input
-                  id="mlbb-zone-id"
-                  type="text"
-                  value={zoneId}
-                  onChange={(e) => setZoneId(e.target.value)}
-                  placeholder="Enter your Zone ID"
-                  className={inputClassName}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="mlbb-user-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
-                  User ID <span className="text-[#d946ef]">*</span>
-                </label>
-                <input
-                  id="mlbb-user-id"
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="Enter your User ID"
-                  className={inputClassName}
-                />
-              </div>
-              {/* Remember me */}
-              <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded accent-[#a855f7] cursor-pointer"
-                />
-                <span className="text-xs font-medium text-gray-400">Remember me</span>
-              </label>
             </div>
 
-            <div aria-live="polite" className="mt-3 min-h-[20px]">
-              {nicknameStatus.kind === "loading" && (
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" aria-label="Verificando jugador" />
-                  <span>Verificando jugador...</span>
-                </div>
-              )}
-              {nicknameStatus.kind === "success" && (
-                <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                  <Check className="w-4 h-4" />
-                  <span className="font-medium">{nicknameStatus.nickname}</span>
-                  <span className="text-gray-500">({nicknameStatus.country})</span>
-                </div>
-              )}
-              {nicknameStatus.kind === "warning" && (
-                <p role="status" className="text-gray-500 text-xs">
-                  No pudimos verificar el nickname, pero podés continuar
-                </p>
-              )}
-            </div>
-
-            {/* Precio y resumen */}
-            <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
-              {/* Precio grande + badge cashback (solo con paquete seleccionado) */}
-              {selectedProductData && (
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-3xl font-black text-white tracking-tight">
-                    {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    10% Cashback
-                  </span>
-                </div>
-              )}
-
-              {/* Caja oscura con el paquete seleccionado */}
-              {selectedProductData ? (
-                <div className="flex items-center gap-3 bg-[#0d0824] p-3 rounded-xl border border-purple-500/30">
-                  <Gem
-                    className="w-6 h-6 text-[#38bdf8] shrink-0"
-                    style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))" }}
+            {/* Barra de confianza: una sola barra alargada con icono a la izquierda y textos a la derecha */}
+            <div className="mt-8 bg-[#110c2c]/70 border border-purple-500/20 backdrop-blur-md rounded-2xl p-3.5 flex items-center justify-between divide-x divide-purple-500/20">
+              {[
+                { icon: ShieldCheck, tint: "text-emerald-400", title: "100% Safe", sub: "Secure top-up" },
+                { icon: Zap, tint: "text-[#38bdf8]", title: "Instant delivery", sub: "1-5 min" },
+                { icon: Crown, tint: "text-amber-400", title: "Official Partner", sub: "Moonton" },
+                { icon: Headset, tint: "text-[#a855f7]", title: "24/7 Support", sub: "We're here!" },
+              ].map((badge) => (
+                <div key={badge.title} className="flex items-center gap-3 px-3 first:pl-1 last:pr-1">
+                  <badge.icon
+                    className={`w-6 h-6 shrink-0 ${badge.tint}`}
+                    style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }}
                   />
-                  <div className="min-w-0">
-                    <div className="font-bold text-sm truncate text-white">
-                      {selectedProductData.name}
-                      {selectedProductData.bonus ? ` + ${selectedProductData.bonus}` : ""}
+                  <div className="leading-tight">
+                    <div className="text-xs font-bold uppercase tracking-wider text-white whitespace-nowrap">
+                      {badge.title}
                     </div>
-                    <div className="text-xs text-gray-500">Mobile Legends · Global</div>
+                    <div className="text-[11px] text-slate-400 whitespace-nowrap">{badge.sub}</div>
                   </div>
                 </div>
-              ) : (
-                <div className="h-14 flex items-center justify-center border-2 border-dashed border-[rgba(147,51,234,0.3)] rounded-xl">
-                  <span className="text-gray-500 font-medium text-xs text-center px-4">
-                    Elegí un paquete abajo
-                  </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
+          <div className="lg:col-span-2 lg:sticky lg:top-24">
+            <div
+              className="rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.18)]"
+              style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+            >
+              {/* Línea de brillo superior */}
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]" />
+
+              <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white mb-5">
+                <UserRound className="w-4 h-4 text-[#d946ef]" />
+                Select Your Account
+              </h3>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="mlbb-zone-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                    Zone ID <span className="text-[#d946ef]">*</span>
+                    <span title="Lo encontrás junto a tu User ID en el perfil del juego" className="cursor-help">
+                      <HelpCircle className="w-3.5 h-3.5 text-gray-500 hover:text-[#a855f7] transition-colors" />
+                    </span>
+                  </label>
+                  <input
+                    id="mlbb-zone-id"
+                    type="text"
+                    value={zoneId}
+                    onChange={(e) => setZoneId(e.target.value)}
+                    placeholder="Enter your Zone ID"
+                    className={inputClassName}
+                  />
                 </div>
-              )}
-
-              {checkoutError && (
-                <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm text-center font-medium">
-                  {checkoutError}
+                <div className="space-y-1.5">
+                  <label htmlFor="mlbb-user-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
+                    User ID <span className="text-[#d946ef]">*</span>
+                  </label>
+                  <input
+                    id="mlbb-user-id"
+                    type="text"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    placeholder="Enter your User ID"
+                    className={inputClassName}
+                  />
                 </div>
-              )}
+                {/* Remember me */}
+                <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded accent-[#a855f7] cursor-pointer"
+                  />
+                  <span className="text-xs font-medium text-gray-400">Remember me</span>
+                </label>
+              </div>
 
-              {/* Botón secundario rápido de PayPal */}
-              <button
-                onClick={handleQuickPaypal}
-                className="mt-3 w-full flex items-center justify-center gap-2 bg-[#0a061e] border border-[rgba(147,51,234,0.35)] hover:border-[#38bdf8]/60 text-white font-bold text-sm py-3 rounded-xl transition-all duration-200"
-              >
-                <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#38bdf8]" fill="currentColor" aria-hidden="true">
-                  <path d="M7.5 21l1.2-7.5H12c2.5 0 4.2-1.3 4.6-3.6.4-2.4-1-3.9-3.6-3.9H8.2L6 21h1.5zm2-13.5h3.2c1.6 0 2.5.8 2.2 2.4-.3 1.7-1.5 2.6-3.3 2.6h-2.9l.8-5z" />
-                </svg>
-                Pagar con PayPal
-              </button>
-
-              {/* Botón principal Buy now */}
-              <button
-                onClick={handleCheckout}
-                disabled={isPending}
-                className="mt-2 w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-slate-950 font-extrabold text-base py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-[0.99] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
-              >
-                {isPending ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Procesando...
-                  </span>
-                ) : (
-                  <>Buy now <ChevronRight className="w-5 h-5" /></>
+              <div aria-live="polite" className="mt-3 min-h-[20px]">
+                {nicknameStatus.kind === "loading" && (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" aria-label="Verificando jugador" />
+                    <span>Verificando jugador...</span>
+                  </div>
                 )}
-              </button>
+                {nicknameStatus.kind === "success" && (
+                  <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                    <Check className="w-4 h-4" />
+                    <span className="font-medium">{nicknameStatus.nickname}</span>
+                    <span className="text-gray-500">({nicknameStatus.country})</span>
+                  </div>
+                )}
+                {nicknameStatus.kind === "warning" && (
+                  <p role="status" className="text-gray-500 text-xs">
+                    No pudimos verificar el nickname, pero podés continuar
+                  </p>
+                )}
+              </div>
 
-              {/* Seguridad al pie */}
-              <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Protected purchase</span>
-                <span title="Pago protegido mediante pasarelas verificadas y socios oficiales" className="cursor-help">
-                  <HelpCircle className="w-3 h-3 text-gray-600 hover:text-[#a855f7] transition-colors" />
-                </span>
+              {/* Precio y resumen */}
+              <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
+                {/* Precio grande + badge cashback (solo con paquete seleccionado) */}
+                {selectedProductData && (
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl font-black text-white tracking-tight">
+                      {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      10% Cashback
+                    </span>
+                  </div>
+                )}
+
+                {/* Caja oscura con el paquete seleccionado */}
+                {selectedProductData ? (
+                  <div className="flex items-center gap-3 bg-[#0d0824] p-3 rounded-xl border border-purple-500/30">
+                    <Gem
+                      className="w-6 h-6 text-[#38bdf8] shrink-0"
+                      style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))" }}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-bold text-sm truncate text-white">
+                        {selectedProductData.name}
+                        {selectedProductData.bonus ? ` + ${selectedProductData.bonus}` : ""}
+                      </div>
+                      <div className="text-xs text-gray-500">Mobile Legends · Global</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-14 flex items-center justify-center border-2 border-dashed border-[rgba(147,51,234,0.3)] rounded-xl">
+                    <span className="text-gray-500 font-medium text-xs text-center px-4">
+                      Elegí un paquete abajo
+                    </span>
+                  </div>
+                )}
+
+                {checkoutError && (
+                  <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm text-center font-medium">
+                    {checkoutError}
+                  </div>
+                )}
+
+                {/* Botón secundario rápido de PayPal */}
+                <button
+                  onClick={handleQuickPaypal}
+                  className="mt-3 w-full flex items-center justify-center gap-2 bg-[#0a061e] border border-[rgba(147,51,234,0.35)] hover:border-[#38bdf8]/60 text-white font-bold text-sm py-3 rounded-xl transition-all duration-200"
+                >
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#38bdf8]" fill="currentColor" aria-hidden="true">
+                    <path d="M7.5 21l1.2-7.5H12c2.5 0 4.2-1.3 4.6-3.6.4-2.4-1-3.9-3.6-3.9H8.2L6 21h1.5zm2-13.5h3.2c1.6 0 2.5.8 2.2 2.4-.3 1.7-1.5 2.6-3.3 2.6h-2.9l.8-5z" />
+                  </svg>
+                  Pagar con PayPal
+                </button>
+
+                {/* Botón principal Buy now */}
+                <button
+                  onClick={handleCheckout}
+                  disabled={isPending}
+                  className="mt-2 w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-slate-950 font-extrabold text-base py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-[0.99] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                >
+                  {isPending ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Procesando...
+                    </span>
+                  ) : (
+                    <>Buy now <ChevronRight className="w-5 h-5" /></>
+                  )}
+                </button>
+
+                {/* Seguridad al pie */}
+                <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Protected purchase</span>
+                  <span title="Pago protegido mediante pasarelas verificadas y socios oficiales" className="cursor-help">
+                    <HelpCircle className="w-3 h-3 text-gray-600 hover:text-[#a855f7] transition-colors" />
+                  </span>
+                </div>
               </div>
             </div>
           </div>
