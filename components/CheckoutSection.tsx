@@ -311,15 +311,15 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         {/* Contenido centrado */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
 
-          {/* Personaje centrado exactamente en el hueco entre el texto y la tarjeta */}
-          <div className="hidden lg:block absolute top-1/2 left-[54%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
+          {/* Personaje con máscara de desvanecimiento para eliminar bordes cuadrados */}
+          <div className="hidden lg:block absolute -top-12 left-[58%] -translate-x-1/2 pointer-events-none z-0 w-[700px] xl:w-[850px] h-[540px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]">
             <Image
               src="/images/personaje.png"
-              alt=""
-              width={900}
-              height={1400}
+              alt="Personaje Mobile Legends"
+              width={1200}
+              height={1600}
               priority
-              className="max-h-[440px] w-auto object-contain opacity-90 drop-shadow-[0_0_25px_rgba(147,51,234,0.3)]"
+              className="w-full h-full object-contain object-top opacity-85 scale-110 drop-shadow-[0_0_30px_rgba(147,51,234,0.4)]"
             />
           </div>
 
