@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, screen, fireEvent, cleanup, act } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, act, within } from "@testing-library/react";
 
 // The component imports the `processCheckout` server action, which transitively
 // pulls in next-auth + next/server. Those imports fail under happy-dom. Since the
@@ -98,8 +98,8 @@ afterEach(() => {
   cleanup();
 });
 
-const userIdInput = () => screen.getByPlaceholderText("Ej. 12345678") as HTMLInputElement;
-const zoneIdInput = () => screen.getByPlaceholderText("Ej. (1234)") as HTMLInputElement;
+const userIdInput = () => screen.getByPlaceholderText("Enter your User ID") as HTMLInputElement;
+const zoneIdInput = () => screen.getByPlaceholderText("Enter your Zone ID") as HTMLInputElement;
 
 // `act` flushes pending React state updates triggered inside the callback.
 // Under fake timers, advancing time fires the debounce callback which awaits
@@ -197,7 +197,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     // ---- IDLE: select product, no input typed → button present, enabled
     const { unmount } = render(<CheckoutSection isLoggedIn={true} />);
     fireEvent.click(screen.getByText(/172 Diamonds/));
-    const idleButton = screen.getByRole("button", { name: /Comprar Ahora/i }) as HTMLButtonElement;
+    const idleButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
     expect(idleButton.disabled).toBe(false);
     unmount();
 
@@ -213,7 +213,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     await flush(301);
     expect(screen.getByText(/Verificando jugador/i)).toBeInTheDocument();
     const loadingButton = screen.getByRole("button", {
-      name: /Comprar Ahora|Procesando/i,
+      name: /Buy now|Procesando/i,
     }) as HTMLButtonElement;
     expect(loadingButton.disabled).toBe(false);
     unmountLoading();
@@ -225,7 +225,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     await typeValid();
     expect(screen.getByText("Hero")).toBeInTheDocument();
-    const successButton = screen.getByRole("button", { name: /Comprar Ahora/i }) as HTMLButtonElement;
+    const successButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
     expect(successButton.disabled).toBe(false);
     unmountSuccess();
     vi.unstubAllGlobals();
@@ -236,7 +236,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     await typeValid();
     expect(screen.getByText(/No pudimos verificar el nickname/i)).toBeInTheDocument();
-    const warningButton = screen.getByRole("button", { name: /Comprar Ahora/i }) as HTMLButtonElement;
+    const warningButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
     expect(warningButton.disabled).toBe(false);
   });
 });
@@ -246,17 +246,17 @@ describe("CheckoutSection payment modal flow", () => {
     // Not logged in
     const { unmount } = render(<CheckoutSection isLoggedIn={false} />);
     fireEvent.click(screen.getByText(/172 Diamonds/));
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     expect(screen.getByText("Debes iniciar sesión para realizar una compra.")).toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "M\u00e9todo de pago" })).not.toBeInTheDocument();
     unmount();
 
     // Missing User/Zone IDs
     render(<CheckoutSection isLoggedIn={true} />);
     fireEvent.click(screen.getByText(/172 Diamonds/));
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     expect(screen.getByText("Por favor ingresa tu User ID y Zone ID.")).toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "M\u00e9todo de pago" })).not.toBeInTheDocument();
   });
 
   it("closes the modal via the X button, a backdrop click, and Escape", async () => {
@@ -267,11 +267,11 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
 
     const openModal = () => {
-      fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
-      return screen.getByRole("dialog", { name: "Método de pago" });
+      fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
+      return screen.getByRole("dialog", { name: "M\u00e9todo de pago" });
     };
     const expectModalClosed = () =>
-      expect(screen.queryByRole("dialog", { name: "Método de pago" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "M\u00e9todo de pago" })).not.toBeInTheDocument();
 
     // X button
     openModal();
@@ -295,7 +295,7 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
 
     expect(screen.getByText("Seleccioná un método de pago.")).toBeInTheDocument();
@@ -308,7 +308,7 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "no-es-un-email" },
@@ -337,9 +337,9 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
 
-    expect(screen.getByRole("dialog", { name: "Método de pago" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "M\u00e9todo de pago" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "compra@ejemplo.com" },
@@ -383,12 +383,13 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
 
     fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
     // Flush the microtask that resets the payment selection on region change.
     await act(async () => {});
-    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    const paypalDialog = screen.getByRole("dialog", { name: "M\u00e9todo de pago" });
+    fireEvent.click(within(paypalDialog).getByRole("button", { name: /PayPal/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "compra@ejemplo.com" },
     });
@@ -435,7 +436,7 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
 
     fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
     // Flush the microtask that resets the payment selection on region change.
@@ -483,11 +484,12 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/172 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
 
     fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
     await act(async () => {});
-    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    const paypalDialog = screen.getByRole("dialog", { name: "M\u00e9todo de pago" });
+    fireEvent.click(within(paypalDialog).getByRole("button", { name: /PayPal/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "compra@ejemplo.com" },
     });
@@ -532,12 +534,13 @@ describe("CheckoutSection payment modal flow", () => {
     fireEvent.click(screen.getByText(/257 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
-    fireEvent.click(screen.getByRole("button", { name: /Comprar Ahora/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
 
     fireEvent.click(screen.getByRole("button", { name: /Europa \(€\)/i }));
     // Flush the microtask that resets the payment selection on region change.
     await act(async () => {});
-    fireEvent.click(screen.getByRole("button", { name: /PayPal/ }));
+    const paypalDialog = screen.getByRole("dialog", { name: "M\u00e9todo de pago" });
+    fireEvent.click(within(paypalDialog).getByRole("button", { name: /PayPal/ }));
     fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
       target: { value: "compra@ejemplo.com" },
     });

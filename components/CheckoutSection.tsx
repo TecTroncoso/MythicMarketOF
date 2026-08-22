@@ -3,8 +3,6 @@
 import React, { useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
 import {
-  Info,
-  ShoppingCart,
   ShieldCheck,
   ChevronRight,
   Loader2,
@@ -16,6 +14,7 @@ import {
   Headset,
   Gem,
   UserRound,
+  HelpCircle,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
@@ -45,6 +44,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [paymentDetail, setPaymentDetail] = useState("");
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   type NicknameStatus =
     | { kind: "idle" }
@@ -283,6 +283,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const inputClassName =
     "w-full bg-[#0a061e] border border-[rgba(147,51,234,0.35)] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] transition-all";
 
+  // Botón secundario rápido de PayPal: abre el enlace PayPal.Me con el monto
+  // real del paquete seleccionado pre-cargado (mismo flujo manual que EU).
+  const handleQuickPaypal = () => {
+    window.open(summaryPrice > 0 ? buildPaypalMeUrl(summaryPrice) : PAYPAL_ME_URL, "_blank");
+  };
+
   return (
     <>
       {/* ================= HERO 2 COLUMNAS ================= */}
@@ -373,31 +379,44 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="mlbb-user-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
-                  User ID
-                </label>
-                <input
-                  id="mlbb-user-id"
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="Ej. 12345678"
-                  className={inputClassName}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="mlbb-zone-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
-                  Zone ID
+                <label htmlFor="mlbb-zone-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                  Zone ID <span className="text-[#d946ef]">*</span>
+                  <span title="Lo encontrás junto a tu User ID en el perfil del juego" className="cursor-help">
+                    <HelpCircle className="w-3.5 h-3.5 text-gray-500 hover:text-[#a855f7] transition-colors" />
+                  </span>
                 </label>
                 <input
                   id="mlbb-zone-id"
                   type="text"
                   value={zoneId}
                   onChange={(e) => setZoneId(e.target.value)}
-                  placeholder="Ej. (1234)"
+                  placeholder="Enter your Zone ID"
                   className={inputClassName}
                 />
               </div>
+              <div className="space-y-1.5">
+                <label htmlFor="mlbb-user-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
+                  User ID <span className="text-[#d946ef]">*</span>
+                </label>
+                <input
+                  id="mlbb-user-id"
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Enter your User ID"
+                  className={inputClassName}
+                />
+              </div>
+              {/* Remember me */}
+              <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded accent-[#a855f7] cursor-pointer"
+                />
+                <span className="text-xs font-medium text-gray-400">Remember me</span>
+              </label>
             </div>
 
             <div aria-live="polite" className="mt-3 min-h-[20px]">
@@ -421,32 +440,38 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               )}
             </div>
 
-            {/* Resumen compacto */}
+            {/* Precio y resumen */}
             <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
+              {/* Precio grande + badge cashback */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-3xl font-black text-white tracking-tight">
+                  {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                </span>
+                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  10% Cashback
+                </span>
+              </div>
+
+              {/* Caja oscura con el paquete seleccionado */}
               {selectedProductData ? (
                 <div className="flex items-center gap-3 bg-[#0a061e] p-3 rounded-xl border border-[rgba(147,51,234,0.25)]">
-                  <Image
-                    src={selectedProductData.image}
-                    alt={`Resumen de ${selectedProductData.name}`}
-                    width={44}
-                    height={44}
-                    className="w-11 h-11 rounded-lg bg-[#1a1240] object-contain shrink-0"
+                  <Gem
+                    className="w-6 h-6 text-[#38bdf8] shrink-0"
+                    style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))" }}
                   />
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-sm truncate">{selectedProductData.name}</div>
-                    <div className="text-xs text-gray-500">Mobile Legends</div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500">Total</div>
-                    <div className="text-lg font-black text-amber-400">
-                      {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm truncate text-white">
+                      {selectedProductData.name}
+                      {selectedProductData.bonus ? ` + ${selectedProductData.bonus}` : ""}
                     </div>
+                    <div className="text-xs text-gray-500">Mobile Legends · Global</div>
                   </div>
                 </div>
               ) : (
-                <div className="h-16 flex items-center justify-center border-2 border-dashed border-[rgba(147,51,234,0.3)] rounded-xl">
+                <div className="h-14 flex items-center justify-center border-2 border-dashed border-[rgba(147,51,234,0.3)] rounded-xl">
                   <span className="text-gray-500 font-medium text-xs text-center px-4">
-                    Elegí un paquete abajo para ver el resumen
+                    Elegí un paquete abajo
                   </span>
                 </div>
               )}
@@ -457,10 +482,22 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </div>
               )}
 
+              {/* Botón secundario rápido de PayPal */}
+              <button
+                onClick={handleQuickPaypal}
+                className="mt-3 w-full flex items-center justify-center gap-2 bg-[#0a061e] border border-[rgba(147,51,234,0.35)] hover:border-[#38bdf8]/60 text-white font-bold text-sm py-3 rounded-xl transition-all duration-200"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#38bdf8]" fill="currentColor" aria-hidden="true">
+                  <path d="M7.5 21l1.2-7.5H12c2.5 0 4.2-1.3 4.6-3.6.4-2.4-1-3.9-3.6-3.9H8.2L6 21h1.5zm2-13.5h3.2c1.6 0 2.5.8 2.2 2.4-.3 1.7-1.5 2.6-3.3 2.6h-2.9l.8-5z" />
+                </svg>
+                Pagar con PayPal
+              </button>
+
+              {/* Botón principal Buy now */}
               <button
                 onClick={handleCheckout}
                 disabled={isPending}
-                className="mt-4 w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-base py-3.5 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.02] active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                className="mt-2 w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-base py-3.5 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.55)] transition-all transform hover:scale-[1.02] active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
               >
                 {isPending ? (
                   <span className="flex items-center gap-2">
@@ -471,12 +508,18 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     Procesando...
                   </span>
                 ) : (
-                  <>Comprar Ahora <ChevronRight className="w-5 h-5" /></>
+                  <>Buy now <ChevronRight className="w-5 h-5" /></>
                 )}
               </button>
-              <p className="text-[10px] text-gray-600 text-center mt-3 leading-relaxed">
-                Al hacer clic en Comprar, aceptas que la venta puede ser gestionada mediante socios externos (ej. Lootbar API).
-              </p>
+
+              {/* Seguridad al pie */}
+              <div className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-gray-500">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Protected purchase</span>
+                <span title="Pago protegido mediante pasarelas verificadas y socios oficiales" className="cursor-help">
+                  <HelpCircle className="w-3 h-3 text-gray-600 hover:text-[#a855f7] transition-colors" />
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -503,8 +546,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 key={prod.id}
                 onClick={() => setSelectedProduct(prod.id)}
                 className={`relative flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-200 overflow-hidden ${isSelected
-                    ? "border-[#d946ef] bg-[#d946ef]/10 shadow-[0_0_25px_rgba(217,70,239,0.3)] scale-[1.02]"
-                    : "border-[rgba(147,51,234,0.25)] bg-[#0a061e] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
+                  ? "border-[#d946ef] bg-[#d946ef]/10 shadow-[0_0_25px_rgba(217,70,239,0.3)] scale-[1.02]"
+                  : "border-[rgba(147,51,234,0.25)] bg-[#0a061e] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
                   }`}
               >
                 {prod.bonus && (
