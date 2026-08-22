@@ -301,24 +301,28 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             "radial-gradient(circle at center, rgba(25, 14, 50, 0.35) 0%, #060314 85%)",
         }}
       >
-        {/* Personaje en el espacio central libre (entre texto y tarjeta), sin quedar tapado */}
-        <Image
-          src="/images/personaje.png"
-          alt=""
-          width={900}
-          height={1400}
-          priority
-          className="absolute bottom-0 right-[380px] lg:right-[430px] z-0 pointer-events-none max-h-[85%] lg:max-h-[420px] w-auto object-contain opacity-90 [mask-image:linear-gradient(to_right,black_75%,transparent_100%)]"
-        />
-        {/* Capa oscura general sobre el personaje (efecto tenue/fundido) */}
-        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
+        {/* Capa oscura general sobre el fondo */}
+        <div className="absolute inset-0 bg-black/30 pointer-events-none z-0" />
         {/* Fundido lateral izquierdo para máxima legibilidad del texto */}
-        <div className="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-[#060314] via-[#060314]/85 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-y-0 left-0 w-2/5 bg-gradient-to-r from-[#060314] via-[#060314]/80 to-transparent pointer-events-none z-0" />
         {/* Fundido inferior suave hacia la sección de diamantes */}
-        <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
 
         {/* Contenido centrado */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
+
+          {/* Personaje centrado exactamente en el hueco entre el texto y la tarjeta */}
+          <div className="hidden lg:block absolute top-1/2 left-[54%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
+            <Image
+              src="/images/personaje.png"
+              alt=""
+              width={900}
+              height={1400}
+              priority
+              className="max-h-[440px] w-auto object-contain opacity-90 drop-shadow-[0_0_25px_rgba(147,51,234,0.3)]"
+            />
+          </div>
+
           {/* Columna izquierda: texto + rating + pills + badges */}
           <div className="lg:col-span-7 flex flex-col gap-4 z-10">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -335,7 +339,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 />
               </div>
               <div className="text-center sm:text-left">
-                <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3">
+                <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3 text-white">
                   Top Up{" "}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]">
                     Mobile Legends
