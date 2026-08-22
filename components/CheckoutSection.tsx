@@ -292,9 +292,24 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   return (
     <>
       {/* ================= HERO 2 COLUMNAS ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+        {/* Resplandor difuminado detrás del título */}
+        <div className="absolute -top-16 left-1/4 w-[420px] h-[420px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
+        {/* Resplandor difuminado detrás de la tarjeta de checkout */}
+        <div className="absolute top-24 right-0 w-[380px] h-[380px] bg-fuchsia-600/10 blur-[120px] rounded-full pointer-events-none" />
+        {/* Personaje gaming con máscara de degradado en el fondo del hero */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-35 hidden lg:block"
+          style={{
+            maskImage: "linear-gradient(to bottom, black 50%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, black 50%, transparent 100%)",
+          }}
+        >
+          <Image src="/images/hero_banner.png" alt="" fill className="object-cover object-right" />
+        </div>
+
         {/* Columna izquierda: identidad del juego */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 relative z-10">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
               <Image
@@ -340,31 +355,26 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </div>
 
-          {/* Barra de 4 badges de confianza */}
-          <div
-            className="mt-8 grid grid-cols-2 md:grid-cols-4 rounded-2xl overflow-hidden border"
-            style={{ borderColor: CARD_BORDER, backgroundColor: CARD_BG }}
-          >
-            {[
-              { icon: ShieldCheck, title: "100% Safe", tint: "text-emerald-400" },
-              { icon: Zap, title: "Instant delivery 1-5 min", tint: "text-[#38bdf8]" },
-              { icon: BadgeCheck, title: "Official Partner", tint: "text-[#d946ef]" },
-              { icon: Headset, title: "24/7 Support", tint: "text-[#a855f7]" },
-            ].map((badge, index) => (
-              <div
-                key={badge.title}
-                className={`flex flex-col items-center gap-2 px-3 py-4 text-center ${index > 0 ? "border-l border-[rgba(147,51,234,0.25)]" : ""
-                  }`}
-              >
-                <badge.icon className={`w-6 h-6 ${badge.tint}`} style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }} />
-                <span className="text-[11px] font-bold uppercase tracking-wide text-gray-200">{badge.title}</span>
-              </div>
-            ))}
+          {/* Barra de confianza: contenedor único alargado translúcido con separadores sutiles */}
+          <div className="mt-8 rounded-xl p-3 bg-[#110c2c]/80 border border-purple-500/20 backdrop-blur-md">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-purple-500/10">
+              {[
+                { icon: ShieldCheck, title: "100% Safe", tint: "text-emerald-400" },
+                { icon: Zap, title: "Instant delivery 1-5 min", tint: "text-[#38bdf8]" },
+                { icon: BadgeCheck, title: "Official Partner", tint: "text-[#d946ef]" },
+                { icon: Headset, title: "24/7 Support", tint: "text-[#a855f7]" },
+              ].map((badge) => (
+                <div key={badge.title} className="flex flex-col items-center gap-2 px-3 py-2 text-center">
+                  <badge.icon className={`w-6 h-6 ${badge.tint}`} style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }} />
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-gray-200">{badge.title}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
-        <div className="lg:col-span-2 lg:sticky lg:top-24">
+        <div className="lg:col-span-2 lg:sticky lg:top-24 relative z-10">
           <div
             className="rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.18)]"
             style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
