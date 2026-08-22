@@ -698,7 +698,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </span>
               ))}
               {/* Badges de texto para medios sin logo propio */}
-              <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors italic font-black tracking-wide">
+              <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors italic font-black tracking-wide">
                 VISA
               </span>
               <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors tracking-wide">
