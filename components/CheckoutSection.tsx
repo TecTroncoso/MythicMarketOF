@@ -301,11 +301,13 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             "radial-gradient(circle at center, rgba(25, 14, 50, 0.35) 0%, #060314 85%)",
         }}
       >
-        {/* Capa oscura general sobre el fondo */}
-        <div className="absolute inset-0 bg-black/30 pointer-events-none z-0" />
-        {/* Fundido lateral izquierdo para máxima legibilidad del texto */}
-        <div className="absolute inset-y-0 left-0 w-2/5 bg-gradient-to-r from-[#060314] via-[#060314]/80 to-transparent pointer-events-none z-0" />
-        {/* Fundido inferior suave hacia la sección de diamantes */}
+        {/* Fondo oscuro limpio sin luces naranjas */}
+        <div className="absolute inset-0 bg-[#060314] -z-10" />
+        {/* Resplandor morado muy tenue centrado */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
+        {/* Fundido lateral izquierdo para que el texto sea 100% legible */}
+        <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#060314] via-[#060314]/90 to-transparent pointer-events-none z-0" />
+        {/* Fundido inferior hacia el catálogo */}
         <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
 
         {/* Contenido centrado */}
