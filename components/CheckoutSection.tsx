@@ -557,8 +557,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <button
                 key={prod.id}
                 onClick={() => setSelectedProduct(prod.id)}
-                className={`relative flex flex-col items-center p-5 rounded-2xl border transition-all duration-200 text-center ${isSelected
-                  ? "border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.35)]"
+                className={`relative flex flex-col justify-between items-center p-5 h-full rounded-2xl border transition-all duration-200 text-center ${isSelected
+                  ? "border-[#d946ef] shadow-[0_0_20px_rgba(217,70,239,0.35)]"
                   : "border-purple-900/40 bg-[#110c2c] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
                   }`}
               >
@@ -579,9 +579,9 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   <span className="text-xs font-bold text-amber-400 mt-0.5">+ {prod.bonus}</span>
                 )}
 
-                {/* Centro: imagen con altura fija, fondo oscuro y resplandor azul radial detrás */}
+                {/* Centro: imagen con altura fija centrada y resplandor azul de fondo */}
                 <div
-                  className="my-4 w-full h-24 rounded-xl bg-[#0a061e] flex items-center justify-center"
+                  className="my-4 w-full h-28 rounded-xl bg-[#0a061e] flex items-center justify-center"
                   style={{
                     backgroundImage:
                       "radial-gradient(circle at center, rgba(56, 189, 248, 0.22) 0%, transparent 70%)",
@@ -590,18 +590,18 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   <Image
                     src={prod.image}
                     alt={`Recarga de ${prod.name}`}
-                    width={72}
-                    height={72}
-                    className="w-16 h-16 object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.5)]"
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]"
                   />
                 </div>
 
-                {/* Pie: precio a la izquierda + badge cashback a la derecha */}
-                <div className="w-full flex items-center justify-between mt-auto pt-3 border-t border-purple-900/40">
-                  <span className="text-base font-bold text-white whitespace-nowrap">
+                {/* Pie de tarjeta: precio grande a la izquierda + cashback a la derecha */}
+                <div className="w-full flex justify-between items-center pt-3 mt-auto border-t border-purple-900/40">
+                  <span className="text-lg font-bold text-white whitespace-nowrap">
                     {effectiveCfg.symbol}{shownPrice.toFixed(2)}
                   </span>
-                  <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 rounded-md px-2 py-1 whitespace-nowrap">
+                  <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 rounded-md px-2.5 py-1 whitespace-nowrap">
                     10% Cashback
                   </span>
                 </div>
