@@ -546,13 +546,13 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 key={prod.id}
                 onClick={() => setSelectedProduct(prod.id)}
                 className={`relative flex flex-col items-center p-5 rounded-2xl border transition-all duration-200 text-center ${isSelected
-                    ? "border-[#d946ef] shadow-[0_0_20px_rgba(217,70,239,0.35)]"
-                    : "border-purple-900/40 bg-[#110c2c] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
+                  ? "border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.35)]"
+                  : "border-purple-900/40 bg-[#110c2c] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
                   }`}
               >
-                {/* Checkmark circular en la esquina superior derecha al seleccionar */}
+                {/* Checkmark circular morado en la esquina superior derecha al seleccionar */}
                 {isSelected && (
-                  <span className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#d946ef] flex items-center justify-center shadow-[0_0_10px_rgba(217,70,239,0.6)]">
+                  <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shadow-[0_0_10px_rgba(217,70,239,0.6)]">
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   </span>
                 )}
@@ -567,23 +567,29 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   <span className="text-xs font-bold text-amber-400 mt-0.5">+ {prod.bonus}</span>
                 )}
 
-                {/* Centro: imagen del paquete con resplandor azul de fondo */}
-                <div className="my-4 w-20 h-20 rounded-full bg-[#38bdf8]/10 flex items-center justify-center">
+                {/* Centro: imagen con altura fija, fondo oscuro y resplandor azul radial detrás */}
+                <div
+                  className="my-4 w-full h-24 rounded-xl bg-[#0a061e] flex items-center justify-center"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(circle at center, rgba(56, 189, 248, 0.22) 0%, transparent 70%)",
+                  }}
+                >
                   <Image
                     src={prod.image}
                     alt={`Recarga de ${prod.name}`}
                     width={72}
                     height={72}
-                    className="w-16 h-16 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]"
+                    className="w-16 h-16 object-contain drop-shadow-[0_0_14px_rgba(56,189,248,0.5)]"
                   />
                 </div>
 
                 {/* Pie: precio a la izquierda + badge cashback a la derecha */}
                 <div className="w-full flex items-center justify-between mt-auto pt-3 border-t border-purple-900/40">
-                  <span className="text-sm font-bold text-white whitespace-nowrap">
+                  <span className="text-base font-bold text-white whitespace-nowrap">
                     {effectiveCfg.symbol}{shownPrice.toFixed(2)}
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2 py-0.5 whitespace-nowrap">
+                  <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 rounded-md px-2 py-1 whitespace-nowrap">
                     10% Cashback
                   </span>
                 </div>
