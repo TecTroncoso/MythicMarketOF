@@ -621,14 +621,14 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       {/* ================= BANNER DE BENEFICIOS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
-        <div className="bg-[#100b2b] border border-purple-500/30 rounded-2xl p-6 relative flex flex-col lg:flex-row items-center justify-between gap-6 shadow-[0_0_25px_rgba(147,51,234,0.15)]">
-          {/* Lado izquierdo: título */}
-          <h3 className="text-xl lg:text-2xl font-black text-white max-w-[260px] uppercase leading-tight">
+        <div className="bg-[#0f0927] border border-purple-500/40 rounded-2xl p-6 lg:p-8 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative overflow-hidden">
+          {/* Título a la izquierda */}
+          <h3 className="text-xl lg:text-2xl font-black text-white max-w-[240px] uppercase leading-tight tracking-wide">
             ¿Por qué recargar con <span className="text-purple-400">Mythic Market?</span>
           </h3>
 
-          {/* Lado derecho: 4 columnas de beneficios con separadores sutiles */}
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-purple-500/20 flex-1 w-full text-center md:text-left">
+          {/* 4 columnas a la derecha con separadores verticales */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-purple-500/25 flex-1 w-full">
             {[
               {
                 icon: BadgeCheck,
@@ -651,9 +651,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 desc: "Atención personalizada",
               },
             ].map((feature) => (
-              <div key={feature.title} className="flex flex-col items-center md:items-start py-3 md:py-0 md:px-4">
-                <feature.icon className="text-purple-400 mb-2 h-6 w-6 inline-block" />
-                <div className="text-xs font-bold text-purple-300 uppercase tracking-wide">
+              <div
+                key={feature.title}
+                className="px-4 py-2 flex flex-col items-center lg:items-start text-center lg:text-left"
+              >
+                <feature.icon className="text-purple-400 mb-2 h-6 w-6 drop-shadow-[0_0_8px_rgba(217,70,239,0.5)]" />
+                <div className="text-xs font-bold text-purple-200 uppercase tracking-wider">
                   {feature.title}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">{feature.desc}</p>
@@ -665,13 +668,13 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
       {/* ================= FOOTER DE MÉTODOS DE PAGO SEGUROS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 pb-4">
-        <div className="mt-4 bg-[#0d0824] border border-purple-500/25 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          {/* Izquierda: pasarelas de pago (título arriba, logos abajo) */}
-          <div className="flex flex-col gap-2.5">
-            <span className="text-xs font-extrabold text-purple-400 tracking-wider uppercase">
+        <div className="mt-4 bg-[#0c0721] border border-purple-500/30 rounded-2xl p-5 flex flex-col lg:flex-row items-stretch justify-between gap-6 shadow-[0_0_15px_rgba(147,51,234,0.1)]">
+          {/* Lado izquierdo: pasarelas de pago (65-70%) */}
+          <div className="flex flex-col gap-3 flex-1">
+            <span className="text-xs font-black text-purple-400 tracking-widest uppercase">
               Métodos de pago seguros
             </span>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               {[
                 { label: "Mercado Pago", logo: "/logos/mercadopago.svg" },
                 { label: "PayPal", logo: "/logos/paypal.svg" },
@@ -680,7 +683,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               ].map((method) => (
                 <span
                   key={method.label}
-                  className="flex items-center gap-1.5 bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200"
+                  className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 flex items-center gap-1.5 shadow-sm hover:border-purple-400/40 transition-colors"
                   title={method.label}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -689,42 +692,48 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 </span>
               ))}
               {/* Badges de texto para medios sin logo propio */}
-              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 italic font-black tracking-wide">
+              <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors italic font-black tracking-wide">
                 VISA
               </span>
-              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 tracking-wide">
+              <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors tracking-wide">
                 Mastercard
               </span>
-              <span className="bg-[#150f38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 tracking-wide">
+              <span className="bg-[#150e38] border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 shadow-sm hover:border-purple-400/40 transition-colors tracking-wide">
                 ₿ Crypto
               </span>
             </div>
           </div>
 
           {/* Línea divisoria vertical */}
-          <div className="hidden lg:block w-px h-12 bg-purple-500/20 mx-2" />
+          <div className="hidden lg:block w-px bg-purple-500/25 my-1 mx-4" />
 
-          {/* Derecha: compra protegida (título arriba, sellos abajo) */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-extrabold text-purple-400 tracking-wider uppercase">
+          {/* Lado derecho: compra protegida (30-35%) */}
+          <div className="flex flex-col gap-3 justify-center shrink-0">
+            <span className="text-xs font-black text-purple-400 tracking-widest uppercase">
               Compra protegida
             </span>
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
-                <Lock className="text-amber-400 text-lg w-5 h-5 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-300 leading-tight">
+            <div className="flex items-center gap-6">
+              {/* Sello 1: SSL */}
+              <div className="flex items-center gap-2.5">
+                <div className="bg-[#18113c] border border-amber-500/40 p-2 rounded-lg text-amber-400 text-sm shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <div className="text-[11px] leading-tight font-bold text-slate-200">
                   Conexión SSL
                   <br />
-                  <span className="text-slate-400 font-normal">Segura</span>
-                </span>
+                  <span className="text-slate-400 font-normal text-[10px]">Segura</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="text-amber-400 text-lg w-5 h-5 shrink-0" />
-                <span className="text-[11px] font-semibold text-slate-300 leading-tight">
+              {/* Sello 2: Encriptación */}
+              <div className="flex items-center gap-2.5">
+                <div className="bg-[#18113c] border border-amber-500/40 p-2 rounded-lg text-amber-400 text-sm shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div className="text-[11px] leading-tight font-bold text-slate-200">
                   Encriptación
                   <br />
-                  <span className="text-slate-400 font-normal">de Datos</span>
-                </span>
+                  <span className="text-slate-400 font-normal text-[10px]">de Datos</span>
+                </div>
               </div>
             </div>
           </div>
