@@ -1,6 +1,8 @@
-import { HelpCircle } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronRight, Home, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ReviewsSectionLoader } from '@/components/ReviewsSectionLoader';
+import { ShareButton } from '@/components/ShareButton';
 import dynamic from 'next/dynamic';
 
 const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
@@ -11,6 +13,24 @@ export default function MobileLegendsStore() {
   return (
     <main className="min-h-screen bg-[#070417] text-white font-sans selection:bg-[#d946ef] selection:text-white pb-10">
       <Navbar />
+
+      {/* Breadcrumbs + compartir (directamente sobre el hero) */}
+      <div className="px-4 lg:px-8 py-3 flex items-center justify-between text-xs text-slate-400 max-w-7xl mx-auto w-full">
+        <nav className="flex items-center gap-1.5 min-w-0" aria-label="Breadcrumb">
+          <Link href="/" className="hover:text-white transition-colors shrink-0" aria-label="Inicio">
+            <Home className="w-3.5 h-3.5" />
+          </Link>
+          <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
+          <span className="hover:text-white cursor-pointer transition-colors whitespace-nowrap">Tienda</span>
+          <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
+          <span className="hover:text-white cursor-pointer transition-colors whitespace-nowrap truncate">
+            Mobile Legends: Bang Bang
+          </span>
+          <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
+          <span className="text-purple-300 whitespace-nowrap">Diamantes</span>
+        </nav>
+        <ShareButton />
+      </div>
 
       {/* Checkout premium: hero 2 columnas + tarjeta flotante + grid de diamantes */}
       <CheckoutSection />
