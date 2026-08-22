@@ -314,8 +314,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         {/* Contenido centrado */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
 
-          {/* Personaje con máscara de desvanecimiento para eliminar bordes cuadrados */}
-          <div className="hidden lg:block absolute -top-12 left-[58%] -translate-x-1/2 pointer-events-none z-0 w-[700px] xl:w-[850px] h-[540px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]">
+          {/* Personaje en el hueco central: su borde derecho termina ANTES de la tarjeta de checkout */}
+          <div className="hidden lg:block absolute -top-12 right-[400px] xl:right-[470px] pointer-events-none z-0 w-[620px] xl:w-[740px] h-[540px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_50%,transparent_90%)]">
             <Image
               src="/images/personaje.png"
               alt="Personaje Mobile Legends"
