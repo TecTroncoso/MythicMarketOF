@@ -15,6 +15,7 @@ import {
   Gem,
   UserRound,
   HelpCircle,
+  Crown,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
@@ -355,21 +356,27 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </div>
 
-          {/* Barra de confianza: contenedor único alargado translúcido con separadores sutiles */}
-          <div className="mt-8 rounded-xl p-3 bg-[#110c2c]/80 border border-purple-500/20 backdrop-blur-md">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-purple-500/10">
-              {[
-                { icon: ShieldCheck, title: "100% Safe", tint: "text-emerald-400" },
-                { icon: Zap, title: "Instant delivery 1-5 min", tint: "text-[#38bdf8]" },
-                { icon: BadgeCheck, title: "Official Partner", tint: "text-[#d946ef]" },
-                { icon: Headset, title: "24/7 Support", tint: "text-[#a855f7]" },
-              ].map((badge) => (
-                <div key={badge.title} className="flex flex-col items-center gap-2 px-3 py-2 text-center">
-                  <badge.icon className={`w-6 h-6 ${badge.tint}`} style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }} />
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-gray-200">{badge.title}</span>
+          {/* Barra de confianza: una sola barra alargada con icono a la izquierda y textos a la derecha */}
+          <div className="mt-8 bg-[#110c2c]/70 border border-purple-500/20 backdrop-blur-md rounded-2xl p-3.5 flex items-center justify-between divide-x divide-purple-500/20">
+            {[
+              { icon: ShieldCheck, tint: "text-emerald-400", title: "100% Safe", sub: "Secure top-up" },
+              { icon: Zap, tint: "text-[#38bdf8]", title: "Instant delivery", sub: "1-5 min" },
+              { icon: Crown, tint: "text-amber-400", title: "Official Partner", sub: "Moonton" },
+              { icon: Headset, tint: "text-[#a855f7]", title: "24/7 Support", sub: "We're here!" },
+            ].map((badge) => (
+              <div key={badge.title} className="flex items-center gap-3 px-3 first:pl-1 last:pr-1">
+                <badge.icon
+                  className={`w-6 h-6 shrink-0 ${badge.tint}`}
+                  style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }}
+                />
+                <div className="leading-tight">
+                  <div className="text-xs font-bold uppercase tracking-wider text-white whitespace-nowrap">
+                    {badge.title}
+                  </div>
+                  <div className="text-[11px] text-slate-400 whitespace-nowrap">{badge.sub}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
