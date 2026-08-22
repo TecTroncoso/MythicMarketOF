@@ -2,12 +2,30 @@
 
 import React, { useState, useTransition, useEffect } from 'react';
 import Image from 'next/image';
-import { Info, ShoppingCart, ShieldCheck, ChevronRight, Loader2, Check } from 'lucide-react';
+import {
+  Info,
+  ShoppingCart,
+  ShieldCheck,
+  ChevronRight,
+  Loader2,
+  Check,
+  Zap,
+  Star,
+  Globe,
+  BadgeCheck,
+  Headset,
+  Gem,
+  UserRound,
+} from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
 import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { PaymentModal } from './PaymentModal';
+
+// Paleta premium del tema gaming oscuro.
+const CARD_BG = "#110c2c";
+const CARD_BORDER = "rgba(147, 51, 234, 0.25)";
 
 export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   // Effective login state: the explicit prop when provided, otherwise resolved
@@ -59,7 +77,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     // Load the server-derived region/pricing context once. Server actions do
     // not need an AbortController; a failure just leaves the payment step
     // in its fallback state.
-    getCheckoutContext().then(setContext).catch(() => {});
+    getCheckoutContext().then(setContext).catch(() => { });
   }, []);
 
   // Changing the effective region resets the payment selection.
@@ -163,8 +181,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     }
 
     // PayPal (EU) is a manual transfer via PayPal.Me: the payment page opens with
-// the REAL price of the purchased object pre-filled (never a hardcoded amount)
-// and is the feedback itself, so no success alert is shown on that path.
+    // the REAL price of the purchased object pre-filled (never a hardcoded amount)
+    // and is the feedback itself, so no success alert is shown on that path.
     const isPaypalEu = selectedMethod === "paypal" && effectiveRegion === "eu";
 
     startTransition(async () => {
@@ -262,226 +280,352 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     context ? (context.products.find((x) => x.id === productId)?.price ?? fallback) : fallback;
   const summaryPrice = selectedProductData ? shownPriceFor(selectedProductData.id, selectedProductData.price) : 0;
 
+  const inputClassName =
+    "w-full bg-[#0a061e] border border-[rgba(147,51,234,0.35)] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] transition-all";
+
   return (
     <>
-      <div className="lg:col-span-2 space-y-8">
-        {/* Step 1: User ID */}
-        <section className="bg-[#121824] rounded-2xl p-6 md:p-8 border border-[#1c2534] shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#ffaa00]"></div>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-10 h-10 rounded-full bg-[#1c2534] flex items-center justify-center font-bold text-[#ffaa00] text-lg border border-[#2a3441]">1</div>
-            <h3 className="text-2xl font-bold">Información de la Cuenta</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-400 block">User ID</label>
-              <input 
-                type="text" 
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="Ej. 12345678" 
-                className="w-full bg-[#0a0f1a] border border-[#2a3441] rounded-xl px-4 py-3 md:py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00] transition-all"
+      {/* ================= HERO 2 COLUMNAS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+        {/* Columna izquierda: identidad del juego */}
+        <div className="lg:col-span-3">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
+              <Image
+                src="/mlbb-logo.png"
+                alt="Mobile Legends: Bang Bang"
+                width={160}
+                height={160}
+                sizes="(max-width: 768px) 112px, 144px"
+                className="w-full h-auto drop-shadow-[0_0_25px_rgba(168,85,247,0.45)]"
+                priority
+                fetchPriority="high"
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-400 block">Zone ID</label>
-              <input 
-                type="text" 
-                value={zoneId}
-                onChange={(e) => setZoneId(e.target.value)}
-                placeholder="Ej. (1234)" 
-                className="w-full bg-[#0a0f1a] border border-[#2a3441] rounded-xl px-4 py-3 md:py-4 text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00] focus:ring-1 focus:ring-[#ffaa00] transition-all"
-              />
-            </div>
-          </div>
-          <div className="mt-4 flex items-start gap-2 bg-[#1c2534]/50 p-3 rounded-lg border border-[#2a3441]">
-            <Info className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-            <p className="text-xs text-gray-400 leading-relaxed">
-              Para encontrar tu User ID, haz clic en tu avatar en la esquina superior izquierda de la pantalla principal del juego. El ID y Zone ID estarán allí (ej. <span className="text-white font-mono bg-[#0a0f1a] px-1 rounded">12345678(1234)</span>).
-            </p>
-          </div>
-          <div aria-live="polite" className="mt-4">
-            {nicknameStatus.kind === "loading" && (
-              <div className="flex items-center gap-2 text-gray-400 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" aria-label="Verificando jugador" />
-                <span>Verificando jugador...</span>
-              </div>
-            )}
-            {nicknameStatus.kind === "success" && (
-              <div className="flex items-center gap-2 text-green-400 text-sm">
-                <Check className="w-4 h-4" />
-                <span className="font-medium">{nicknameStatus.nickname}</span>
-                <span className="text-gray-500">({nicknameStatus.country})</span>
-              </div>
-            )}
-            {nicknameStatus.kind === "warning" && (
-              <p role="status" className="text-gray-500 text-xs">
-                No pudimos verificar el nickname, pero podés continuar
-              </p>
-            )}
-          </div>
-        </section>
-
-        {/* Step 2: Select Top-up */}
-        <section className="bg-[#121824] rounded-2xl p-6 md:p-8 border border-[#1c2534] shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-1 h-full bg-[#ffaa00]"></div>
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-10 h-10 rounded-full bg-[#1c2534] flex items-center justify-center font-bold text-[#ffaa00] text-lg border border-[#2a3441]">2</div>
-            <h3 className="text-2xl font-bold">Selecciona una Recarga</h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-            {PRODUCTS.map((prod) => {
-              const isSelected = selectedProduct === prod.id;
-              const shownPrice = shownPriceFor(prod.id, prod.price);
-              return (
-                <button
-                  key={prod.id}
-                  onClick={() => setSelectedProduct(prod.id)}
-                  className={`relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 overflow-hidden ${
-                    isSelected 
-                      ? 'border-[#ffaa00] bg-[#ffaa00]/10 shadow-[0_0_20px_rgba(255,170,0,0.15)] scale-[1.02]' 
-                      : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500 hover:bg-[#1c2534]'
-                  }`}
-                >
-                  {prod.bonus && (
-                    <div className="absolute top-0 right-0 bg-[#c51f00] text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
-                      {prod.bonus}
-                    </div>
-                  )}
-                  <Image src={prod.image} alt={`Recarga de ${prod.name}`} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16 mb-3 object-contain drop-shadow-lg" />
-                  <span className="font-bold text-sm md:text-base text-center line-clamp-2 leading-tight mb-1">{prod.name}</span>
-                  <span className={`text-xs font-medium ${isSelected ? 'text-[#ffaa00]' : 'text-gray-400'}`}>
-                    {effectiveCfg.symbol}{shownPrice.toFixed(2)}
-                  </span>
-                  {isSelected && (
-                    <div className="absolute inset-0 pointer-events-none ring-inset ring-2 ring-[#ffaa00] rounded-xl"></div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      </div>
-
-      {/* Right Column: Checkout Sidebar */}
-      <div className="lg:col-span-1">
-        <div className="sticky top-24 space-y-6">
-          {/* Summary Card */}
-          <div className="bg-[#121824] p-6 lg:p-8 rounded-2xl border border-[#1c2534] shadow-2xl">
-            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-[#ffaa00]" /> Resumen
-            </h3>
-            
-            {selectedProductData ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 bg-[#0a0f1a] p-4 rounded-xl border border-[#2a3441]">
-                  <Image src={selectedProductData.image} alt={`Resumen de ${selectedProductData.name}`} width={48} height={48} className="w-12 h-12 rounded bg-[#1c2534] object-contain" />
-                  <div>
-                    <div className="font-bold text-lg">{selectedProductData.name}</div>
-                    <div className="text-sm text-gray-400">Mobile Legends</div>
-                  </div>
+            <div className="text-center sm:text-left">
+              <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3">
+                Top Up{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]">
+                  Mobile Legends
+                </span>{" "}
+                Diamonds Global
+              </h1>
+              {/* Calificación */}
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
+                <div className="flex items-center gap-0.5">
+                  {[0, 1, 2, 3, 4].map((star) => (
+                    <Star key={star} className="w-4 h-4 text-amber-400" fill="currentColor" />
+                  ))}
                 </div>
-                
-                <div className="space-y-2 py-4 border-y border-[#2a3441]">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Precio</span>
-                    <span className="font-medium">{effectiveCfg.symbol}{summaryPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Tarifa de procesamiento</span>
-                    <span className="text-green-400">Gratis</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-end pt-2 mb-4">
-                  <span className="text-gray-300 font-medium">Total</span>
-                  <span className="text-3xl font-black text-[#ffaa00]">{effectiveCfg.symbol}{summaryPrice.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Método</span>
-                  <span className="font-medium">{selectedMethod ? (effectiveCfg.methods.find((m) => m.id === selectedMethod)?.label ?? selectedMethod) : "—"}</span>
-                </div>
-                {paymentDetail && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Detalle</span>
-                    <span className="font-medium">{paymentDetail}</span>
-                  </div>
-                )}
-
-                {checkoutError && (
-                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-500 text-sm text-center font-medium">
-                    {checkoutError}
-                  </div>
-                )}
-
-                <button 
-                  onClick={handleCheckout}
-                  disabled={isPending}
-                  className="w-full bg-gradient-to-r from-[#ffaa00] to-[#ff5d00] hover:from-[#ffbf33] hover:to-[#ff7b33] text-black font-black text-lg py-4 rounded-xl shadow-[0_0_20px_rgba(255,170,0,0.4)] transition-all transform hover:scale-[1.02] active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
-                >
-                  {isPending ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Procesando...
-                    </span>
-                  ) : (
-                    <>Comprar Ahora <ChevronRight className="w-5 h-5" /></>
-                  )}
-                </button>
-                <p className="text-[11px] text-gray-500 text-center mt-4">
-                  Al hacer clic en Comprar, aceptas que la venta puede ser gestionada mediante socios externos (ej. Lootbar API).
-                </p>
+                <span className="text-sm font-bold text-white">4.68 / 5</span>
               </div>
-            ) : (
-              <div className="h-48 flex items-center justify-center border-2 border-dashed border-[#2a3441] rounded-xl flex-col gap-3">
-                <ShoppingCart className="w-8 h-8 text-gray-600" />
-                <span className="text-gray-500 font-medium text-sm text-center">Selecciona un producto <br/>para ver el resumen</span>
-              </div>
-            )}
-          </div>
-
-          {/* Accepted Payment Methods (region-aware) */}
-          <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534]">
-            <h4 className="font-bold text-sm mb-1">Métodos aceptados</h4>
-            <p className="text-[11px] text-gray-500 mb-3">
-              {effectiveRegion === "eu" ? "Región Europa" : "Región Latinoamérica"}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {effectiveCfg.methods.map((m) => (
-                <span
-                  key={m.id}
-                  className="flex flex-col items-center justify-center gap-1 w-16 bg-white rounded-lg border border-gray-700 px-1 py-2"
-                >
-                  {m.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.logo} alt={m.label} className="h-5 w-auto object-contain" />
-                  ) : (
-                    <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
-                  )}
-                  <span className="text-[9px] font-semibold text-gray-700 text-center leading-tight">
-                    {m.label}
-                  </span>
+              {/* Pills de características */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#d9b8fe] text-xs font-bold">
+                  <Globe className="w-3 h-3" /> Global
                 </span>
-              ))}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 border border-[#38bdf8]/40 text-[#7dd3fc] text-xs font-bold">
+                  <Zap className="w-3 h-3" /> Instant delivery
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d946ef]/15 border border-[#d946ef]/40 text-[#f0abfc] text-xs font-bold">
+                  <BadgeCheck className="w-3 h-3" /> Official Top-up
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Trust Badges */}
-          <div className="bg-[#121824] p-5 rounded-xl border border-[#1c2534] flex items-center gap-4">
-            <ShieldCheck className="w-10 h-10 text-green-500 shrink-0" />
-            <div>
-              <h4 className="font-bold text-sm">Pagos 100% Seguros</h4>
-              <p className="text-xs text-gray-400 mt-1">Tus datos están encriptados y protegidos mediante pasarelas verificadas.</p>
+          {/* Barra de 4 badges de confianza */}
+          <div
+            className="mt-8 grid grid-cols-2 md:grid-cols-4 rounded-2xl overflow-hidden border"
+            style={{ borderColor: CARD_BORDER, backgroundColor: CARD_BG }}
+          >
+            {[
+              { icon: ShieldCheck, title: "100% Safe", tint: "text-emerald-400" },
+              { icon: Zap, title: "Instant delivery 1-5 min", tint: "text-[#38bdf8]" },
+              { icon: BadgeCheck, title: "Official Partner", tint: "text-[#d946ef]" },
+              { icon: Headset, title: "24/7 Support", tint: "text-[#a855f7]" },
+            ].map((badge, index) => (
+              <div
+                key={badge.title}
+                className={`flex flex-col items-center gap-2 px-3 py-4 text-center ${index > 0 ? "border-l border-[rgba(147,51,234,0.25)]" : ""
+                  }`}
+              >
+                <badge.icon className={`w-6 h-6 ${badge.tint}`} style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }} />
+                <span className="text-[11px] font-bold uppercase tracking-wide text-gray-200">{badge.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
+        <div className="lg:col-span-2 lg:sticky lg:top-24">
+          <div
+            className="rounded-2xl p-6 relative overflow-hidden shadow-[0_0_40px_rgba(168,85,247,0.18)]"
+            style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+          >
+            {/* Línea de brillo superior */}
+            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]" />
+
+            <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white mb-5">
+              <UserRound className="w-4 h-4 text-[#d946ef]" />
+              Select Your Account
+            </h3>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="mlbb-user-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
+                  User ID
+                </label>
+                <input
+                  id="mlbb-user-id"
+                  type="text"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Ej. 12345678"
+                  className={inputClassName}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="mlbb-zone-id" className="text-xs font-bold uppercase tracking-wide text-gray-400 block">
+                  Zone ID
+                </label>
+                <input
+                  id="mlbb-zone-id"
+                  type="text"
+                  value={zoneId}
+                  onChange={(e) => setZoneId(e.target.value)}
+                  placeholder="Ej. (1234)"
+                  className={inputClassName}
+                />
+              </div>
+            </div>
+
+            <div aria-live="polite" className="mt-3 min-h-[20px]">
+              {nicknameStatus.kind === "loading" && (
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" aria-label="Verificando jugador" />
+                  <span>Verificando jugador...</span>
+                </div>
+              )}
+              {nicknameStatus.kind === "success" && (
+                <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                  <Check className="w-4 h-4" />
+                  <span className="font-medium">{nicknameStatus.nickname}</span>
+                  <span className="text-gray-500">({nicknameStatus.country})</span>
+                </div>
+              )}
+              {nicknameStatus.kind === "warning" && (
+                <p role="status" className="text-gray-500 text-xs">
+                  No pudimos verificar el nickname, pero podés continuar
+                </p>
+              )}
+            </div>
+
+            {/* Resumen compacto */}
+            <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
+              {selectedProductData ? (
+                <div className="flex items-center gap-3 bg-[#0a061e] p-3 rounded-xl border border-[rgba(147,51,234,0.25)]">
+                  <Image
+                    src={selectedProductData.image}
+                    alt={`Resumen de ${selectedProductData.name}`}
+                    width={44}
+                    height={44}
+                    className="w-11 h-11 rounded-lg bg-[#1a1240] object-contain shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-sm truncate">{selectedProductData.name}</div>
+                    <div className="text-xs text-gray-500">Mobile Legends</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[10px] uppercase tracking-wide text-gray-500">Total</div>
+                    <div className="text-lg font-black text-amber-400">
+                      {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-16 flex items-center justify-center border-2 border-dashed border-[rgba(147,51,234,0.3)] rounded-xl">
+                  <span className="text-gray-500 font-medium text-xs text-center px-4">
+                    Elegí un paquete abajo para ver el resumen
+                  </span>
+                </div>
+              )}
+
+              {checkoutError && (
+                <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-red-400 text-sm text-center font-medium">
+                  {checkoutError}
+                </div>
+              )}
+
+              <button
+                onClick={handleCheckout}
+                disabled={isPending}
+                className="mt-4 w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black text-base py-3.5 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.02] active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+              >
+                {isPending ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Procesando...
+                  </span>
+                ) : (
+                  <>Comprar Ahora <ChevronRight className="w-5 h-5" /></>
+                )}
+              </button>
+              <p className="text-[10px] text-gray-600 text-center mt-3 leading-relaxed">
+                Al hacer clic en Comprar, aceptas que la venta puede ser gestionada mediante socios externos (ej. Lootbar API).
+              </p>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* ================= CHOOSE YOUR DIAMONDS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
+        <div className="flex items-center gap-3 mb-6">
+          <Gem
+            className="w-6 h-6 text-[#d946ef]"
+            style={{ filter: "drop-shadow(0 0 8px rgba(217, 70, 239, 0.7))" }}
+          />
+          <h2 className="text-2xl font-black uppercase tracking-wide text-white">
+            Choose Your Diamonds
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {PRODUCTS.map((prod) => {
+            const isSelected = selectedProduct === prod.id;
+            const shownPrice = shownPriceFor(prod.id, prod.price);
+            return (
+              <button
+                key={prod.id}
+                onClick={() => setSelectedProduct(prod.id)}
+                className={`relative flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-200 overflow-hidden ${isSelected
+                    ? "border-[#d946ef] bg-[#d946ef]/10 shadow-[0_0_25px_rgba(217,70,239,0.3)] scale-[1.02]"
+                    : "border-[rgba(147,51,234,0.25)] bg-[#0a061e] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
+                  }`}
+              >
+                {prod.bonus && (
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-fuchsia-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
+                    +{prod.bonus}
+                  </div>
+                )}
+                <Image
+                  src={prod.image}
+                  alt={`Recarga de ${prod.name}`}
+                  width={72}
+                  height={72}
+                  className="w-14 h-14 md:w-16 md:h-16 mb-3 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.35)]"
+                />
+                <span className="font-bold text-sm md:text-base text-center line-clamp-2 leading-tight mb-1 text-white">
+                  {prod.name}
+                </span>
+                <span className={`text-sm font-bold ${isSelected ? "text-[#d946ef]" : "text-[#38bdf8]"}`}>
+                  {effectiveCfg.symbol}{shownPrice.toFixed(2)}
+                </span>
+                {isSelected && (
+                  <div className="absolute inset-0 pointer-events-none ring-inset ring-2 ring-[#d946ef] rounded-2xl"></div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ================= BANNER DE BENEFICIOS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
+        <div
+          className="rounded-2xl p-6 md:p-8"
+          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+        >
+          <h3 className="text-xl md:text-2xl font-black text-white mb-6 text-center">
+            ¿Por qué recargar con{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#38bdf8]">
+              nosotros?
+            </span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: Zap,
+                tint: "text-[#38bdf8]",
+                ring: "bg-[#38bdf8]/10 border-[#38bdf8]/40",
+                title: "Entrega instantánea",
+                desc: "Tus diamantes llegan en 1-5 minutos después de confirmar el pago.",
+              },
+              {
+                icon: ShieldCheck,
+                tint: "text-emerald-400",
+                ring: "bg-emerald-400/10 border-emerald-400/40",
+                title: "100% Seguro",
+                desc: "Solo necesitamos tu User ID y Zone ID. Nunca te pediremos tu contraseña.",
+              },
+              {
+                icon: BadgeCheck,
+                tint: "text-[#d946ef]",
+                ring: "bg-[#d946ef]/10 border-[#d946ef]/40",
+                title: "Top-up oficial",
+                desc: "Diamantes globales entregados directamente a través de socios verificados.",
+              },
+              {
+                icon: Headset,
+                tint: "text-[#a855f7]",
+                ring: "bg-[#a855f7]/10 border-[#a855f7]/40",
+                title: "Soporte 24/7",
+                desc: "Nuestro equipo está disponible a cualquier hora por WhatsApp.",
+              },
+            ].map((feature) => (
+              <div key={feature.title} className="flex flex-col items-center text-center gap-3">
+                <div className={`w-12 h-12 rounded-full border flex items-center justify-center ${feature.ring}`}>
+                  <feature.icon className={`w-6 h-6 ${feature.tint}`} />
+                </div>
+                <div>
+                  <div className="font-bold text-white text-sm mb-1">{feature.title}</div>
+                  <p className="text-xs text-gray-400 leading-relaxed">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= BARRA DE MÉTODOS DE PAGO ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 pb-4">
+        <div
+          className="rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+        >
+          <div className="text-center sm:text-left">
+            <div className="text-xs font-black uppercase tracking-widest text-white">
+              Métodos aceptados
+            </div>
+            <div className="text-[11px] text-gray-500">
+              {effectiveRegion === "eu" ? "Región Europa (€)" : "Región Latinoamérica (US$)"}
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {effectiveCfg.methods.map((m) => (
+              <span
+                key={m.id}
+                className="flex items-center gap-1.5 bg-white rounded-lg px-2.5 py-1.5"
+                title={m.label}
+              >
+                {m.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.logo} alt={m.label} className="h-4 w-auto object-contain" />
+                ) : (
+                  <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
+                )}
+                <span className="text-[10px] font-semibold text-gray-700 whitespace-nowrap">
+                  {m.label}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {isModalOpen && (
         <PaymentModal
