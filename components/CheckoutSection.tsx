@@ -16,6 +16,7 @@ import {
   UserRound,
   HelpCircle,
   Crown,
+  Lock,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
@@ -621,92 +622,127 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       {/* ================= BANNER DE BENEFICIOS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
         <div
-          className="rounded-2xl p-6 md:p-8"
-          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+          className="relative rounded-2xl p-6 md:p-8 overflow-hidden"
+          style={{ backgroundColor: CARD_BG, border: "1px solid rgba(168, 85, 247, 0.25)" }}
         >
-          <h3 className="text-xl md:text-2xl font-black text-white mb-6 text-center">
-            ¿Por qué recargar con{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#38bdf8]">
-              nosotros?
-            </span>
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: Zap,
-                tint: "text-[#38bdf8]",
-                ring: "bg-[#38bdf8]/10 border-[#38bdf8]/40",
-                title: "Entrega instantánea",
-                desc: "Tus diamantes llegan en 1-5 minutos después de confirmar el pago.",
-              },
-              {
-                icon: ShieldCheck,
-                tint: "text-emerald-400",
-                ring: "bg-emerald-400/10 border-emerald-400/40",
-                title: "100% Seguro",
-                desc: "Solo necesitamos tu User ID y Zone ID. Nunca te pediremos tu contraseña.",
-              },
-              {
-                icon: BadgeCheck,
-                tint: "text-[#d946ef]",
-                ring: "bg-[#d946ef]/10 border-[#d946ef]/40",
-                title: "Top-up oficial",
-                desc: "Diamantes globales entregados directamente a través de socios verificados.",
-              },
-              {
-                icon: Headset,
-                tint: "text-[#a855f7]",
-                ring: "bg-[#a855f7]/10 border-[#a855f7]/40",
-                title: "Soporte 24/7",
-                desc: "Nuestro equipo está disponible a cualquier hora por WhatsApp.",
-              },
-            ].map((feature) => (
-              <div key={feature.title} className="flex flex-col items-center text-center gap-3">
-                <div className={`w-12 h-12 rounded-full border flex items-center justify-center ${feature.ring}`}>
-                  <feature.icon className={`w-6 h-6 ${feature.tint}`} />
+          {/* Esquinas sutilmente decoradas estilo HUD */}
+          <span className="absolute top-0 left-0 w-10 h-10 border-t-2 border-l-2 border-[#a855f7]/50 rounded-tl-2xl pointer-events-none" />
+          <span className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-[#a855f7]/50 rounded-tr-2xl pointer-events-none" />
+          <span className="absolute bottom-0 left-0 w-10 h-10 border-b-2 border-l-2 border-[#a855f7]/50 rounded-bl-2xl pointer-events-none" />
+          <span className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-[#a855f7]/50 rounded-br-2xl pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-6 gap-8 items-center">
+            {/* Título a la izquierda */}
+            <div className="lg:col-span-2">
+              <h3 className="text-xl md:text-2xl font-black uppercase leading-snug tracking-wide text-white">
+                ¿Por qué recargar con{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#38bdf8]">
+                  Mythic Market?
+                </span>
+              </h3>
+            </div>
+
+            {/* 4 columnas de beneficios */}
+            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+              {[
+                {
+                  icon: BadgeCheck,
+                  title: "Oficial y seguro",
+                  desc: "Recargas 100% autorizadas",
+                },
+                {
+                  icon: Gem,
+                  title: "Mejores precios",
+                  desc: "Precios competitivos con cashback",
+                },
+                {
+                  icon: Zap,
+                  title: "Entrega instantánea",
+                  desc: "Diamantes en minutos",
+                },
+                {
+                  icon: Headset,
+                  title: "Soporte 24/7",
+                  desc: "Atención personalizada",
+                },
+              ].map((feature) => (
+                <div key={feature.title} className="flex flex-col items-center text-center gap-3">
+                  <feature.icon
+                    className="w-8 h-8 text-[#a855f7]"
+                    style={{ filter: "drop-shadow(0 0 8px rgba(168, 85, 247, 0.55))" }}
+                  />
+                  <div>
+                    <div className="font-black text-xs uppercase tracking-wider text-white mb-1">
+                      {feature.title}
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">{feature.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-white text-sm mb-1">{feature.title}</div>
-                  <p className="text-xs text-gray-400 leading-relaxed">{feature.desc}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ================= BARRA DE MÉTODOS DE PAGO ================= */}
+      {/* ================= FOOTER DE MÉTODOS DE PAGO SEGUROS ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-6 pb-4">
         <div
-          className="rounded-2xl px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4"
-          style={{ backgroundColor: CARD_BG, border: `1px solid ${CARD_BORDER}` }}
+          className="rounded-2xl px-6 py-4 flex flex-col lg:flex-row items-center justify-between gap-5"
+          style={{ backgroundColor: "#0d0824", border: "1px solid rgba(168, 85, 247, 0.25)" }}
         >
-          <div className="text-center sm:text-left">
-            <div className="text-xs font-black uppercase tracking-widest text-white">
-              Métodos aceptados
-            </div>
-            <div className="text-[11px] text-gray-500">
-              {effectiveRegion === "eu" ? "Región Europa (€)" : "Región Latinoamérica (US$)"}
+          {/* Izquierda: métodos de pago */}
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 whitespace-nowrap">
+              Métodos de pago seguros
+            </span>
+            <div className="flex flex-wrap justify-center items-center gap-2">
+              {[
+                { label: "Mercado Pago", logo: "/logos/mercadopago.svg" },
+                { label: "PayPal", logo: "/logos/paypal.svg" },
+                { label: "Pix", logo: "/logos/pix.svg" },
+                { label: "Binance (USDT)", logo: "/logos/binance.svg" },
+              ].map((method) => (
+                <span
+                  key={method.label}
+                  className="flex items-center gap-1.5 bg-white rounded-lg px-2.5 py-1.5"
+                  title={method.label}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={method.logo} alt={method.label} className="h-4 w-auto object-contain" />
+                  <span className="text-[10px] font-semibold text-gray-700 whitespace-nowrap">
+                    {method.label}
+                  </span>
+                </span>
+              ))}
+              {/* Badges de texto para medios sin logo propio */}
+              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-black italic text-blue-900 tracking-wide">
+                VISA
+              </span>
+              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-black text-red-600 tracking-wide">
+                Mastercard
+              </span>
+              <span className="bg-white rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-amber-600 tracking-wide">
+                ₿ Crypto
+              </span>
             </div>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {effectiveCfg.methods.map((m) => (
-              <span
-                key={m.id}
-                className="flex items-center gap-1.5 bg-white rounded-lg px-2.5 py-1.5"
-                title={m.label}
-              >
-                {m.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.logo} alt={m.label} className="h-4 w-auto object-contain" />
-                ) : (
-                  <span className="text-[10px] font-bold text-gray-700">{m.label}</span>
-                )}
-                <span className="text-[10px] font-semibold text-gray-700 whitespace-nowrap">
-                  {m.label}
-                </span>
-              </span>
-            ))}
+
+          {/* Derecha: compra protegida */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+              <Lock className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                Compra protegida
+              </div>
+              <div className="text-[11px] text-slate-400">Conexión SSL Segura</div>
+              <div className="text-[11px] text-slate-400">Encriptación de Datos</div>
+            </div>
+            <ShieldCheck
+              className="w-6 h-6 text-emerald-400/70 hidden sm:block"
+              style={{ filter: "drop-shadow(0 0 6px rgba(52, 211, 153, 0.45))" }}
+            />
           </div>
         </div>
       </section>
