@@ -452,20 +452,22 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
             {/* Precio y resumen */}
             <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
-              {/* Precio grande + badge cashback */}
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-3xl font-black text-white tracking-tight">
-                  {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  10% Cashback
-                </span>
-              </div>
+              {/* Precio grande + badge cashback (solo con paquete seleccionado) */}
+              {selectedProductData && (
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-3xl font-black text-white tracking-tight">
+                    {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    10% Cashback
+                  </span>
+                </div>
+              )}
 
               {/* Caja oscura con el paquete seleccionado */}
               {selectedProductData ? (
-                <div className="flex items-center gap-3 bg-[#0a061e] p-3 rounded-xl border border-[rgba(147,51,234,0.25)]">
+                <div className="flex items-center gap-3 bg-[#0d0824] p-3 rounded-xl border border-purple-500/30">
                   <Gem
                     className="w-6 h-6 text-[#38bdf8] shrink-0"
                     style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.5))" }}
@@ -507,7 +509,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <button
                 onClick={handleCheckout}
                 disabled={isPending}
-                className="mt-2 w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-base py-3.5 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.35)] hover:shadow-[0_0_30px_rgba(245,158,11,0.55)] transition-all transform hover:scale-[1.02] active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
+                className="mt-2 w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-400 text-slate-950 font-extrabold text-base py-3.5 rounded-xl shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-[0.99] transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:pointer-events-none"
               >
                 {isPending ? (
                   <span className="flex items-center gap-2">
