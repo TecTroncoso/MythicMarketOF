@@ -301,14 +301,14 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             "radial-gradient(circle at center, rgba(25, 14, 50, 0.35) 0%, #060314 85%)",
         }}
       >
-        {/* Personaje en el centro-derecha, detrás del espacio entre texto y tarjeta */}
+        {/* Personaje en el espacio central libre (entre texto y tarjeta), sin quedar tapado */}
         <Image
           src="/images/personaje.png"
           alt=""
           width={900}
           height={1400}
           priority
-          className="absolute top-0 right-[15%] lg:right-[22%] h-full w-auto max-w-none object-contain pointer-events-none z-0 opacity-90"
+          className="absolute bottom-0 right-[380px] lg:right-[430px] z-0 pointer-events-none max-h-[85%] lg:max-h-[420px] w-auto object-contain opacity-90 [mask-image:linear-gradient(to_right,black_75%,transparent_100%)]"
         />
         {/* Capa oscura general sobre el personaje (efecto tenue/fundido) */}
         <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
