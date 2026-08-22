@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Crown,
   Lock,
+  CircleDollarSign,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
@@ -321,7 +322,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               width={1200}
               height={1600}
               priority
-              className="w-full h-full object-contain object-top opacity-85 scale-110 drop-shadow-[0_0_30px_rgba(147,51,234,0.4)]"
+              className="w-full h-full object-contain object-top opacity-95 scale-110 drop-shadow-[0_0_30px_rgba(147,51,234,0.4)]"
             />
           </div>
 
@@ -342,10 +343,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               </div>
               <div className="text-center sm:text-left">
                 <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3 text-white">
-                  Top Up{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]">
-                    Mobile Legends
-                  </span>{" "}
+                  Top Up Mobile Legends
+                  <br />
                   Diamonds Global
                 </h1>
                 {/* Calificación */}
@@ -356,6 +355,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     ))}
                   </div>
                   <span className="text-sm font-bold text-white">4.68 / 5</span>
+                  <span className="text-xs text-slate-400">from 862 ratings</span>
                 </div>
                 {/* Pills de características */}
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
@@ -381,10 +381,9 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 { icon: Headset, tint: "text-[#a855f7]", title: "24/7 Support", sub: "We're here!" },
               ].map((badge) => (
                 <div key={badge.title} className="flex items-center gap-3 px-3 first:pl-1 last:pr-1">
-                  <badge.icon
-                    className={`w-6 h-6 shrink-0 ${badge.tint}`}
-                    style={{ filter: "drop-shadow(0 0 6px rgba(168,85,247,0.45))" }}
-                  />
+                  <span className="w-10 h-10 shrink-0 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center">
+                    <badge.icon className={`w-5 h-5 ${badge.tint}`} />
+                  </span>
                   <div className="leading-tight">
                     <div className="text-xs font-bold uppercase tracking-wider text-white whitespace-nowrap">
                       {badge.title}
@@ -447,7 +446,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded accent-[#a855f7] cursor-pointer"
+                    className="w-4 h-4 rounded accent-amber-400 cursor-pointer"
                   />
                   <span className="text-xs font-medium text-gray-400">Remember me</span>
                 </label>
@@ -476,16 +475,16 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
               {/* Precio y resumen */}
               <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
-                {/* Precio grande + badge cashback (solo con paquete seleccionado) */}
+                {/* Precio grande + cashback debajo (solo con paquete seleccionado) */}
                 {selectedProductData && (
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-3xl font-black text-white tracking-tight">
+                  <div className="mb-3">
+                    <div className="text-3xl font-black text-white tracking-tight">
                       {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 rounded-full px-2.5 py-1 text-[10px] font-bold whitespace-nowrap">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1 text-emerald-400 text-xs font-bold">
+                      <CircleDollarSign className="w-3.5 h-3.5" />
                       10% Cashback
-                    </span>
+                    </div>
                   </div>
                 )}
 
@@ -518,15 +517,16 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                   </div>
                 )}
 
-                {/* Botón secundario rápido de PayPal */}
+                {/* Botón secundario rápido de PayPal (wordmark oficial) */}
                 <button
                   onClick={handleQuickPaypal}
-                  className="mt-3 w-full flex items-center justify-center gap-2 bg-[#0a061e] border border-[rgba(147,51,234,0.35)] hover:border-[#38bdf8]/60 text-white font-bold text-sm py-3 rounded-xl transition-all duration-200"
+                  className="mt-3 w-full flex items-center justify-center bg-[#0a061e] border border-[rgba(147,51,234,0.35)] hover:border-[#38bdf8]/60 py-3 rounded-xl transition-all duration-200"
+                  aria-label="Pagar con PayPal"
                 >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#38bdf8]" fill="currentColor" aria-hidden="true">
-                    <path d="M7.5 21l1.2-7.5H12c2.5 0 4.2-1.3 4.6-3.6.4-2.4-1-3.9-3.6-3.9H8.2L6 21h1.5zm2-13.5h3.2c1.6 0 2.5.8 2.2 2.4-.3 1.7-1.5 2.6-3.3 2.6h-2.9l.8-5z" />
-                  </svg>
-                  Pagar con PayPal
+                  <span className="italic font-black text-xl tracking-tight">
+                    <span className="text-[#38bdf8]">Pay</span>
+                    <span className="text-slate-300">Pal</span>
+                  </span>
                 </button>
 
                 {/* Botón principal Buy now */}
