@@ -299,16 +299,20 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         <div className="absolute -top-16 left-1/4 w-[420px] h-[420px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
         {/* Resplandor difuminado detrás de la tarjeta de checkout */}
         <div className="absolute top-24 right-0 w-[380px] h-[380px] bg-fuchsia-600/10 blur-[120px] rounded-full pointer-events-none" />
-        {/* Personaje gaming con máscara de degradado en el fondo del hero */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-35 hidden lg:block"
-          style={{
-            maskImage: "linear-gradient(to bottom, black 50%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 50%, transparent 100%)",
-          }}
-        >
-          <Image src="/images/hero_banner.png" alt="" fill className="object-cover object-right" />
+        {/* Personaje gaming de fondo (capa absoluta) */}
+        <div className="absolute inset-0 -z-10 w-full h-full pointer-events-none">
+          <Image
+            src="/images/personaje.png"
+            alt=""
+            fill
+            className="object-cover object-right lg:object-center"
+            priority
+          />
         </div>
+        {/* Fundido hacia abajo: conecta suavemente con la sección de diamantes */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#070417] via-[#070417]/70 to-transparent" />
+        {/* Fundido lateral izquierdo: legibilidad total del texto y badges */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#070417] via-[#070417]/80 to-transparent" />
 
         {/* Columna izquierda: identidad del juego */}
         <div className="lg:col-span-3 relative z-10">
