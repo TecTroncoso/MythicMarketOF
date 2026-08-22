@@ -295,14 +295,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     <>
       {/* ================= HERO 2 COLUMNAS ================= */}
       <section
-        className="relative w-full bg-[#070417] overflow-hidden py-6 lg:py-10 border-b border-purple-950/40"
+        className="relative w-full bg-[#060314] overflow-hidden py-6 lg:py-10 border-b border-purple-950/40"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse at top, rgba(126, 34, 206, 0.2), transparent 55%), linear-gradient(#070417, #070417)",
+            "radial-gradient(circle at center, rgba(25, 14, 50, 0.35) 0%, #060314 85%)",
         }}
       >
-        {/* Resplandor violeta directo detrás del personaje */}
-        <div className="absolute top-1/2 right-[30%] -translate-y-1/2 w-[500px] h-[500px] bg-purple-600/30 blur-[130px] rounded-full pointer-events-none z-0" />
         {/* Personaje en el centro-derecha, detrás del espacio entre texto y tarjeta */}
         <Image
           src="/images/personaje.png"
@@ -312,10 +310,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           priority
           className="absolute top-0 right-[15%] lg:right-[22%] h-full w-auto max-w-none object-contain pointer-events-none z-0 opacity-90"
         />
+        {/* Capa oscura general sobre el personaje (efecto tenue/fundido) */}
+        <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
         {/* Fundido lateral izquierdo para máxima legibilidad del texto */}
-        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#070417] via-[#070417]/80 to-transparent pointer-events-none z-0" />
+        <div className="absolute inset-y-0 left-0 w-3/5 bg-gradient-to-r from-[#060314] via-[#060314]/85 to-transparent pointer-events-none z-0" />
         {/* Fundido inferior suave hacia la sección de diamantes */}
-        <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#070417] to-transparent pointer-events-none z-0" />
+        <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
 
         {/* Contenido centrado */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
