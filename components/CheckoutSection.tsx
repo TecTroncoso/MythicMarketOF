@@ -537,7 +537,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PRODUCTS.map((prod) => {
             const isSelected = selectedProduct === prod.id;
             const shownPrice = shownPriceFor(prod.id, prod.price);
@@ -545,32 +545,48 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
               <button
                 key={prod.id}
                 onClick={() => setSelectedProduct(prod.id)}
-                className={`relative flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-200 overflow-hidden ${isSelected
-                  ? "border-[#d946ef] bg-[#d946ef]/10 shadow-[0_0_25px_rgba(217,70,239,0.3)] scale-[1.02]"
-                  : "border-[rgba(147,51,234,0.25)] bg-[#0a061e] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
+                className={`relative flex flex-col items-center p-5 rounded-2xl border transition-all duration-200 text-center ${isSelected
+                    ? "border-[#d946ef] shadow-[0_0_20px_rgba(217,70,239,0.35)]"
+                    : "border-purple-900/40 bg-[#110c2c] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
                   }`}
               >
-                {prod.bonus && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-fuchsia-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
-                    +{prod.bonus}
-                  </div>
-                )}
-                <Image
-                  src={prod.image}
-                  alt={`Recarga de ${prod.name}`}
-                  width={72}
-                  height={72}
-                  className="w-14 h-14 md:w-16 md:h-16 mb-3 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.35)]"
-                />
-                <span className="font-bold text-sm md:text-base text-center line-clamp-2 leading-tight mb-1 text-white">
-                  {prod.name}
-                </span>
-                <span className={`text-sm font-bold ${isSelected ? "text-[#d946ef]" : "text-[#38bdf8]"}`}>
-                  {effectiveCfg.symbol}{shownPrice.toFixed(2)}
-                </span>
+                {/* Checkmark circular en la esquina superior derecha al seleccionar */}
                 {isSelected && (
-                  <div className="absolute inset-0 pointer-events-none ring-inset ring-2 ring-[#d946ef] rounded-2xl"></div>
+                  <span className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#d946ef] flex items-center justify-center shadow-[0_0_10px_rgba(217,70,239,0.6)]">
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  </span>
                 )}
+
+                {/* Cabecera: icono diamante + cantidad + bonus dorado */}
+                <Gem
+                  className="w-5 h-5 text-[#38bdf8] mb-2"
+                  style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.6))" }}
+                />
+                <span className="font-black text-base text-white leading-tight">{prod.name}</span>
+                {prod.bonus && (
+                  <span className="text-xs font-bold text-amber-400 mt-0.5">+ {prod.bonus}</span>
+                )}
+
+                {/* Centro: imagen del paquete con resplandor azul de fondo */}
+                <div className="my-4 w-20 h-20 rounded-full bg-[#38bdf8]/10 flex items-center justify-center">
+                  <Image
+                    src={prod.image}
+                    alt={`Recarga de ${prod.name}`}
+                    width={72}
+                    height={72}
+                    className="w-16 h-16 object-contain drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]"
+                  />
+                </div>
+
+                {/* Pie: precio a la izquierda + badge cashback a la derecha */}
+                <div className="w-full flex items-center justify-between mt-auto pt-3 border-t border-purple-900/40">
+                  <span className="text-sm font-bold text-white whitespace-nowrap">
+                    {effectiveCfg.symbol}{shownPrice.toFixed(2)}
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 rounded-full px-2 py-0.5 whitespace-nowrap">
+                    10% Cashback
+                  </span>
+                </div>
               </button>
             );
           })}
