@@ -326,49 +326,48 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             />
           </div>
 
-          {/* Columna izquierda: texto + rating + pills + badges */}
+          {/* Columna izquierda: logo + texto + rating + pills + badges */}
           <div className="lg:col-span-7 flex flex-col gap-4 z-10">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-              <div className="w-28 h-28 md:w-36 md:h-36 shrink-0 relative flex items-center justify-center">
-                <Image
-                  src="/mlbb-logo.png"
-                  alt="Mobile Legends: Bang Bang"
-                  width={160}
-                  height={160}
-                  sizes="(max-width: 768px) 112px, 144px"
-                  className="w-full h-auto drop-shadow-[0_0_25px_rgba(168,85,247,0.45)] [mask-image:radial-gradient(circle_at_center,black_45%,transparent_72%)]"
-                  priority
-                  fetchPriority="high"
-                />
+            {/* Logo ENCIMA del título, con máscara agresiva que elimina el halo naranja horneado */}
+            <div className="w-24 md:w-32 shrink-0 relative">
+              <Image
+                src="/mlbb-logo.png"
+                alt="Mobile Legends: Bang Bang"
+                width={160}
+                height={160}
+                sizes="(max-width: 768px) 96px, 128px"
+                className="w-full h-auto [mask-image:radial-gradient(circle_at_center,black_32%,transparent_58%)]"
+                priority
+                fetchPriority="high"
+              />
+            </div>
+            <div className="text-center sm:text-left">
+              <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3 text-white">
+                Top Up Mobile Legends
+                <br />
+                Diamonds Global
+              </h1>
+              {/* Calificación */}
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
+                <div className="flex items-center gap-0.5">
+                  {[0, 1, 2, 3, 4].map((star) => (
+                    <Star key={star} className="w-4 h-4 text-amber-400" fill="currentColor" />
+                  ))}
+                </div>
+                <span className="text-sm font-bold text-white">4.68 / 5</span>
+                <span className="text-xs text-slate-400">from 862 ratings</span>
               </div>
-              <div className="text-center sm:text-left">
-                <h1 className="text-3xl md:text-4xl font-black leading-tight tracking-tight mb-3 text-white">
-                  Top Up Mobile Legends
-                  <br />
-                  Diamonds Global
-                </h1>
-                {/* Calificación */}
-                <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
-                  <div className="flex items-center gap-0.5">
-                    {[0, 1, 2, 3, 4].map((star) => (
-                      <Star key={star} className="w-4 h-4 text-amber-400" fill="currentColor" />
-                    ))}
-                  </div>
-                  <span className="text-sm font-bold text-white">4.68 / 5</span>
-                  <span className="text-xs text-slate-400">from 862 ratings</span>
-                </div>
-                {/* Pills de características */}
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#d9b8fe] text-xs font-bold">
-                    <Globe className="w-3 h-3" /> Global
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 border border-[#38bdf8]/40 text-[#7dd3fc] text-xs font-bold">
-                    <Zap className="w-3 h-3" /> Instant delivery
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d946ef]/15 border border-[#d946ef]/40 text-[#f0abfc] text-xs font-bold">
-                    <BadgeCheck className="w-3 h-3" /> Official Top-up
-                  </span>
-                </div>
+              {/* Pills de características */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#d9b8fe] text-xs font-bold">
+                  <Globe className="w-3 h-3" /> Global
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#38bdf8]/15 border border-[#38bdf8]/40 text-[#7dd3fc] text-xs font-bold">
+                  <Zap className="w-3 h-3" /> Instant delivery
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d946ef]/15 border border-[#d946ef]/40 text-[#f0abfc] text-xs font-bold">
+                  <BadgeCheck className="w-3 h-3" /> Official Top-up
+                </span>
               </div>
             </div>
 
