@@ -18,6 +18,7 @@ import {
   Crown,
   Lock,
   CircleDollarSign,
+  Heart,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS } from '@/lib/catalog';
@@ -392,11 +393,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
           {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT (desplazada más a la derecha) */}
           <div className="lg:col-span-5 flex justify-end z-10 relative lg:translate-x-10">
+            {/* Tarjeta flotante de favoritos (independiente, a la izquierda arriba de la tarjeta) */}
+            <div className="hidden xl:flex absolute -top-3 right-[calc(100%+14px)] flex-col items-center gap-1 bg-[#140c34] border border-purple-500/30 px-3.5 py-2.5 rounded-xl shadow-[0_0_15px_rgba(147,51,234,0.15)]">
+              <Heart className="w-4 h-4 text-slate-300" />
+              <span className="text-xs font-bold text-slate-200">10114</span>
+            </div>
             <div className="w-full max-w-md bg-[#0c0721]/90 border border-purple-500/30 backdrop-blur-md rounded-2xl p-6 shadow-[0_0_25px_rgba(147,51,234,0.15)] relative">
-              {/* Botón flotante de favoritos */}
-              <div className="absolute -top-3 right-4 bg-[#140c34] border border-purple-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1 text-xs text-purple-300">
-                🤍 10114
-              </div>
               {/* Línea de brillo superior */}
               <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#a855f7] via-[#d946ef] to-[#38bdf8]" />
 
