@@ -333,7 +333,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 width={160}
                 height={160}
                 sizes="(max-width: 768px) 96px, 128px"
-                className="w-full h-auto [mask-image:radial-gradient(circle_at_center,black_32%,transparent_58%)]"
+                className="w-full h-auto"
                 priority
                 fetchPriority="high"
               />
