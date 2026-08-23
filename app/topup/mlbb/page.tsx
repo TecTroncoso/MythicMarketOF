@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { ChevronRight, Home, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ReviewsSectionLoader } from '@/components/ReviewsSectionLoader';
-import { ShareButton } from '@/components/ShareButton';
 import dynamic from 'next/dynamic';
 
 const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
@@ -29,7 +28,6 @@ export default function MobileLegendsStore() {
           <ChevronRight className="w-3 h-3 text-slate-600 shrink-0" />
           <span className="text-purple-300 whitespace-nowrap">Diamantes</span>
         </nav>
-        <ShareButton />
       </div>
 
       {/* Checkout premium: hero 2 columnas + tarjeta flotante + grid de diamantes */}

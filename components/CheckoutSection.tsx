@@ -24,6 +24,7 @@ import { PRODUCTS } from '@/lib/catalog';
 import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { PaymentModal } from './PaymentModal';
+import { ShareButton } from './ShareButton';
 
 // Paleta premium del tema gaming oscuro.
 const CARD_BG = "#110c2c";
@@ -392,6 +393,10 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
           {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT (desplazada más a la derecha) */}
           <div className="lg:col-span-5 flex justify-end z-10 relative lg:translate-x-10">
+            {/* Botón Share alineado a la derecha, encima de la tarjeta */}
+            <div className="w-full max-w-md flex justify-end mb-3">
+              <ShareButton />
+            </div>
             <div className="w-full max-w-md bg-[#0d0721]/95 border-2 border-[#7c3aed]/60 backdrop-blur-md rounded-2xl p-6 shadow-[0_0_30px_rgba(124,58,237,0.35)] relative">
               {/* Tarjeta flotante de favoritos (alineada al borde superior de la tarjeta) */}
               <div className="hidden xl:flex absolute top-0 -left-[76px] flex-col items-center gap-1 bg-[#140c34] border border-purple-500/30 px-3.5 py-2.5 rounded-xl shadow-[0_0_15px_rgba(147,51,234,0.15)]">
