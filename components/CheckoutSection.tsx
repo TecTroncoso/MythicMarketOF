@@ -392,7 +392,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           </div>
 
           {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT (desplazada más a la derecha) */}
-          <div className="lg:col-span-5 flex justify-end z-10 relative lg:translate-x-10">
+          <div className="lg:col-span-5 flex flex-col justify-end z-10 relative lg:translate-x-10">
             {/* Botón Share alineado a la derecha, encima de la tarjeta */}
             <div className="w-full max-w-md flex justify-end mb-3">
               <ShareButton />
