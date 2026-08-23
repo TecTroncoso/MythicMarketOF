@@ -390,8 +390,8 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             </div>
           </div>
 
-          {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT */}
-          <div className="lg:col-span-5 flex justify-end z-10 relative">
+          {/* Columna derecha: tarjeta flotante SELECT YOUR ACCOUNT (desplazada más a la derecha) */}
+          <div className="lg:col-span-5 flex justify-end z-10 relative lg:translate-x-10">
             <div className="w-full max-w-md bg-[#0c0721]/90 border border-purple-500/30 backdrop-blur-md rounded-2xl p-6 shadow-[0_0_25px_rgba(147,51,234,0.15)] relative">
               {/* Botón flotante de favoritos */}
               <div className="absolute -top-3 right-4 bg-[#140c34] border border-purple-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1 text-xs text-purple-300">
