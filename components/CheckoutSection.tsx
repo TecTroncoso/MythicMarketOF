@@ -302,20 +302,16 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
             "radial-gradient(circle at center, rgba(25, 14, 50, 0.35) 0%, #060314 85%)",
         }}
       >
-        {/* Fondo oscuro limpio sin luces naranjas */}
-        <div className="absolute inset-0 bg-[#060314] -z-10" />
-        {/* Resplandor morado muy tenue centrado */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
-        {/* Fundido lateral izquierdo para que el texto sea 100% legible y cubrir el halo del logo */}
-        <div className="absolute inset-y-0 left-0 w-2/5 bg-gradient-to-r from-[#060314] via-[#060314]/85 to-transparent pointer-events-none z-0" />
+        {/* Fundido lateral izquierdo para que el texto sea 100% legible, cubrir el halo del logo y el borde de la imagen */}
+        <div className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-[#060314] via-[#060314]/90 to-transparent pointer-events-none z-0" />
         {/* Fundido inferior hacia el catálogo */}
         <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[#060314] to-transparent pointer-events-none z-0" />
 
         {/* Contenido centrado */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[460px]">
 
-          {/* Personaje en el hueco central: su borde derecho termina ANTES de la tarjeta de checkout */}
-          <div className="hidden lg:block absolute -top-8 right-[380px] xl:right-[450px] pointer-events-none z-0 w-[680px] xl:w-[800px] h-[560px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_92%)]">
+          {/* Personaje en el hueco central con máscara doble: sin bordes visibles por ningún lado */}
+          <div className="hidden lg:block absolute -top-8 right-[380px] xl:right-[450px] pointer-events-none z-0 w-[680px] xl:w-[800px] h-[560px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_75%)]">
             <Image
               src="/images/personaje.png"
               alt="Personaje Mobile Legends"
