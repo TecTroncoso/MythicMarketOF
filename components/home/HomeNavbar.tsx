@@ -1,13 +1,18 @@
 import Link from "next/link";
-import { Search, Heart, ShoppingCart, User } from "lucide-react";
+import Image from "next/image";
+import { Search, Heart, ShoppingCart, User, LogOut } from "lucide-react";
+import type { Session } from "next-auth";
+import { auth } from "@/auth";
+import { signOutAction } from "@/lib/actions/auth";
 
-export function HomeNavbar() {
+export async function HomeNavbar() {
+  const session = await auth();
   return (
     <nav className="border-b border-border-dark bg-bg-dark/90 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-6">
+      <div className="max-w-[1400px] mx-auto px-4 py-4 flex items-center justify-between gap-6">
         <Logo />
         <SearchBar />
-        <Actions />
+        <Actions session={session} />
     </div>
   </nav>
   );
@@ -32,7 +37,7 @@ function Logo() {
 
 function SearchBar() {
   return (
-    <div className="flex-1 max-w-2xl hidden md:flex items-center bg-panel-dark border border-border-mid rounded-xl px-4 py-2.5 focus-within:border-neon-pink focus-within:shadow-[0_0_10px_rgba(255,0,255,0.3)] transition-all">
+    <div className="flex-1 max-w-2xl hidden md:flex items-center bg-panel-dark border border-[#9E40C0]/70 rounded-xl px-4 py-2.5 shadow-[0_0_12px_rgba(158,64,192,0.25)] focus-within:border-neon-pink focus-within:shadow-[0_0_14px_rgba(255,0,255,0.35)] transition-all">
       <Search className="w-5 h-5 text-muted" />
       <input
         type="text"
@@ -43,7 +48,7 @@ function SearchBar() {
   );
 }
 
-function Actions() {
+function Actions({ session }: { session: Session | null }) {
   return (
     <div className="flex items-center gap-4 sm:gap-6">
       <button className="hidden sm:flex items-center gap-2 text-muted hover:text-neon-pink transition-colors">
@@ -54,26 +59,55 @@ function Actions() {
         <ShoppingCart className="w-5 h-5" />
         <span className="text-sm font-medium">Carrito</span>
     </button>
-      <UserBadge />
+      {session?.user ? <UserGreeting user={session.user} /> : <AuthLinks />}
   </div>
   );
 }
 
-function UserBadge() {
+function UserGreeting({ user }: { user: Session["user"] }) {
+  const firstName = user?.name?.split(" ")[0] || "Usuario";
   return (
-    <Link href="/login" className="flex items-center gap-3 pl-2 transition-all group">
-      <div className="flex flex-col items-end">
-        <span className="text-xs font-bold text-muted group-hover:text-white transition-colors">GamerX</span>
-        <span className="text-[10px] text-muted">Nivel 42</span>
-    </div>
-      <div className="relative">
+    <div className="flex items-center gap-3">
+      <Link href="/dashboard" title="Mis compras" className="flex items-center gap-3 pl-2 group">
         <div className="w-9 h-9 rounded-full bg-panel-dark border border-border-mid overflow-hidden flex items-center justify-center shadow-[0_0_10px_rgba(255,0,255,0.2)] group-hover:border-neon-cyan transition-colors">
-          <User className="w-5 h-5 text-muted group-hover:text-white" />
+          {user?.image ? (
+            <Image src={user.image} alt={firstName} width={36} height={36} className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-5 h-5 text-muted group-hover:text-white transition-colors" />
+          )}
+        </div>
+        <span className="text-xs font-bold text-muted group-hover:text-neon-cyan transition-colors">
+          {firstName}
+        </span>
+      </Link>
+      <form action={signOutAction}>
+        <button
+          type="submit"
+          title="Cerrar sesión"
+          className="p-2 text-muted hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all cursor-pointer"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function AuthLinks() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-9 h-9 rounded-full bg-panel-dark border border-border-mid flex items-center justify-center shadow-[0_0_10px_rgba(255,0,255,0.2)]">
+        <User className="w-5 h-5 text-muted" />
       </div>
-        <div className="absolute -bottom-1 -right-1 bg-bg-dark border border-neon-cyan text-neon-cyan text-[8px] font-black px-1 py-0.5 rounded shadow-[0_0_5px_rgba(255,0,255,0.5)]">
-          42
+      <div className="flex items-center gap-2 text-xs font-bold whitespace-nowrap">
+        <Link href="/login" className="text-muted hover:text-neon-cyan transition-colors">
+          Iniciar sesión
+        </Link>
+        <span className="text-muted/50 select-none">|</span>
+        <Link href="/register" className="text-muted hover:text-neon-pink transition-colors">
+          Registrarse
+        </Link>
       </div>
     </div>
-  </Link>
   );
 }

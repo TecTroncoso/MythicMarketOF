@@ -86,7 +86,7 @@ export const NAV_CATEGORIES: NavCategory[] = [
   { label: "Software", href: "#" },
   { label: "Gaming Points", href: "#" },
   { label: "Top-Up", href: "/topup/mlbb" },
-  { label: "Ofertas", href: "#", highlight: true },
+  { label: "Ofertas", href: "#" },
 ];
 
 export type SidebarFeature = {

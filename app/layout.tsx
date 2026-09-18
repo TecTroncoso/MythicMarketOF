@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { Sedgwick_Ave_Display } from 'next/font/google';
+import { Bangers } from 'next/font/google';
 import { WhatsAppWidget } from '@/components/WhatsAppWidget';
 import './globals.css'; // Global styles
 
-// Fuente display estilo brush para títulos del hero.
-const displayFont = Sedgwick_Ave_Display({
+// Fuente display estilo brush/gruesa para títulos del hero.
+const displayFont = Bangers({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-display',
