@@ -157,8 +157,7 @@ export const BEST_SELLERS: Product[] = [
   {
     id: "mlbb-topup",
     title: "Recarga Mobile Legends",
-    image: "/mlbb-logo.png",
-    imageContain: true,
+    image: "/mlbb.png",
     badge: "INSTANT",
     badgeClass: "bg-[#9E40C0] text-white",
     price: "Desde US$1.49",
