@@ -9,9 +9,10 @@ const NEON_ICON_GLOW =
 const BAR_CLIP =
   "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
 
-// Badge GAME ON: hexágono alargado (puntas laterales) como en la referencia.
+// Badge GAME ON: punta a la izquierda y chaflanes diagonales a la derecha,
+// como en la referencia.
 const BADGE_CLIP =
-  "polygon(22px 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 22px 100%, 0 50%)";
+  "polygon(26px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 26px 100%, 0 50%)";
 
 export function TrustBanner() {
   return (
@@ -70,8 +71,8 @@ export function TrustBanner() {
 function GameOnBadge() {
   return (
     <div
-      className="relative shrink-0 -my-3 mr-[-2px]"
-      style={{ filter: "drop-shadow(0 0 16px rgba(255, 45, 146, 0.8))" }}
+      className="relative shrink-0 -my-3 mr-[-1px]"
+      style={{ filter: "drop-shadow(0 0 20px rgba(255, 45, 146, 0.9))" }}
     >
       {/* Capa 1: borde neón rosa siguiendo la forma hexagonal */}
       <div className="absolute inset-0 bg-[#ff2d92]" style={{ clipPath: BADGE_CLIP }} />
@@ -84,7 +85,7 @@ function GameOnBadge() {
         }}
       />
       {/* Contenido */}
-      <div className="relative z-10 flex items-center gap-3 pl-9 pr-8 py-3.5">
+      <div className="relative z-10 flex items-center gap-3 pl-10 pr-7 py-3.5">
         <Gamepad2
           className="w-9 h-9 text-[#ff4fd8]"
           strokeWidth={1.6}
