@@ -1,113 +1,108 @@
 import { Gamepad2 } from "lucide-react";
 import { TRUST_ITEMS } from "@/lib/home-data";
 
-// Glow neón de los iconos de beneficios.
-const NEON_ICON_GLOW = "drop-shadow(0 0 5px #d946ef)";
+// Glow neón rosa de los iconos (más intenso, como en la referencia).
+const NEON_ICON_GLOW =
+  "drop-shadow(0 0 6px rgba(255, 77, 216, 0.9)) drop-shadow(0 0 14px rgba(255, 45, 146, 0.5))";
 
-// Geometría tecnológica de la barra: chaflán en esquina superior izquierda
-// y corte diagonal en el lateral superior derecho.
+// Barra: rectángulo con pequeños chaflanes en las cuatro esquinas.
 const BAR_CLIP =
-  "polygon(14px 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%, 0 14px)";
+  "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
 
-// Paralelogramo del badge GAME ON: corte diagonal paralelo.
-const BADGE_CLIP = "polygon(12px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%)";
+// Badge GAME ON: hexágono alargado (puntas laterales) como en la referencia.
+const BADGE_CLIP =
+  "polygon(22px 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 22px 100%, 0 50%)";
 
 export function TrustBanner() {
   return (
-    <>
-      {/* Barra con chaflanes tecnológicos (borde neón por doble capa) */}
+    <div
+      className="relative"
+      style={{ filter: "drop-shadow(0 0 18px rgba(168, 85, 247, 0.35))" }}
+    >
+      {/* Capa 1: borde neón violeta de la barra */}
+      <div className="absolute inset-0 bg-[#a855f7]" style={{ clipPath: BAR_CLIP }} />
+      {/* Capa 2: fondo oscuro translúcido (deja ver ~1.5px de borde) */}
       <div
-        className="relative"
-        style={{ filter: "drop-shadow(0 0 15px rgba(158, 64, 192, 0.3))" }}
-      >
-        {/* Capa 1: línea neón violeta */}
-        <div className="absolute inset-0 bg-[#a855f7]" style={{ clipPath: BAR_CLIP }} />
-        {/* Capa 2: fondo oscuro translúcido (deja ver el borde de 1.5px) */}
-        <div
-          className="absolute inset-[1.5px] bg-[rgba(12,1,45,0.85)] backdrop-blur-[12px]"
-          style={{ clipPath: BAR_CLIP }}
-        />
+        className="absolute inset-[1.5px] bg-[rgba(13,2,40,0.88)] backdrop-blur-[12px]"
+        style={{ clipPath: BAR_CLIP }}
+      />
 
-        {/* Contenido */}
-        <div className="relative z-10 flex flex-row items-center justify-between px-6 py-3.5">
-          {/* Los 5 beneficios en una sola fila con divisores verticales */}
-          <div className="hidden lg:flex flex-row items-center flex-1 justify-between pr-6 min-w-0">
-            {TRUST_ITEMS.map((item, index) => (
-              <div key={item.title} className="contents">
-                <div className="flex items-center gap-3">
-                  <item.icon
-                    className="w-5 h-5 shrink-0 text-[#d946ef]"
-                    style={{ filter: NEON_ICON_GLOW }}
-                  />
-                  <div className="leading-tight">
-                    <div className="text-xs font-bold uppercase text-white whitespace-nowrap">
-                      {item.title}
-                    </div>
-                    <div className="text-[10px] font-semibold uppercase text-[#c084fc] whitespace-nowrap">
-                      {item.subtitle}
-                    </div>
-                  </div>
-                </div>
-                {index < TRUST_ITEMS.length - 1 && (
-                  <span className="w-px h-7 shrink-0 bg-[rgba(158,64,192,0.2)]" />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Fallback compacto en pantallas pequeñas: solo iconos */}
-          <div className="flex lg:hidden flex-row items-center justify-center gap-6 flex-1 pr-4">
-            {TRUST_ITEMS.map((item) => (
+      {/* Contenido */}
+      <div className="relative z-10 flex flex-row items-center justify-between pl-8 pr-0 py-3">
+        {/* Los 5 beneficios en una sola fila, sin divisores, distribuidos */}
+        <div className="hidden lg:flex flex-row items-center flex-1 justify-between pr-10 min-w-0">
+          {TRUST_ITEMS.map((item) => (
+            <div key={item.title} className="flex items-center gap-3">
               <item.icon
-                key={item.title}
-                className="w-5 h-5 text-[#d946ef]"
+                className="w-6 h-6 shrink-0 text-[#ff4fd8]"
+                strokeWidth={1.7}
                 style={{ filter: NEON_ICON_GLOW }}
               />
-            ))}
-          </div>
-
-          <GameOnBadge />
+              <div className="leading-tight">
+                <div className="text-[12px] font-bold uppercase tracking-wide text-white whitespace-nowrap">
+                  {item.title}
+                </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-[#d8b4fe] whitespace-nowrap">
+                  {item.subtitle}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* Fallback compacto en pantallas pequeñas: solo iconos */}
+        <div className="flex lg:hidden flex-row items-center justify-center gap-6 flex-1 pr-4">
+          {TRUST_ITEMS.map((item) => (
+            <item.icon
+              key={item.title}
+              className="w-5 h-5 text-[#ff4fd8]"
+              style={{ filter: NEON_ICON_GLOW }}
+            />
+          ))}
+        </div>
+
+        <GameOnBadge />
       </div>
-    </>
+    </div>
   );
 }
 
 function GameOnBadge() {
   return (
     <div
-      className="relative shrink-0 ml-6"
-      style={{ filter: "drop-shadow(0 0 18px rgba(217, 70, 239, 0.65))" }}
+      className="relative shrink-0 -my-3 mr-[-2px]"
+      style={{ filter: "drop-shadow(0 0 16px rgba(255, 45, 146, 0.8))" }}
     >
-      {/* Capa 1: borde neón ultra brillante siguiendo el corte diagonal */}
-      <div className="absolute inset-0 bg-[#d946ef]" style={{ clipPath: BADGE_CLIP }} />
-      {/* Capa 2: interior oscuro + glow interno */}
+      {/* Capa 1: borde neón rosa siguiendo la forma hexagonal */}
+      <div className="absolute inset-0 bg-[#ff2d92]" style={{ clipPath: BADGE_CLIP }} />
+      {/* Capa 2: interior oscuro */}
       <div
-        className="absolute inset-[2px] bg-[#0C012D]"
-        style={{ clipPath: BADGE_CLIP, boxShadow: "inset 0 0 8px rgba(217, 70, 239, 0.2)" }}
-      />
-      {/* Destello en la esquina superior derecha */}
-      <div
-        className="absolute top-0 right-0 w-16 h-[3px] z-20"
+        className="absolute inset-[2px] bg-[#12031f]"
         style={{
-          background: "linear-gradient(90deg, transparent, #ffffff, #ff2a85)",
-          filter: "drop-shadow(0 0 6px #ff2a85)",
+          clipPath: BADGE_CLIP,
+          boxShadow: "inset 0 0 14px rgba(255, 45, 146, 0.25)",
         }}
       />
       {/* Contenido */}
-      <div className="relative z-10 flex items-center gap-3 px-6 py-2.5">
+      <div className="relative z-10 flex items-center gap-3 pl-9 pr-8 py-3.5">
         <Gamepad2
-          className="w-8 h-8 text-[#e879f9]"
-          style={{ filter: "drop-shadow(0 0 6px #d946ef)" }}
+          className="w-9 h-9 text-[#ff4fd8]"
+          strokeWidth={1.6}
+          style={{ filter: "drop-shadow(0 0 8px rgba(255, 45, 146, 0.9))" }}
         />
         <div className="leading-tight">
           <div
-            className="font-extrabold text-lg tracking-wide"
-            style={{ color: "#ff2a85", textShadow: "0 0 8px #ff2a85" }}
+            className="font-extrabold text-xl tracking-wide text-[#ff2d92]"
+            style={{ textShadow: "0 0 10px rgba(255, 45, 146, 0.9)" }}
           >
             GAME ON.
           </div>
-          <div className="font-bold text-xs tracking-wider text-[#ede9fe]">AHORRA MÁS.</div>
+          <div
+            className="font-bold text-[13px] tracking-wider text-[#ff9ecf]"
+            style={{ textShadow: "0 0 8px rgba(255, 45, 146, 0.6)" }}
+          >
+            AHORRA MÁS.
+          </div>
         </div>
       </div>
     </div>

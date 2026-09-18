@@ -1,55 +1,58 @@
 import { SIDEBAR_FEATURES } from "@/lib/home-data";
 
-// Paleta exacta de la sección de beneficios.
-const PURPLE = "#9E40C0";
-const CARD_BG = "rgba(12, 1, 45, 0.85)";
-const CARD_BORDER = "#1F044E";
+const ICON_GLOW =
+  "drop-shadow(0 0 4px #d946ef) drop-shadow(0 0 9px rgba(168, 85, 247, 0.7))";
 
-// Hexágono regular (punta arriba) usado como marco del icono.
-const HEX_CLIP = "polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)";
-
-function HexIcon({ icon: Icon }: { icon: typeof SIDEBAR_FEATURES[number]["icon"] }) {
+// No circle border — just the icon with neon glow, matching the reference
+function NeonIcon({
+  icon: Icon,
+}: {
+  icon: (typeof SIDEBAR_FEATURES)[number]["icon"];
+}) {
   return (
-    <div
-      className="relative w-9 h-10 shrink-0"
-      style={{ filter: `drop-shadow(0 0 6px ${PURPLE}66)` }}
-    >
-      {/* Borde neón del hexágono */}
-      <div className="absolute inset-0" style={{ clipPath: HEX_CLIP, background: PURPLE }} />
-      {/* Interior oscuro (deja ver el "borde" de 1.5px) */}
-      <div
-        className="absolute inset-[1.5px] grid place-items-center"
-        style={{ clipPath: HEX_CLIP, background: "#0C012D" }}
-      >
-        <Icon className="w-4 h-4" strokeWidth={2.25} style={{ color: PURPLE }} />
-      </div>
-    </div>
+    <Icon
+      className="w-6 h-6 shrink-0"
+      strokeWidth={1.8}
+      style={{ color: "#d946ef", filter: ICON_GLOW }}
+    />
   );
 }
 
 export function FeatureList() {
   return (
     <div
-      className="rounded-2xl p-5 space-y-4"
+      className="relative py-5 pl-4 pr-6 space-y-5 w-[220px]"
       style={{
-        backgroundColor: CARD_BG,
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-        border: `2.5px solid ${CARD_BORDER}`,
-        boxShadow: "0 0 15px rgba(31, 4, 78, 0.4)",
+        border: "1.5px solid #9333ea",
+        borderRadius: "14px",
+        boxShadow:
+          "0 0 14px rgba(147, 51, 234, 0.5), inset 0 0 8px rgba(147, 51, 234, 0.08)",
+        background: "rgba(10, 2, 30, 0.85)",
       }}
     >
-      {SIDEBAR_FEATURES.map((feature, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <HexIcon icon={feature.icon} />
-          <span
-            className="text-xs font-bold uppercase tracking-wide leading-tight max-w-[7.5rem]"
-            style={{ color: PURPLE }}
-          >
-            {feature.title}
-          </span>
-        </div>
-      ))}
+      {SIDEBAR_FEATURES.map((feature, index) => {
+        const words = feature.title.split(" ");
+        const mid = Math.ceil(words.length / 2);
+        const line1 = words.slice(0, mid).join(" ");
+        const line2 = words.slice(mid).join(" ");
+
+        return (
+          <div key={index} className="flex items-center gap-3">
+            <NeonIcon icon={feature.icon} />
+
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-[0.08em] leading-tight" style={{ color: "#e879f9" }}>
+                {line1}
+              </span>
+              {line2 && (
+                <span className="text-[11px] font-bold uppercase tracking-[0.08em] leading-tight" style={{ color: "#e879f9" }}>
+                  {line2}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

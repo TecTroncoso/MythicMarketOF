@@ -59,3 +59,7 @@ Desktop.ini
 # imágenes temporales en la raíz (assets de trabajo, no usados por la app)
 /ChatGPT Image*.png
 /ultimate-anime-*.jpg
+.chrome-shot-*
+/maqueta.png
+/shot-home.png
+/kilo_footer_analyze.py

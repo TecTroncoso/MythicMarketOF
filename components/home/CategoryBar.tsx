@@ -13,7 +13,7 @@ function navLinkClass(category: NavCategory): string {
 export function CategoryBar() {
   return (
     <div className="border-t border-border-dark bg-bg-dark/90 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 overflow-x-auto no-scrollbar">
+      <div className="max-w-[1400px] mx-auto px-4 flex items-center gap-6 overflow-x-auto no-scrollbar">
         <button className="flex items-center gap-2 text-white font-bold text-sm py-3 border-b-2 border-transparent hover:text-neon-pink hover:border-neon-pink transition-all whitespace-nowrap">
           <Menu className="w-5 h-5" />
           Todas las categorías
