@@ -634,10 +634,10 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 <button
                   key={prod.id}
                   onClick={() => setSelectedProduct(prod.id)}
-                  className={`group relative flex flex-col rounded-2xl border-2 p-4 pt-4 text-center transition-all duration-200 ${
+                  className={`group relative flex flex-col rounded-2xl border-2 p-4 pt-4 text-center transition-all duration-200 bg-gradient-to-b ${
                     isSelected
-                      ? "border-[#d946ef] bg-[#150d33] shadow-[0_0_22px_rgba(217,70,239,0.45)]"
-                      : "border-purple-900/40 bg-[#0e0a24] hover:border-[#a855f7]/60 hover:bg-[#130d2e]"
+                      ? "from-[#241652] to-[#150d33] border-[#d946ef] shadow-[0_0_22px_rgba(217,70,239,0.45)]"
+                      : "from-[#1a1242] to-[#0e0a24] border-purple-900/40 hover:border-[#a855f7]/60"
                   }`}
                 >
                   {/* Título: nombre + bonus inline estilo proveedor */}
@@ -646,20 +646,16 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     {bonusLabel(prod.bonus)}
                   </span>
 
-                  {/* Arte del paquete a tamaño protagonista */}
-                  <div
-                    className="flex-1 flex items-center justify-center py-3"
-                    style={{
-                      backgroundImage:
-                        "radial-gradient(circle at center, rgba(56, 189, 248, 0.14) 0%, transparent 65%)",
-                    }}
-                  >
+                  {/* Arte del paquete a tamaño protagonista, sobre pedestal
+                      luminoso como en la maqueta (glow elíptico bajo el item) */}
+                  <div className="relative flex-1 flex items-center justify-center py-4 min-h-[150px]">
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-4/5 h-10 rounded-full bg-[#38bdf8]/25 blur-xl pointer-events-none" />
                     <Image
                       src={prod.image}
                       alt={`Recarga de ${prod.name}`}
-                      width={140}
-                      height={140}
-                      className="w-full max-w-[130px] h-28 object-contain drop-shadow-[0_0_18px_rgba(56,189,248,0.45)] transition-transform duration-200 group-hover:scale-105"
+                      width={160}
+                      height={160}
+                      className="relative w-full max-w-[150px] h-32 object-contain drop-shadow-[0_0_25px_rgba(56,189,248,0.55)] transition-transform duration-200 group-hover:scale-105"
                     />
                   </div>
 
