@@ -26,15 +26,20 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
   position: relative;
+  /* Stacking context propio: garantiza que los overlays (::before/::after)
+     pinten entre el fondo del body y el contenido de las páginas. */
+  isolation: isolate;
 }
 
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  /* Overlay oscuro: deja ver apenas el arte de los bordes (como la maqueta) */
+  /* Overlay oscuro: deja ver apenas el arte de los bordes (como la maqueta).
+     z-index negativo para quedar DEBAJO del contenido; sin esto, cualquier
+     página sin posicionamiento propio (/admin, /dashboard) quedaba tapada. */
   background-color: rgba(7, 5, 20, 0.86);
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 }
 
@@ -45,6 +50,6 @@ body::after {
   background: linear-gradient(rgba(255, 0, 255, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 0, 255, 0.04) 1px, transparent 1px);
   background-size: 40px 40px;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
 }
