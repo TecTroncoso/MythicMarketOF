@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 export const users = sqliteTable("user", {
@@ -100,3 +100,55 @@ export const verificationTokens = sqliteTable(
     }),
   })
 );
+
+// ---------------------------------------------------------------------------
+// Supplier price snapshots: one run of a game scraper (scrapers/eneba_mlbb.py)
+// imported via scripts/import-eneba-prices.ts. Prices are stored as integer
+// cents,
+// same convention as orders.amountCents. Nullable cents = the scraper could
+// not quote that value (e.g. checkout failed for that package/currency).
+// ---------------------------------------------------------------------------
+
+export const supplierPriceSnapshots = sqliteTable("supplier_price_snapshots", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  // Which game this price list belongs to (matches SupplierGame.id)
+  game: text("game").notNull().default("mlbb"),
+  scrapedAt: integer("scrapedAt", { mode: "timestamp_ms" }).notNull(),
+  importedAt: integer("importedAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  source: text("source").notNull().default("eneba"),
+  provider: text("provider"),
+  region: text("region"),
+  // JSON array of currency codes, e.g. ["BRL","USD","EUR"]
+  currencies: text("currencies").notNull(),
+  totalPackages: integer("totalPackages").notNull(),
+});
+
+export type SupplierPriceSnapshot = typeof supplierPriceSnapshots.$inferSelect;
+
+export const supplierPriceRows = sqliteTable("supplier_price_rows", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  snapshotId: text("snapshotId")
+    .notNull()
+    .references(() => supplierPriceSnapshots.id, { onDelete: "cascade" }),
+  packageName: text("packageName").notNull(),
+  // Stable order within the snapshot (scraper emits packages by ascending price)
+  position: integer("position").notNull(),
+  catalogBrlCents: integer("catalogBrlCents"),
+  checkoutBrlCents: integer("checkoutBrlCents"),
+  cashbackBrlCents: integer("cashbackBrlCents"),
+  catalogUsdCents: integer("catalogUsdCents"),
+  checkoutUsdCents: integer("checkoutUsdCents"),
+  cashbackUsdCents: integer("cashbackUsdCents"),
+  catalogEurCents: integer("catalogEurCents"),
+  checkoutEurCents: integer("checkoutEurCents"),
+  cashbackEurCents: integer("cashbackEurCents"),
+  cashbackPercent: real("cashbackPercent"),
+});
+
+export type SupplierPriceRow = typeof supplierPriceRows.$inferSelect;

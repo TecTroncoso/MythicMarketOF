@@ -1,6 +1,8 @@
 import { defineConfig } from 'drizzle-kit';
 import * as dotenv from 'dotenv';
 
+// Credentials live in .env on this project; also load .env.local when present.
+dotenv.config({ path: '.env' });
 dotenv.config({ path: '.env.local' });
 
 export default defineConfig({

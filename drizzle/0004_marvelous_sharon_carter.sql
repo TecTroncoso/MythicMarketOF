@@ -1,0 +1,1 @@
+ALTER TABLE `supplier_price_snapshots` ADD `game` text DEFAULT 'mlbb' NOT NULL;

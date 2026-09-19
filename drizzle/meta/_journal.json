@@ -22,6 +22,20 @@
       "when": 1787151807135,
       "tag": "0002_talented_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789802831653,
+      "tag": "0003_clumsy_molecule_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789810246175,
+      "tag": "0004_marvelous_sharon_carter",
+      "breakpoints": true
     }
   ]
 }

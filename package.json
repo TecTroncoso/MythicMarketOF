@@ -14,7 +14,8 @@
     "test:run": "vitest --run",
     "test:watch": "vitest",
     "test:coverage": "vitest --run --coverage",
-    "set-admin": "tsx scripts/set-admin.ts"
+    "set-admin": "tsx scripts/set-admin.ts",
+    "import-eneba": "tsx scripts/import-eneba-prices.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
