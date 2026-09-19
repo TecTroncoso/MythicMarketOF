@@ -113,8 +113,8 @@ describe("processCheckout()", () => {
         orderNumber: result.orderNumber,
         userId: "u1",
         productId: "1",
-        productName: "86 Diamonds",
-        amountCents: 149,
+        productName: "78 Diamonds",
+        amountCents: 135,
         currency: "USD",
         paymentMethod: "mercadopago",
         paymentDetail: "compra@ejemplo.com",
@@ -212,7 +212,7 @@ describe("processCheckout() payment methods", () => {
         paymentMethod: "sepa",
         paymentDetail: "DE89370400440532013000",
         currency: "EUR",
-        amountCents: 137,
+        amountCents: 124,
       });
     } finally {
       vi.useRealTimers();
@@ -228,7 +228,7 @@ describe("processCheckout() payment methods", () => {
       await vi.advanceTimersByTimeAsync(1500);
       await euPromise;
       const euRow = mockInsertValues.mock.calls[0]?.[0];
-      expect(euRow).toMatchObject({ paymentMethod: "paypal", currency: "EUR", amountCents: 137 });
+      expect(euRow).toMatchObject({ paymentMethod: "paypal", currency: "EUR", amountCents: 124 });
 
       const latamPromise = processCheckout(
         fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "paypal", paymentDetail: "ana@x.com", paymentRegion: "latam" })
@@ -236,7 +236,7 @@ describe("processCheckout() payment methods", () => {
       await vi.advanceTimersByTimeAsync(1500);
       await latamPromise;
       const latamRow = mockInsertValues.mock.calls[1]?.[0];
-      expect(latamRow).toMatchObject({ paymentMethod: "paypal", currency: "USD", amountCents: 149 });
+      expect(latamRow).toMatchObject({ paymentMethod: "paypal", currency: "USD", amountCents: 135 });
     } finally {
       vi.useRealTimers();
     }
@@ -270,7 +270,7 @@ describe("processCheckout() payment methods", () => {
         paymentMethod: "mercadopago",
         paymentDetail: "compra@ejemplo.com",
         currency: "USD",
-        amountCents: 149,
+        amountCents: 135,
       });
     } finally {
       vi.useRealTimers();
@@ -291,7 +291,7 @@ describe("processCheckout() payment methods", () => {
         paymentMethod: "binance",
         paymentDetail: "compra@ejemplo.com",
         currency: "USD",
-        amountCents: 149,
+        amountCents: 135,
       });
     } finally {
       vi.useRealTimers();
@@ -319,7 +319,7 @@ describe("getCheckoutContext()", () => {
       fieldLabel: "Email de PayPal",
       pattern: "^\\S+@\\S+\\.\\S+$",
     });
-    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.37);
+    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.24);
   });
 
   it("falls back to latam when no country header is present", async () => {
@@ -328,6 +328,6 @@ describe("getCheckoutContext()", () => {
     expect(ctx.currency).toBe("USD");
     expect(ctx.symbol).toBe("US$");
     expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "paypal", "pix", "binance"]);
-    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.49);
+    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.35);
   });
 });

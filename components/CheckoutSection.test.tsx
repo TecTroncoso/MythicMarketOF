@@ -55,11 +55,11 @@ vi.mock("@/lib/actions/checkout", () => ({
       },
     ],
     products: [
-      { id: "1", name: "86 Diamonds", price: 1.49 },
-      { id: "2", name: "172 Diamonds", price: 2.99 },
-      { id: "3", name: "257 Diamonds", price: 4.49 },
-      { id: "4", name: "429 Diamonds", price: 7.49 },
-      { id: "5", name: "706 Diamonds", price: 11.99 },
+      { id: "1", name: "78 Diamonds", price: 1.49 },
+      { id: "2", name: "156 Diamonds", price: 2.99 },
+      { id: "3", name: "234 Diamonds", price: 4.49 },
+      { id: "4", name: "390 Diamonds", price: 7.49 },
+      { id: "5", name: "625 Diamonds", price: 11.99 },
       { id: "6", name: "2195 Diamonds", price: 34.99 },
       { id: "7", name: "Twilight Pass", price: 9.99 },
       { id: "8", name: "Weekly Diamond Pass", price: 1.99 },
@@ -196,7 +196,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
 
     // ---- IDLE: select product, no input typed → button present, enabled
     const { unmount } = render(<CheckoutSection isLoggedIn={true} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     const idleButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
     expect(idleButton.disabled).toBe(false);
     unmount();
@@ -205,7 +205,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     const fetchPending = vi.fn().mockReturnValue(new Promise(() => {}));
     vi.stubGlobal("fetch", fetchPending);
     const { unmount: unmountLoading } = render(<CheckoutSection isLoggedIn={true} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     // Advance only 1ms past debounce so the timer fires but the pending fetch
@@ -222,7 +222,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     // ---- SUCCESS
     vi.stubGlobal("fetch", fetchSuccess);
     const { unmount: unmountSuccess } = render(<CheckoutSection isLoggedIn={true} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     await typeValid();
     expect(screen.getByText("Hero")).toBeInTheDocument();
     const successButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
@@ -233,7 +233,7 @@ describe("CheckoutSection MLBB lookup UX", () => {
     // ---- WARNING
     vi.stubGlobal("fetch", fetchFail);
     render(<CheckoutSection isLoggedIn={true} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     await typeValid();
     expect(screen.getByText(/No pudimos verificar el nickname/i)).toBeInTheDocument();
     const warningButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
@@ -245,7 +245,7 @@ describe("CheckoutSection payment modal flow", () => {
   it("does not open the modal when checkout validation fails", () => {
     // Not logged in
     const { unmount } = render(<CheckoutSection isLoggedIn={false} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     expect(screen.getByText("Debes iniciar sesión para realizar una compra.")).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "M\u00e9todo de pago" })).not.toBeInTheDocument();
@@ -253,7 +253,7 @@ describe("CheckoutSection payment modal flow", () => {
 
     // Missing User/Zone IDs
     render(<CheckoutSection isLoggedIn={true} />);
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
     expect(screen.getByText("Por favor ingresa tu User ID y Zone ID.")).toBeInTheDocument();
     expect(screen.queryByRole("dialog", { name: "M\u00e9todo de pago" })).not.toBeInTheDocument();
@@ -262,7 +262,7 @@ describe("CheckoutSection payment modal flow", () => {
   it("closes the modal via the X button, a backdrop click, and Escape", async () => {
     render(<CheckoutSection isLoggedIn={true} />);
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
 
@@ -292,7 +292,7 @@ describe("CheckoutSection payment modal flow", () => {
   it("shows an error when confirming without a selected method", async () => {
     render(<CheckoutSection isLoggedIn={true} />);
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -305,7 +305,7 @@ describe("CheckoutSection payment modal flow", () => {
   it("validates the payment detail before confirming", async () => {
     render(<CheckoutSection isLoggedIn={true} />);
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -334,7 +334,7 @@ describe("CheckoutSection payment modal flow", () => {
     render(<CheckoutSection isLoggedIn={true} />);
     // Let the mocked getCheckoutContext resolve so the payment methods render.
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -380,7 +380,7 @@ describe("CheckoutSection payment modal flow", () => {
 
     render(<CheckoutSection isLoggedIn={true} />);
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -401,7 +401,7 @@ describe("CheckoutSection payment modal flow", () => {
     expect(formData.get("paymentMethod")).toBe("paypal");
     expect(formData.get("paymentRegion")).toBe("eu");
     // The amount-prefilled PayPal.Me window (real product price, 2.99 for the
-    // selected 172 Diamonds) replaces the success alert.
+    // selected 156 Diamonds) replaces the success alert.
     expect(openSpy).toHaveBeenCalledTimes(1);
     expect(openSpy).toHaveBeenNthCalledWith(
       1,
@@ -433,7 +433,7 @@ describe("CheckoutSection payment modal flow", () => {
     render(<CheckoutSection isLoggedIn={true} />);
     // Let the mocked getCheckoutContext resolve so the payment methods render.
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -461,7 +461,7 @@ describe("CheckoutSection payment modal flow", () => {
     expect(fakeWindow.location.href.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
     const text = decodeURIComponent(fakeWindow.location.href.split("?text=")[1]);
     expect(text).toContain("MM-TEST1234");
-    expect(text).toContain("172 Diamonds");
+    expect(text).toContain("156 Diamonds");
     expect(text).toContain(formatAmount(299, "EUR"));
     expect(text).toContain("34600000000");
     expect(text).toContain("Juan Pérez");
@@ -481,7 +481,7 @@ describe("CheckoutSection payment modal flow", () => {
 
     render(<CheckoutSection isLoggedIn={true} />);
     await act(async () => {});
-    fireEvent.click(screen.getByText(/172 Diamonds/));
+    fireEvent.click(screen.getByText(/156 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -503,7 +503,7 @@ describe("CheckoutSection payment modal flow", () => {
     const url = openSpy.mock.calls[0][0] as string;
     expect(url.startsWith(`https://wa.me/${BIZUM_RECIPIENT_PHONE}?text=`)).toBe(true);
     const text = decodeURIComponent(url.split("?text=")[1]);
-    expect(text).toContain("172 Diamonds");
+    expect(text).toContain("156 Diamonds");
     expect(text).toContain(formatAmount(299, "EUR"));
     expect(text).toContain("Correo: compra@ejemplo.com");
     expect(text).toContain("Método: PayPal");
@@ -530,8 +530,8 @@ describe("CheckoutSection payment modal flow", () => {
     render(<CheckoutSection isLoggedIn={true} />);
     // Let the mocked getCheckoutContext resolve so the payment methods render.
     await act(async () => {});
-    // 257 Diamonds maps to 4.49 in the mocked context products.
-    fireEvent.click(screen.getByText(/257 Diamonds/));
+    // 234 Diamonds maps to 4.49 in the mocked context products.
+    fireEvent.click(screen.getByText(/234 Diamonds/));
     fireEvent.change(userIdInput(), { target: { value: "12345678" } });
     fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
     fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
@@ -554,7 +554,7 @@ describe("CheckoutSection payment modal flow", () => {
     expect(formData.get("paymentRegion")).toBe("eu");
     expect(formData.get("productId")).toBe("3");
     // The final PayPal.Me link opens during the click gesture with the REAL
-    // price of the purchased object pre-filled (4.49 = 257 Diamonds in the
+    // price of the purchased object pre-filled (4.49 = 234 Diamonds in the
     // mocked context, not a hardcoded amount); no blank window is used.
     expect(openSpy).toHaveBeenCalledTimes(1);
     expect(openSpy).toHaveBeenNthCalledWith(
