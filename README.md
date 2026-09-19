@@ -11,7 +11,7 @@ checkout regional multi-método de pago y una arquitectura *security-first* end-
 [![TypeScript](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/tests-221%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-229%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/db-Turso-FFEE58?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PC9zdmc+&logoColor=black)](https://turso.tech/)
 
 </div>
@@ -27,6 +27,7 @@ checkout regional multi-método de pago y una arquitectura *security-first* end-
 - [Checkout regional y pagos](#-checkout-regional-y-pagos)
 - [Verificación de jugador MLBB](#-verificación-de-jugador-mlbb)
 - [Panel de administración](#-panel-de-administración)
+- [Scraper de precios de proveedor](#-scraper-de-precios-de-proveedor)
 - [Estructura del proyecto](#-estructura-del-proyecto)
 - [Puesta en marcha](#-puesta-en-marcha)
 - [Variables de entorno](#-variables-de-entorno)
@@ -54,6 +55,7 @@ El comprador elige su paquete, verifica la cuenta de MLBB destino en tiempo real
 | 💬 **Soporte geo-horario** | Widget de WhatsApp que enruta al agente correcto (AR/ES) según país y horario laboral, con turnos por zona horaria IANA. |
 | ⭐ **Reseñas verificadas** | Sistema de reseñas ligado a usuarios autenticados, cargado de forma diferida. |
 | 🛡️ **Panel admin con RBAC** | Órdenes, estadísticas y filtros protegidos doblemente: Edge Middleware (JWT role) + verificación server-side. |
+| 📊 **Precios de proveedor por juego** | Snapshots históricos de costos Eneba (Cat/Chk en BRL/USD/EUR) por juego, con scraper Python disparable desde el panel (spawn local · GitHub Actions en Vercel). |
 
 ## 🛠 Stack tecnológico
 
@@ -147,6 +149,7 @@ Accesible solo para usuarios con `role = "admin"` (doble control: Edge Middlewar
 - Listado completo de órdenes con **estadísticas agregadas**.
 - Filtros sanitizados server-side (`sanitizeAdminFilters`).
 - Cambio de estado de órdenes (`pending` → `paid` / `cancelled`).
+- `/admin/precios` — selector de juegos y listas de precios de proveedor (ver siguiente sección).
 
 Para promover un administrador:
 
@@ -154,22 +157,47 @@ Para promover un administrador:
 npm run set-admin -- usuario@email.com
 ```
 
+## 🕷 Scraper de precios de proveedor
+
+El panel admin incluye tracking de costos del proveedor (Eneba) por juego y moneda, para calcular márgenes de reventa con datos reales de checkout.
+
+```
+/admin/precios              → selector de juegos (última actualización por juego)
+/admin/precios/mlbb         → tabla Cat/Chk en BRL/USD/EUR + cashback + historial
+```
+
+- **Datos**: cada corrida crea un *snapshot* (`supplier_price_snapshots` + `supplier_price_rows`) con precios en centavos; los snapshots antiguos se conservan como historial.
+- **Botón "Actualizar precios"**: dispara el scraper desde el panel.
+  - **Local**: spawn directo de `venv/Scripts/python.exe` (se resuelve solo; `ENEBA_PYTHON_PATH` como override).
+  - **Vercel**: serverless no puede correr Python, así que se dispara el workflow `.github/workflows/scrape-prices.yml` (Actions), que scrapea e importa a Turso con el mismo código del repo. El panel consulta el estado de la run vía API de GitHub.
+- **Multi-juego**: `lib/supplier-games.ts` define los juegos y `lib/scrapers.ts` mapea juego → script. Un juego sin entrada muestra la tabla pero no el botón.
+
+Alternativa por consola: `python scrapers/eneba_mlbb.py` → `npm run import-eneba`.
+
+### Añadir un juego nuevo
+
+1. Crear el script `scrapers/eneba_<juego>.py` que escriba su JSON en `scrapers/output/` con `"game": "<id>"` en la metadata.
+2. Registrar el juego en `lib/supplier-games.ts` y el script en `lib/scrapers.ts`.
+3. Registrar el caso en el workflow (paso `if: inputs.game == '<id>'` + opción en `options`).
+
 ## 📁 Estructura del proyecto
 
 ```
 app/
 ├── api/
+│   ├── admin/scrape-prices/    # POST dispara scraper · GET estado (local | GitHub Actions)
 │   ├── auth/[...nextauth]/     # Handlers de NextAuth
 │   ├── mlbb/lookup/            # POST /api/mlbb/lookup (rate limit + cache + fallback)
 │   ├── orders/[id]/invoice/    # Factura PDF on-demand
 │   └── support/on-duty/        # Agente de soporte activo según geo/horario
 ├── admin/                      # Panel de administración (RBAC)
+│   └── precios/                # Selector de juegos + [game] con tabla de precios proveedor
 ├── dashboard/                  # Órdenes del usuario + facturas
 ├── login/, register/           # Auth pages (Server Components)
 └── topup/mlbb/                 # Flujo de compra
 components/
 ├── home/                       # Hero, categorías, best-sellers, trust banner
-├── admin/                      # Panel de órdenes
+├── admin/                      # Panel de órdenes + botón de actualización de precios
 ├── CheckoutSection.tsx         # Checkout client-side (lazy-loaded)
 ├── PaymentModal.tsx            # Instrucciones + comprobante WhatsApp
 ├── WhatsAppWidget.tsx          # Soporte geo-horario
@@ -179,14 +207,24 @@ lib/
 ├── catalog.ts                  # Fuente única de verdad del catálogo
 ├── payments.ts                 # Regiones, métodos y validaciones de pago
 ├── mlbb/client.ts              # Único punto que conoce los upstreams
+├── supplier-games.ts           # Registro de juegos con tracking de precios
+├── scrapers.ts                 # Registro juego → script scraper
+├── scrape-jobs.ts              # Runner: spawn local · dispatch GitHub Actions en Vercel
+├── supplier-prices.ts          # Parser JSON → snapshot + consultas del panel
 ├── cache.ts                    # Upstash ↔ in-memory auto-seleccionado
 ├── rate-limit.ts               # Ventanas deslizantes + fallback
 ├── validations/                # Schemas Zod de todas las fronteras
 ├── db/                         # Schema Drizzle + cliente LibSQL
 ├── invoice-pdf.tsx             # Plantilla de factura A4
 └── support-schedule.ts         # Turnos AR/ES por zona horaria
+scrapers/                       # Tooling Python por juego (output/ ignorado por git)
+├── eneba_mlbb.py               # Scraper Eneba de MLBB (curl_cffi + ScrapingAnt)
+└── output/                     # JSONs resultantes de cada corrida
+scripts/
+├── set-admin.ts                # Promoción de admins por email
+└── import-eneba-prices.ts      # Importa el JSON del scraper a Turso
+.github/workflows/              # scrape-prices.yml (workflow_dispatch desde el admin)
 drizzle/                        # Migraciones SQL versionadas
-scripts/set-admin.ts            # Promoción de admins por email
 ```
 
 ## 🚀 Puesta en marcha
@@ -230,10 +268,16 @@ Abre [http://localhost:3000](http://localhost:3000).
 | `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | ✅ | Conexión a la base Turso. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Recomendada | Rate limiting + caché en producción. Sin ellas cae a memoria local (solo dev). |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ✅ | Cloudflare Turnstile. `.env.example` incluye claves de prueba. |
+| `SCRAPINGANT_API_KEY` | Scraper | Token de ScrapingAnt (proxy BR para checkout). |
+| `ENEBA_USER_ID` / `ENEBA_ZONE_ID` | Scraper | Cuenta MLBB usada para simular el checkout. |
+| `ENEBA_PYTHON_PATH` | Opcional | Ruta absoluta al Python del venv si no se detecta solo (local). |
+| `GITHUB_REPO` / `GITHUB_TOKEN` | Solo Vercel | El botón de precios dispara el workflow vía API (PAT con `actions:write`). |
+
+> Los mismos 5 valores del scraper/Turso deben existir también como **GitHub Actions secrets** (`SCRAPINGANT_API_KEY`, `ENEBA_USER_ID`, `ENEBA_ZONE_ID`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`) para el modo Vercel. Si falta alguno, el workflow lo reporta en su primer paso.
 
 ## 🧪 Testing
 
-**221 tests en 17 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
+**229 tests en 18 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
 
 ```bash
 npm run test          # modo watch
@@ -263,6 +307,7 @@ Convenciones: los tests viven junto al archivo que prueban (`foo.ts` → `foo.te
 | `npm run db:generate` | Genera archivos de migración Drizzle. |
 | `npm run db:push` | Aplica el schema a Turso. |
 | `npm run set-admin -- <email>` | Promueve un usuario a admin (idempotente). |
+| `npm run import-eneba` | Importa `scrapers/output/ml_diamonds_results.json` a Turso como snapshot. |
 | `npm run test` / `test:run` / `test:coverage` | Suite Vitest (watch / una vez / cobertura). |
 
 ## 🏗 Notas de arquitectura
