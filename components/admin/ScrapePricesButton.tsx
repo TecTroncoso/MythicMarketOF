@@ -155,7 +155,9 @@ export function ScrapePricesButton({ game }: { game: string }) {
             {job.status === "done" ? (
               <>
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
-                Lista actualizada: {job.packages ?? "?"} paquetes importados.
+                {job.packages != null
+                  ? `Lista actualizada: ${job.packages} paquetes importados.`
+                  : "Actualización completada."}
               </>
             ) : (
               <>
@@ -185,7 +187,8 @@ export function ScrapePricesButton({ game }: { game: string }) {
 
       {running && (
         <p className="text-xs text-gray-500">
-          El scraper recorre catálogo y checkout; suele tardar 2-4 minutos.
+          El scraper recorre catálogo y checkout; suele tardar unos minutos
+          (en producción corre en GitHub Actions).
         </p>
       )}
     </div>
