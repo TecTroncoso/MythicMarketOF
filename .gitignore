@@ -39,6 +39,10 @@ next-env.d.ts
 venv/
 env/
 .venv/
+__pycache__/
+
+# salidas del scraper de precios (se regeneran con cada corrida)
+scrapers/output/
 
 # scripts locales del usuario
 abrir_proyecto.bat
