@@ -14,6 +14,9 @@ export default defineConfig({
     environment: "node",
     globals: false,
     include: ["lib/**/*.test.ts", "**/*.test.ts", "**/*.test.tsx"],
+    // `.kilo/worktrees` holds Agent Manager worktree copies of this repo; their
+    // test duplicates must not run as part of the main project suite.
+    exclude: ["**/node_modules/**", ".kilo/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
