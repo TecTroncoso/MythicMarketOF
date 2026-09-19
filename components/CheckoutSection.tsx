@@ -20,7 +20,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
-import { PRODUCTS } from '@/lib/catalog';
+import { PRODUCTS, type ProductCategory } from '@/lib/catalog';
 import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { PaymentModal } from './PaymentModal';
@@ -30,6 +30,24 @@ import { ShareButton } from './ShareButton';
 const CARD_BG = "#110c2c";
 const CARD_BORDER = "rgba(147, 51, 234, 0.25)";
 
+// Filtros del grid "Choose your diamonds" (estilo panel de proveedor:
+// All + una categoría por tipo de producto).
+type CategoryFilter = "all" | ProductCategory;
+
+const CATEGORY_TABS: { id: CategoryFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "diamonds", label: "Diamonds" },
+  { id: "weekly-pass", label: "Weekly Pass" },
+  { id: "twilight-pass", label: "Twilight Pass" },
+  { id: "starlight", label: "Starlight" },
+  { id: "bundle", label: "Bundles" },
+];
+
+/** "86 Diamonds" + "8 Diamonds" -> "86 Diamonds + 8 Bonus" (estilo proveedor). */
+function bonusLabel(bonus: string): string {
+  return bonus.endsWith("Diamonds") ? ` + ${bonus.replace("Diamonds", "Bonus")}` : "";
+}
+
 export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   // Effective login state: the explicit prop when provided, otherwise resolved
   // once from /api/auth/session on the client (default false).
@@ -37,6 +55,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const [userId, setUserId] = useState('');
   const [zoneId, setZoneId] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -283,6 +302,12 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const shownPriceFor = (productId: string, fallback: number): number =>
     context ? (context.products.find((x) => x.id === productId)?.price ?? fallback) : fallback;
   const summaryPrice = selectedProductData ? shownPriceFor(selectedProductData.id, selectedProductData.price) : 0;
+
+  // Grid filtrado por la pestaña activa del selector de categorías.
+  const visibleProducts =
+    activeCategory === "all"
+      ? PRODUCTS
+      : PRODUCTS.filter((product) => product.category === activeCategory);
 
   const inputClassName =
     "w-full bg-[#0a061e] border border-[rgba(147,51,234,0.35)] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] transition-all";
@@ -560,78 +585,98 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
         </div>
       </section>
 
-      {/* ================= CHOOSE YOUR DIAMONDS ================= */}
+      {/* ================= SELECT TOP-UP ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 mt-14">
-        <div className="flex items-center gap-3 mb-6">
-          <Gem
-            className="w-6 h-6 text-[#d946ef]"
-            style={{ filter: "drop-shadow(0 0 8px rgba(217, 70, 239, 0.7))" }}
-          />
-          <h2 className="text-2xl font-black uppercase tracking-wide text-white">
-            Choose Your Diamonds
-          </h2>
-        </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 shrink-0">
+            <Gem
+              className="w-6 h-6 text-[#d946ef]"
+              style={{ filter: "drop-shadow(0 0 8px rgba(217, 70, 239, 0.7))" }}
+            />
+            <h2 className="text-xl font-black uppercase tracking-wide text-white">
+              Select Top-Up
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PRODUCTS.map((prod) => {
-            const isSelected = selectedProduct === prod.id;
-            const shownPrice = shownPriceFor(prod.id, prod.price);
-            return (
-              <button
-                key={prod.id}
-                onClick={() => setSelectedProduct(prod.id)}
-                className={`relative flex flex-col justify-between items-center p-5 h-full rounded-2xl border transition-all duration-200 text-center ${isSelected
-                  ? "border-[#d946ef] shadow-[0_0_20px_rgba(217,70,239,0.35)]"
-                  : "border-purple-900/40 bg-[#110c2c] hover:border-[#a855f7]/60 hover:bg-[#150e33]"
+          {/* Tabs de filtro por categoría (estilo segmented control) */}
+          <div className="flex gap-1 bg-[#0d0926] border border-purple-900/40 rounded-xl p-1 overflow-x-auto w-full md:w-auto">
+            {CATEGORY_TABS.map((tab) => {
+              const isActive = activeCategory === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveCategory(tab.id)}
+                  className={`flex-1 md:flex-none whitespace-nowrap rounded-lg px-4 py-2 text-sm font-bold transition-all duration-150 ${
+                    isActive
+                      ? "bg-[#a855f7]/20 text-white border border-[#a855f7]/70"
+                      : "text-gray-400 border border-transparent hover:text-white"
                   }`}
-              >
-                {/* Checkmark circular morado en la esquina superior derecha al seleccionar */}
-                {isSelected && (
-                  <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shadow-[0_0_10px_rgba(217,70,239,0.6)]">
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                  </span>
-                )}
-
-                {/* Cabecera: icono diamante + cantidad + bonus dorado */}
-                <Gem
-                  className="w-5 h-5 text-[#38bdf8] mb-2"
-                  style={{ filter: "drop-shadow(0 0 6px rgba(56, 189, 248, 0.6))" }}
-                />
-                <span className="font-black text-base text-white leading-tight">{prod.name}</span>
-                {prod.bonus && (
-                  <span className="text-xs font-bold text-amber-400 mt-0.5">+ {prod.bonus}</span>
-                )}
-
-                {/* Centro: imagen con altura fija centrada y resplandor azul de fondo */}
-                <div
-                  className="my-4 w-full h-28 rounded-xl bg-[#0a061e] flex items-center justify-center"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at center, rgba(56, 189, 248, 0.22) 0%, transparent 70%)",
-                  }}
                 >
-                  <Image
-                    src={prod.image}
-                    alt={`Recarga de ${prod.name}`}
-                    width={80}
-                    height={80}
-                    className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]"
-                  />
-                </div>
-
-                {/* Pie de tarjeta: precio grande a la izquierda + cashback a la derecha */}
-                <div className="w-full flex justify-between items-center pt-3 mt-auto border-t border-purple-900/40">
-                  <span className="text-lg font-bold text-white whitespace-nowrap">
-                    {effectiveCfg.symbol}{shownPrice.toFixed(2)}
-                  </span>
-                  <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/80 border border-emerald-500/30 rounded-md px-2.5 py-1 whitespace-nowrap">
-                    10% Cashback
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {visibleProducts.length === 0 ? (
+          <div className="border border-dashed border-purple-900/40 rounded-2xl py-16 text-center">
+            <p className="text-gray-500 text-sm font-semibold">
+              Próximamente en esta categoría
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {visibleProducts.map((prod) => {
+              const isSelected = selectedProduct === prod.id;
+              const shownPrice = shownPriceFor(prod.id, prod.price);
+              return (
+                <button
+                  key={prod.id}
+                  onClick={() => setSelectedProduct(prod.id)}
+                  className={`group relative flex flex-col rounded-2xl border-2 p-4 pt-4 text-center transition-all duration-200 ${
+                    isSelected
+                      ? "border-[#d946ef] bg-[#150d33] shadow-[0_0_22px_rgba(217,70,239,0.45)]"
+                      : "border-purple-900/40 bg-[#0e0a24] hover:border-[#a855f7]/60 hover:bg-[#130d2e]"
+                  }`}
+                >
+                  {/* Título: nombre + bonus inline estilo proveedor */}
+                  <span className="text-sm font-bold text-white leading-snug min-h-[2.5rem]">
+                    {prod.name}
+                    {bonusLabel(prod.bonus)}
+                  </span>
+
+                  {/* Arte del paquete a tamaño protagonista */}
+                  <div
+                    className="flex-1 flex items-center justify-center py-3"
+                    style={{
+                      backgroundImage:
+                        "radial-gradient(circle at center, rgba(56, 189, 248, 0.14) 0%, transparent 65%)",
+                    }}
+                  >
+                    <Image
+                      src={prod.image}
+                      alt={`Recarga de ${prod.name}`}
+                      width={140}
+                      height={140}
+                      className="w-full max-w-[130px] h-28 object-contain drop-shadow-[0_0_18px_rgba(56,189,248,0.45)] transition-transform duration-200 group-hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Pie: precio a la izquierda, cashback plano a la derecha */}
+                  <div className="flex items-end justify-between w-full">
+                    <span className="text-lg font-black text-white whitespace-nowrap">
+                      {effectiveCfg.symbol}{shownPrice.toFixed(2)}
+                    </span>
+                    <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
+                      10% Cashback
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* ================= BANNER DE BENEFICIOS ================= */}
