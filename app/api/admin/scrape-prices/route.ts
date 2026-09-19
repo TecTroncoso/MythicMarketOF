@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getLatestScrapeJob, startScrapeJob } from "@/lib/scrape-jobs";
+import {
+  getLatestScrapeJob,
+  startScrapeJob,
+  type ScrapeJob,
+} from "@/lib/scrape-jobs";
 
-// The scraper runs as a child process of the Node server.
+// The scraper runs as a child process of the Node server (local) or via a
+// GitHub Actions dispatch (Vercel).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function serializeJob(job: ReturnType<typeof getLatestScrapeJob>) {
+function serializeJob(job: ScrapeJob | null) {
   if (!job) return null;
   return {
     id: job.id,
@@ -44,13 +49,13 @@ export async function POST(request: Request) {
       : "";
 
   try {
-    const job = startScrapeJob(game);
+    const job = await startScrapeJob(game);
     return NextResponse.json(serializeJob(job), { status: 202 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "No se pudo iniciar.";
     const busy = message.includes("en curso");
     return NextResponse.json(
-      { error: message, job: serializeJob(getLatestScrapeJob(game || undefined)) },
+      { error: message, job: serializeJob(await getLatestScrapeJob(game || undefined)) },
       { status: busy ? 409 : 400 }
     );
   }
@@ -66,7 +71,7 @@ export async function GET(request: Request) {
   const game = new URL(request.url).searchParams.get("game") ?? undefined;
 
   return NextResponse.json(
-    { job: serializeJob(getLatestScrapeJob(game)) },
+    { job: serializeJob(await getLatestScrapeJob(game)) },
     { headers: { "Cache-Control": "no-store" } }
   );
 }
