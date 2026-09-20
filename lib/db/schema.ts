@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, primaryKey, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 export const users = sqliteTable("user", {
@@ -196,3 +196,33 @@ export const storeCombos = sqliteTable("store_combos", {
 });
 
 export type StoreCombo = typeof storeCombos.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Per-item retail markups. Overrides the game-level defaults from
+// pricing_settings for a single sellable item, so expensive packages do not
+// inherit a blunt flat percentage. The itemKey is the storefront product id
+// (package slug like "78-diamonds-8-bonus" or "combo-<uuid>" for combos), and
+// the same id stored on orders.productId.
+// ---------------------------------------------------------------------------
+
+export const itemMarkups = sqliteTable(
+  "item_markups",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    game: text("game").notNull(),
+    itemKey: text("itemKey").notNull(),
+    markupUsd: real("markupUsd").notNull(),
+    markupEur: real("markupEur").notNull(),
+    updatedAt: integer("updatedAt", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedBy: text("updatedBy"),
+  },
+  (table) => ({
+    gameItemKey: uniqueIndex("item_markups_game_item_key").on(table.game, table.itemKey),
+  })
+);
+
+export type ItemMarkupRow = typeof itemMarkups.$inferSelect;

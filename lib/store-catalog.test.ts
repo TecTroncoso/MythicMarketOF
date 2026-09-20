@@ -81,6 +81,21 @@ describe("buildStoreProducts()", () => {
     expect(diamonds?.priceEurCents).toBe(119); // EU sale price
   });
 
+  it("applies a per-item markup override instead of the game default", () => {
+    // "78 Diamonds": default 5% would give 135¢ USD / 119¢ EUR; the override
+    // sets 2% USD / 10% EUR for this package only.
+    const overrides = new Map([
+      ["78-diamonds-8-bonus", { markupUsd: 0.02, markupEur: 0.1 }],
+    ]);
+    const withOverrides = buildStoreProducts(ROWS, SETTINGS, overrides);
+    const tuned = withOverrides.find((p) => p.id === "78-diamonds-8-bonus");
+    expect(tuned?.priceUsdCents).toBe(132); // 129 * 1.02
+    expect(tuned?.priceEurCents).toBe(124); // 113 * 1.10 -> 124.3
+    // Other packages keep the game default markup.
+    const untouched = withOverrides.find((p) => p.id === "156-diamonds-16-bonus");
+    expect(untouched?.priceUsdCents).toBe(Math.round(258 * 1.05));
+  });
+
   it("keeps a region unsellable when its checkout price is missing", () => {
     const usdOnly = buildStoreProducts(
       [{ packageName: "100 Diamonds", checkoutUsdCents: 200, checkoutEurCents: null }],
@@ -182,5 +197,18 @@ describe("buildComboProducts()", () => {
 
   it("ignores combos with an empty component list", () => {
     expect(buildComboProducts(ROWS, [makeCombo([])], SETTINGS)).toEqual([]);
+  });
+
+  it("applies a per-combo markup override", () => {
+    // Default 5% on 495 USD -> 520; override 10% -> 545.
+    const overrides = new Map([["combo-abc123", { markupUsd: 0.1, markupEur: 0.1 }]]);
+    const [combo] = buildComboProducts(
+      ROWS,
+      [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly")],
+      SETTINGS,
+      overrides
+    );
+    expect(combo.priceUsdCents).toBe(545); // 495 * 1.10 = 544.5 -> 545
+    expect(combo.priceEurCents).toBe(475); // 432 * 1.10 = 475.2 -> 475
   });
 });

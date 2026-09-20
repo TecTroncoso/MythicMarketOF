@@ -69,3 +69,19 @@ export const CreateStoreComboSchema = z.object({
     .max(10, "Un combo puede combinar hasta 10 paquetes distintos."),
 });
 export type CreateStoreComboInput = z.infer<typeof CreateStoreComboSchema>;
+
+// Per-item markup override: replaces the game's default for ONE sellable
+// item (supplier package slug or combo id). Fractions: 0.05 = 5%.
+export const ItemMarkupSchema = z.object({
+  game: z.string().min(1, "Juego inválido."),
+  itemKey: z.string().min(1, "Item inválido.").max(120, "Item inválido."),
+  markupUsd: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
+  markupEur: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
+});
+export type ItemMarkupInput = z.infer<typeof ItemMarkupSchema>;

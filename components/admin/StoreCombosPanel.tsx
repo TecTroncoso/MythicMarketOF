@@ -6,8 +6,9 @@ import { Layers, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { createStoreCombo, deleteStoreCombo } from "@/lib/actions/combos";
 // Pure markup helper from lib/markup — importing from "@/lib/pricing-settings"
 // would drag the DB client into the browser bundle.
-import { applyMarkupCents } from "@/lib/markup";
+import { applyMarkupCents, type GamePricingSettings } from "@/lib/markup";
 import { formatAmount } from "@/lib/orders";
+import { ItemMarkupEditor } from "./ItemMarkupEditor";
 
 interface ComboPackageRow {
   packageName: string;
@@ -25,8 +26,11 @@ interface StoreCombosPanelProps {
   game: string;
   packages: ComboPackageRow[];
   combos: ExistingCombo[];
+  /** Game-level defaults (used for unsaved combos and as editor hints). */
   markupUsd: number;
   markupEur: number;
+  /** Per-item overrides keyed by storefront id ("combo-<uuid>"), serialized. */
+  itemMarkups: Record<string, GamePricingSettings>;
 }
 
 /** Sale price preview: supplier checkout sum marked up per currency. */
@@ -53,7 +57,7 @@ function Breakdown({ components }: { components: { packageName: string; qty: num
   );
 }
 
-export function StoreCombosPanel({ game, packages, combos, markupUsd, markupEur }: StoreCombosPanelProps) {
+export function StoreCombosPanel({ game, packages, combos, markupUsd, markupEur, itemMarkups }: StoreCombosPanelProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [name, setName] = useState("");
@@ -131,6 +135,10 @@ export function StoreCombosPanel({ game, packages, combos, markupUsd, markupEur 
           {combos.map((combo) => {
             const costUsd = comboCents(combo.components, packages, (p) => p.checkoutUsdCents);
             const costEur = comboCents(combo.components, packages, (p) => p.checkoutEurCents);
+            // Per-combo markup override, falling back to the game defaults.
+            const override = itemMarkups[`combo-${combo.id}`];
+            const comboMarkupUsd = override?.markupUsd ?? markupUsd;
+            const comboMarkupEur = override?.markupEur ?? markupEur;
             return (
               <li
                 key={combo.id}
@@ -142,8 +150,8 @@ export function StoreCombosPanel({ game, packages, combos, markupUsd, markupEur 
                 </div>
                 <div className="flex items-center gap-4">
                   {([
-                    { cost: costUsd, markup: markupUsd, currency: "USD" },
-                    { cost: costEur, markup: markupEur, currency: "EUR" },
+                    { cost: costUsd, markup: comboMarkupUsd, currency: "USD" },
+                    { cost: costEur, markup: comboMarkupEur, currency: "EUR" },
                   ] as const).map(({ cost, markup, currency }) => (
                     <div key={currency} className="text-right">
                       <p className="text-[10px] uppercase tracking-wider text-gray-500">{currency}</p>
@@ -157,6 +165,16 @@ export function StoreCombosPanel({ game, packages, combos, markupUsd, markupEur 
                       </p>
                     </div>
                   ))}
+                  <ItemMarkupEditor
+                    game={game}
+                    itemKey={`combo-${combo.id}`}
+                    markupUsd={comboMarkupUsd}
+                    markupEur={comboMarkupEur}
+                    hasOverride={Boolean(override)}
+                    defaultUsd={markupUsd}
+                    defaultEur={markupEur}
+                    compact
+                  />
                   <button
                     type="button"
                     onClick={() => handleDelete(combo.id)}

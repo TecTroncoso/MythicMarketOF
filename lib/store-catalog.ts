@@ -12,7 +12,8 @@
 // to the static catalog when this returns null (no snapshot / DB error).
 
 import type { ProductCategory } from "@/lib/catalog";
-import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
+import { itemMarkupFor, getItemMarkups, type ItemMarkupMap } from "@/lib/item-markups";
+import { applyMarkupCents, getPricingSettings, type GamePricingSettings } from "@/lib/pricing-settings";
 import { getStoreCombos, type StoreComboDef } from "@/lib/store-combos";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 
@@ -77,13 +78,22 @@ function imageFor(category: ProductCategory, name: string): string {
   return tier?.image ?? "/products/baul6.png";
 }
 
-/** "78 Diamonds + 8 Bonus" -> "78-diamonds-8-bonus"; collisions get "-2"… */
-function slugify(packageName: string, taken: Set<string>): string {
-  const base =
+/**
+ * "78 Diamonds + 8 Bonus" -> "78-diamonds-8-bonus". Exported so every layer
+ * (store builder, admin UI, markup overrides) derives the SAME product id.
+ */
+export function slugifyPackageName(packageName: string): string {
+  return (
     packageName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "paquete";
+      .replace(/^-+|-+$/g, "") || "paquete"
+  );
+}
+
+/** "78 Diamonds + 8 Bonus" -> "78-diamonds-8-bonus"; collisions get "-2"… */
+function slugify(packageName: string, taken: Set<string>): string {
+  const base = slugifyPackageName(packageName);
   let slug = base;
   let n = 2;
   while (taken.has(slug)) {
@@ -102,7 +112,8 @@ function slugify(packageName: string, taken: Set<string>): string {
  */
 export function buildStoreProducts(
   rows: SupplierCostRow[],
-  settings: { markupUsd: number; markupEur: number }
+  settings: GamePricingSettings,
+  itemMarkups?: ItemMarkupMap
 ): StoreProduct[] {
   const taken = new Set<string>();
   const products: StoreProduct[] = [];
@@ -112,8 +123,12 @@ export function buildStoreProducts(
 
     const [name, rawBonus] = row.packageName.split("+").map((part) => part.trim());
     const category = categorize(row.packageName);
+    const id = slugify(row.packageName, taken);
+    // Per-item markup when the admin fine-tuned this package; otherwise the
+    // game-level default.
+    const markup = itemMarkupFor(id, itemMarkups, settings);
     products.push({
-      id: slugify(row.packageName, taken),
+      id,
       name: name ?? row.packageName,
       // "8 Bonus" -> "8 Diamonds" to match the static catalog bonus contract
       // ("+ 8 Bonus" is re-derived by the UI from it).
@@ -124,11 +139,11 @@ export function buildStoreProducts(
       priceUsdCents:
         row.checkoutUsdCents === null
           ? null
-          : applyMarkupCents(row.checkoutUsdCents, settings.markupUsd),
+          : applyMarkupCents(row.checkoutUsdCents, markup.markupUsd),
       priceEurCents:
         row.checkoutEurCents === null
           ? null
-          : applyMarkupCents(row.checkoutEurCents, settings.markupEur),
+          : applyMarkupCents(row.checkoutEurCents, markup.markupEur),
     });
   }
 
@@ -164,7 +179,8 @@ function comboCostCents(
 export function buildComboProducts(
   rows: SupplierCostRow[],
   combos: StoreComboDef[],
-  settings: { markupUsd: number; markupEur: number }
+  settings: GamePricingSettings,
+  itemMarkups?: ItemMarkupMap
 ): StoreProduct[] {
   const products: StoreProduct[] = [];
 
@@ -174,6 +190,9 @@ export function buildComboProducts(
     const costUsd = comboCostCents(combo.components, rows, (r) => r.checkoutUsdCents);
     const costEur = comboCostCents(combo.components, rows, (r) => r.checkoutEurCents);
     if (costUsd === null && costEur === null) continue;
+
+    const id = `combo-${combo.id}`;
+    const markup = itemMarkupFor(id, itemMarkups, settings);
 
     const categories = new Set(
       combo.components.map((c) => categorize(c.packageName))
@@ -187,16 +206,16 @@ export function buildComboProducts(
 
     products.push({
       // "combo-" prefix keeps admin combos collision-free with package slugs.
-      id: `combo-${combo.id}`,
+      id,
       name: combo.name,
       bonus: "",
       label: combo.name,
       image,
       category,
       priceUsdCents:
-        costUsd === null ? null : applyMarkupCents(costUsd, settings.markupUsd),
+        costUsd === null ? null : applyMarkupCents(costUsd, markup.markupUsd),
       priceEurCents:
-        costEur === null ? null : applyMarkupCents(costEur, settings.markupEur),
+        costEur === null ? null : applyMarkupCents(costEur, markup.markupEur),
     });
   }
 
@@ -211,15 +230,16 @@ export function buildComboProducts(
  */
 export async function getStoreProducts(game: string): Promise<StoreProduct[] | null> {
   try {
-    const [latest, settings, combos] = await Promise.all([
+    const [latest, settings, combos, itemMarkups] = await Promise.all([
       getLatestSupplierSnapshot(game),
       getPricingSettings(game),
       getStoreCombos(game),
+      getItemMarkups(game),
     ]);
     if (!latest) return null;
     const products = [
-      ...buildStoreProducts(latest.rows, settings),
-      ...buildComboProducts(latest.rows, combos, settings),
+      ...buildStoreProducts(latest.rows, settings, itemMarkups),
+      ...buildComboProducts(latest.rows, combos, settings, itemMarkups),
     ];
     return products.length > 0 ? products : null;
   } catch (error) {

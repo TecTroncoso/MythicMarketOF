@@ -58,13 +58,14 @@ export function PricingSettingsForm({ game, markupUsd, markupEur }: PricingSetti
       <div className="flex items-center gap-2">
         <Percent className="w-4 h-4 text-[#ffaa00]" />
         <h2 className="text-sm font-black uppercase tracking-widest text-white">
-          Markup de venta
+          Markup por defecto del juego
         </h2>
       </div>
       <p className="text-xs text-gray-400 leading-relaxed">
-        El Select Top-Up vende al precio <span className="text-gray-200 font-semibold">Chk × (1 + markup)</span>.
-        El markup USD se aplica a los compradores de Latinoamérica (cobran en US$) y el EUR a los
-        de Europa (cobran en €).
+        Aplica a todos los items <span className="text-gray-200 font-semibold">sin markup propio</span>: la
+        tabla de abajo permite ajustar cada paquete por separado (útiles para no encarecer de más
+        los paquetes caros). Precio de venta = <span className="text-gray-200 font-semibold">Chk × (1 + markup)</span>;
+        el USD se cobra en LATAM (US$) y el EUR en Europa (€).
       </p>
 
       <div className="flex flex-wrap items-end gap-4">

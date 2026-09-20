@@ -11,7 +11,7 @@ checkout regional multi-método de pago y una arquitectura *security-first* end-
 [![TypeScript](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/tests-276%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-290%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/db-Turso-FFEE58?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PC9zdmc+&logoColor=black)](https://turso.tech/)
 
 </div>
@@ -46,7 +46,7 @@ El comprador elige su paquete, verifica la cuenta de MLBB destino en tiempo real
 | Área | Detalle |
 |---|---|
 | 🛒 **Catálogo server-side** | Con snapshot del proveedor importado, el Select Top-Up muestra sus paquetes con precio = **checkout del proveedor × (1 + markup)** por moneda; sin snapshot cae al catálogo estático (`lib/catalog.ts`). El cliente solo envía el ID del producto. |
-| 🏷️ **Markup admin por moneda** | Markups USD (LATAM) y EUR (Europa) editables desde `/admin/precios/[game]`, con vista previa del precio de venta por paquete. |
+| 🏷️ **Markup por item y por moneda** | Cada paquete (y cada combo) tiene su propio markup USD (LATAM) y EUR (Europa), editable desde `/admin/precios/[game]` con vista previa de venta; el % global del juego actúa como default. |
 | 🧩 **Combos del admin** | Paquetes compuestos creados en el panel combinando items del proveedor con cantidades (ej. 3× Weekly Pass); su coste es la suma de los checkouts, llevan el mismo markup y se revalúan solos con cada snapshot. |
 | 🌎 **Checkout regional** | Detección automática de país (`x-vercel-ip-country` / `cf-ipcountry`) → región **EU (€)** o **LATAM (US$)** con conversión de moneda en el servidor. |
 | 💳 **9 métodos de pago** | PayPal, Tarjeta, SEPA, Bizum, N26 y Revolut (EU) · Mercado Pago, Pix, Binance USDT y PayPal (LATAM), con badges SVG de marca y validación por patrón. |
@@ -169,7 +169,7 @@ El panel admin incluye tracking de costos del proveedor (Eneba) por juego y mone
 ```
 
 - **Datos**: cada corrida crea un *snapshot* (`supplier_price_snapshots` + `supplier_price_rows`) con precios en centavos; los snapshots antiguos se conservan como historial.
-- **Markup de venta por moneda**: la misma página permite editar el markup USD (LATAM) y EUR (Europa) que la tienda aplica sobre el checkout del proveedor, y muestra la columna "Venta" con el precio final ya calculado. La tienda (`/topup/mlbb`) se alimenta del **último snapshot + markups** (`lib/store-catalog.ts`): el precio autoritativo de cada orden se resuelve en el servidor con esos mismos datos, y sin snapshot la tienda cae al catálogo estático sin romperse.
+- **Markup de venta por item y moneda**: la página permite editar el markup USD (LATAM) y EUR (Europa) **de cada paquete del proveedor y de cada combo** (columna "Markup %"), para no inflar de más los paquetes caros con un % plano. Items sin override usan el markup por defecto del juego (editable arriba). La columna "Venta" muestra el precio final (Chk × 1+markup). La tienda (`/topup/mlbb`) se alimenta del **último snapshot + markups por item** (`lib/store-catalog.ts` + `lib/item-markups.ts`): el precio autoritativo de cada orden se resuelve en el servidor con esos mismos datos, y sin snapshot la tienda cae al catálogo estático sin romperse.
 - **Combos personalizados**: desde el panel se crean paquetes compuestos (`store_combos`) eligiendo items del snapshot con cantidades (p. ej. 3× Weekly Diamond Pass). Su coste se resuelve en vivo contra el último snapshot (`lib/store-combos.ts` + `buildComboProducts`), pasan por el mismo markup y aparecen en el grid de la tienda; si un componente desaparece del proveedor, el combo deja de mostrarse en vez de malvenderse.
 - **Botón "Actualizar precios"**: dispara el scraper desde el panel.
   - **Local**: spawn directo de `venv/Scripts/python.exe` (se resuelve solo; `ENEBA_PYTHON_PATH` como override).
@@ -210,7 +210,9 @@ lib/
 ├── actions/                    # Server Actions (auth, checkout, admin, reviews, pricing)
 ├── catalog.ts                  # Catálogo estático de respaldo
 ├── store-catalog.ts            # Catálogo live: snapshot proveedor + markup → productos
-├── pricing-settings.ts         # Markups USD/EUR por juego (tabla pricing_settings)
+├── pricing-settings.ts         # Markups USD/EUR por defecto del juego (pricing_settings)
+├── item-markups.ts             # Overrides de markup por item (item_markups)
+├── markup.ts                   # Primitivas de markup PURAS (seguro en cliente)
 ├── store-combos.ts             # Combos del admin (tabla store_combos, suma de checkouts)
 ├── payments.ts                 # Regiones, métodos y validaciones de pago
 ├── mlbb/client.ts              # Único punto que conoce los upstreams
@@ -284,7 +286,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ## 🧪 Testing
 
-**276 tests en 23 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, el catálogo live con combos, los markups de venta, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
+**290 tests en 25 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, el catálogo live con combos, los markups por item y por juego, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
 
 ```bash
 npm run test          # modo watch

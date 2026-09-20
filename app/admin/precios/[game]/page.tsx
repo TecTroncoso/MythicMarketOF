@@ -10,7 +10,11 @@ import { getSupplierGame } from "@/lib/supplier-games";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 import { getStoreCombos } from "@/lib/store-combos";
 import { StoreCombosPanel } from "@/components/admin/StoreCombosPanel";
+import { ItemMarkupEditor } from "@/components/admin/ItemMarkupEditor";
+import { getItemMarkups, itemMarkupFor } from "@/lib/item-markups";
+import { slugifyPackageName } from "@/lib/store-catalog";
 import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
+import type { GamePricingSettings } from "@/lib/markup";
 import { formatAmount } from "@/lib/orders";
 import type { SupplierPriceRow } from "@/lib/db/schema";
 
@@ -35,12 +39,10 @@ function PriceCell({ cents, currency }: { cents: number | null; currency: string
 
 function PriceCatalogGroup({
   row,
-  markupUsd,
-  markupEur,
+  markup,
 }: {
   row: SupplierPriceRow;
-  markupUsd: number;
-  markupEur: number;
+  markup: GamePricingSettings;
 }) {
   return (
     <>
@@ -58,7 +60,7 @@ function PriceCatalogGroup({
       </td>
       <td className="px-3 py-3 text-right text-[#7dd87d] font-semibold bg-green-500/[0.04]">
         <PriceCell
-          cents={row.checkoutUsdCents === null ? null : applyMarkupCents(row.checkoutUsdCents, markupUsd)}
+          cents={row.checkoutUsdCents === null ? null : applyMarkupCents(row.checkoutUsdCents, markup.markupUsd)}
           currency="USD"
         />
       </td>
@@ -70,7 +72,7 @@ function PriceCatalogGroup({
       </td>
       <td className="px-3 py-3 text-right text-[#7dd87d] font-semibold bg-green-500/[0.04]">
         <PriceCell
-          cents={row.checkoutEurCents === null ? null : applyMarkupCents(row.checkoutEurCents, markupEur)}
+          cents={row.checkoutEurCents === null ? null : applyMarkupCents(row.checkoutEurCents, markup.markupEur)}
           currency="EUR"
         />
       </td>
@@ -95,10 +97,11 @@ export default async function AdminGamePricesPage({
   }
 
   const scraper = getScraperForGame(game.id);
-  const [latest, pricing, combos] = await Promise.all([
+  const [latest, pricing, combos, itemMarkups] = await Promise.all([
     getLatestSupplierSnapshot(game.id),
     getPricingSettings(game.id),
     getStoreCombos(game.id),
+    getItemMarkups(game.id),
   ]);
 
   return (
@@ -157,6 +160,7 @@ export default async function AdminGamePricesPage({
           combos={combos}
           markupUsd={pricing.markupUsd}
           markupEur={pricing.markupEur}
+          itemMarkups={Object.fromEntries(itemMarkups)}
         />
 
         {!latest ? (
@@ -188,6 +192,9 @@ export default async function AdminGamePricesPage({
                     <th colSpan={3} className="px-3 py-2 text-center border-l border-[#1c2534]">
                       EUR
                     </th>
+                    <th rowSpan={2} className="px-4 py-3 text-center align-bottom">
+                      Markup %
+                    </th>
                     <th rowSpan={2} className="px-4 py-3 text-right align-bottom">
                       Cashback
                     </th>
@@ -204,30 +211,43 @@ export default async function AdminGamePricesPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1c2534]">
-                  {latest.rows.map((row) => (
-                    <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-100">
-                        {row.packageName}
-                      </td>
-                      <PriceCatalogGroup
-                        row={row}
-                        markupUsd={pricing.markupUsd}
-                        markupEur={pricing.markupEur}
-                      />
-                      <td className="px-4 py-3 text-right text-[#ffaa00] font-semibold">
-                        {row.cashbackPercent !== null
-                          ? `${row.cashbackPercent}%`
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                  {latest.rows.map((row) => {
+                    const itemKey = slugifyPackageName(row.packageName);
+                    const rowMarkup = itemMarkupFor(itemKey, itemMarkups, pricing);
+                    return (
+                      <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="px-4 py-3 font-semibold text-gray-100">
+                          {row.packageName}
+                        </td>
+                        <PriceCatalogGroup row={row} markup={rowMarkup} />
+                        <td className="px-3 py-3">
+                          <ItemMarkupEditor
+                            game={game.id}
+                            itemKey={itemKey}
+                            markupUsd={rowMarkup.markupUsd}
+                            markupEur={rowMarkup.markupEur}
+                            hasOverride={itemMarkups.has(itemKey)}
+                            defaultUsd={pricing.markupUsd}
+                            defaultEur={pricing.markupEur}
+                            compact
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-right text-[#ffaa00] font-semibold">
+                          {row.cashbackPercent !== null
+                            ? `${row.cashbackPercent}%`
+                            : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
             <p className="px-4 py-3 text-xs text-gray-600 border-t border-[#1c2534]">
               Cat. = precio de lista en el proveedor · Chk. = total real en
-              checkout · Venta = Chk. × (1 + markup) — el precio que ve el
-              comprador en la tienda (USD en LATAM, EUR en Europa).
+              checkout · Venta = Chk. × (1 + markup del item) — el precio que ve
+              el comprador en la tienda (USD en LATAM, EUR en Europa). El markup
+              se edita por paquete; sin override usa el default del juego.
               {scraper
                 ? ` Scraper: ${scraper.description} (corre en esta máquina vía el botón de arriba).`
                 : " Este juego aún no tiene scraper automatizado."}
