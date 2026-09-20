@@ -154,26 +154,6 @@ export const supplierPriceRows = sqliteTable("supplier_price_rows", {
 export type SupplierPriceRow = typeof supplierPriceRows.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Per-game retail pricing settings. The storefront price is derived from the
-// latest supplier snapshot: salePriceCents = checkoutCents * (1 + markup).
-// Markups are stored as fractions (0.05 = 5%) and are editable per game from
-// /admin/precios/[game]. USD markup feeds the LATAM region (charged in US$),
-// EUR markup feeds the EU region (charged in €).
-// ---------------------------------------------------------------------------
-
-export const pricingSettings = sqliteTable("pricing_settings", {
-  game: text("game").primaryKey(),
-  markupUsd: real("markupUsd").notNull().default(0.05),
-  markupEur: real("markupEur").notNull().default(0.05),
-  updatedAt: integer("updatedAt", { mode: "timestamp_ms" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-  updatedBy: text("updatedBy"),
-});
-
-export type PricingSettings = typeof pricingSettings.$inferSelect;
-
-// ---------------------------------------------------------------------------
 // Admin-defined combo packages: custom sellable items whose cost is the sum
 // of other supplier packages' checkout prices times their quantities
 // (e.g. "3x Weekly Diamond Pass"). Costs are resolved live against the latest
@@ -198,11 +178,12 @@ export const storeCombos = sqliteTable("store_combos", {
 export type StoreCombo = typeof storeCombos.$inferSelect;
 
 // ---------------------------------------------------------------------------
-// Per-item retail markups. Overrides the game-level defaults from
-// pricing_settings for a single sellable item, so expensive packages do not
-// inherit a blunt flat percentage. The itemKey is the storefront product id
-// (package slug like "78-diamonds-8-bonus" or "combo-<uuid>" for combos), and
-// the same id stored on orders.productId.
+// Per-item retail markups: THE source of margin. Each sellable item carries
+// its own USD/EUR markup, so a cheap package and an expensive one never share
+// a flat percentage. Items without a row sell at supplier cost (0%). The
+// itemKey is the storefront product id (package slug like
+// "78-diamonds-8-bonus" or "combo-<uuid>" for combos) — the same id stored
+// on orders.productId.
 // ---------------------------------------------------------------------------
 
 export const itemMarkups = sqliteTable(

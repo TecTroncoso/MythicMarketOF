@@ -1,5 +1,5 @@
 // Retail markup primitives. PURE module: safe for both client and server
-// bundles (Imported by admin panel client components). Do NOT import db or
+// bundles (imported by admin panel client components). Do NOT import db or
 // anything server-only from here.
 
 export interface GamePricingSettings {
@@ -7,10 +7,12 @@ export interface GamePricingSettings {
   markupEur: number;
 }
 
-// 5% mirrors the historical markup baked into the static catalog prices.
-export const DEFAULT_PRICING_SETTINGS: GamePricingSettings = {
-  markupUsd: 0.05,
-  markupEur: 0.05,
+// There is NO game-level default anymore: every sellable item carries its own
+// markup (item_markups table). Items without an override sell at supplier
+// cost (0%), and the admin panel flags them as "SIN MARKUP".
+export const ZERO_MARKUP: GamePricingSettings = {
+  markupUsd: 0,
+  markupEur: 0,
 };
 
 /**

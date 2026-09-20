@@ -57,6 +57,13 @@
       "when": 1789911142900,
       "tag": "0007_salty_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789918801250,
+      "tag": "0008_hesitant_titania",
+      "breakpoints": true
     }
   ]
 }

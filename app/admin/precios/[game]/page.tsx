@@ -4,7 +4,6 @@ import { ArrowLeft, CircleDollarSign } from "lucide-react";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/Navbar";
 import { ScrapePricesButton } from "@/components/admin/ScrapePricesButton";
-import { PricingSettingsForm } from "@/components/admin/PricingSettingsForm";
 import { getScraperForGame } from "@/lib/scrapers";
 import { getSupplierGame } from "@/lib/supplier-games";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
@@ -13,7 +12,7 @@ import { StoreCombosPanel } from "@/components/admin/StoreCombosPanel";
 import { ItemMarkupEditor } from "@/components/admin/ItemMarkupEditor";
 import { getItemMarkups, itemMarkupFor } from "@/lib/item-markups";
 import { slugifyPackageName } from "@/lib/store-catalog";
-import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
+import { applyMarkupCents } from "@/lib/markup";
 import type { GamePricingSettings } from "@/lib/markup";
 import { formatAmount } from "@/lib/orders";
 import type { SupplierPriceRow } from "@/lib/db/schema";
@@ -97,9 +96,8 @@ export default async function AdminGamePricesPage({
   }
 
   const scraper = getScraperForGame(game.id);
-  const [latest, pricing, combos, itemMarkups] = await Promise.all([
+  const [latest, combos, itemMarkups] = await Promise.all([
     getLatestSupplierSnapshot(game.id),
-    getPricingSettings(game.id),
     getStoreCombos(game.id),
     getItemMarkups(game.id),
   ]);
@@ -142,14 +140,6 @@ export default async function AdminGamePricesPage({
           </div>
         </header>
 
-        <div className="mb-6">
-          <PricingSettingsForm
-            game={game.id}
-            markupUsd={pricing.markupUsd}
-            markupEur={pricing.markupEur}
-          />
-        </div>
-
         <StoreCombosPanel
           game={game.id}
           packages={(latest?.rows ?? []).map((row) => ({
@@ -158,8 +148,6 @@ export default async function AdminGamePricesPage({
             checkoutEurCents: row.checkoutEurCents,
           }))}
           combos={combos}
-          markupUsd={pricing.markupUsd}
-          markupEur={pricing.markupEur}
           itemMarkups={Object.fromEntries(itemMarkups)}
         />
 
@@ -213,7 +201,7 @@ export default async function AdminGamePricesPage({
                 <tbody className="divide-y divide-[#1c2534]">
                   {latest.rows.map((row) => {
                     const itemKey = slugifyPackageName(row.packageName);
-                    const rowMarkup = itemMarkupFor(itemKey, itemMarkups, pricing);
+                    const rowMarkup = itemMarkupFor(itemKey, itemMarkups);
                     return (
                       <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="px-4 py-3 font-semibold text-gray-100">
@@ -227,8 +215,6 @@ export default async function AdminGamePricesPage({
                             markupUsd={rowMarkup.markupUsd}
                             markupEur={rowMarkup.markupEur}
                             hasOverride={itemMarkups.has(itemKey)}
-                            defaultUsd={pricing.markupUsd}
-                            defaultEur={pricing.markupEur}
                             compact
                           />
                         </td>

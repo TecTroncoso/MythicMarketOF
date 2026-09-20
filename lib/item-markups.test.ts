@@ -41,15 +41,13 @@ describe("getItemMarkups()", () => {
 });
 
 describe("itemMarkupFor()", () => {
-  const defaults = { markupUsd: 0.05, markupEur: 0.05 };
-
-  it("returns the item override when present", () => {
+  it("returns the item's own markup when present", () => {
     const map = new Map([["p1", { markupUsd: 0.02, markupEur: 0.09 }]]);
-    expect(itemMarkupFor("p1", map, defaults)).toEqual({ markupUsd: 0.02, markupEur: 0.09 });
+    expect(itemMarkupFor("p1", map)).toEqual({ markupUsd: 0.02, markupEur: 0.09 });
   });
 
-  it("falls back to the game defaults when there is no override", () => {
-    expect(itemMarkupFor("p1", new Map(), defaults)).toEqual(defaults);
-    expect(itemMarkupFor("p1", undefined, defaults)).toEqual(defaults);
+  it("falls back to ZERO (sell at cost) when the item has no markup", () => {
+    expect(itemMarkupFor("p1", new Map())).toEqual({ markupUsd: 0, markupEur: 0 });
+    expect(itemMarkupFor("p1", undefined)).toEqual({ markupUsd: 0, markupEur: 0 });
   });
 });

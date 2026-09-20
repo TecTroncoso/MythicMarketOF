@@ -1,19 +1,19 @@
 // Live storefront catalog: the Select Top-Up grid is fed by the LATEST
 // supplier price snapshot (same rows shown in /admin/precios/[game]) instead
 // of the static lib/catalog.ts list. Each supplier row becomes a store
-// product whose sale price is its checkout cost marked up per currency
-// (lib/pricing-settings.ts):
+// product whose sale price is its checkout cost marked up by THAT item's own
+// per-currency markup (lib/item-markups.ts; no markup => sells at cost):
 //
 //   LATAM buyers see checkoutUsdCents * (1 + markupUsd)  — charged in USD
 //   EU buyers    see checkoutEurCents * (1 + markupEur)  — charged in EUR
 //
 // buildStoreProducts() is pure so Vitest can exercise it without a DB;
-// getStoreProducts() adds the snapshot + settings reads. Callers fall back
-// to the static catalog when this returns null (no snapshot / DB error).
+// getStoreProducts() adds the snapshot + combo + markup reads. Callers fall
+// back to the static catalog when this returns null (no snapshot / DB error).
 
 import type { ProductCategory } from "@/lib/catalog";
 import { itemMarkupFor, getItemMarkups, type ItemMarkupMap } from "@/lib/item-markups";
-import { applyMarkupCents, getPricingSettings, type GamePricingSettings } from "@/lib/pricing-settings";
+import { applyMarkupCents } from "@/lib/markup";
 import { getStoreCombos, type StoreComboDef } from "@/lib/store-combos";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 
@@ -112,7 +112,6 @@ function slugify(packageName: string, taken: Set<string>): string {
  */
 export function buildStoreProducts(
   rows: SupplierCostRow[],
-  settings: GamePricingSettings,
   itemMarkups?: ItemMarkupMap
 ): StoreProduct[] {
   const taken = new Set<string>();
@@ -124,9 +123,9 @@ export function buildStoreProducts(
     const [name, rawBonus] = row.packageName.split("+").map((part) => part.trim());
     const category = categorize(row.packageName);
     const id = slugify(row.packageName, taken);
-    // Per-item markup when the admin fine-tuned this package; otherwise the
-    // game-level default.
-    const markup = itemMarkupFor(id, itemMarkups, settings);
+    // He who has no markup row sells at cost (ZERO_MARKUP) — the panel flags
+    // those items as SIN MARKUP so the admin prices them on the spot.
+    const markup = itemMarkupFor(id, itemMarkups);
     products.push({
       id,
       name: name ?? row.packageName,
@@ -179,7 +178,6 @@ function comboCostCents(
 export function buildComboProducts(
   rows: SupplierCostRow[],
   combos: StoreComboDef[],
-  settings: GamePricingSettings,
   itemMarkups?: ItemMarkupMap
 ): StoreProduct[] {
   const products: StoreProduct[] = [];
@@ -192,7 +190,7 @@ export function buildComboProducts(
     if (costUsd === null && costEur === null) continue;
 
     const id = `combo-${combo.id}`;
-    const markup = itemMarkupFor(id, itemMarkups, settings);
+    const markup = itemMarkupFor(id, itemMarkups);
 
     const categories = new Set(
       combo.components.map((c) => categorize(c.packageName))
@@ -230,16 +228,15 @@ export function buildComboProducts(
  */
 export async function getStoreProducts(game: string): Promise<StoreProduct[] | null> {
   try {
-    const [latest, settings, combos, itemMarkups] = await Promise.all([
+    const [latest, combos, itemMarkups] = await Promise.all([
       getLatestSupplierSnapshot(game),
-      getPricingSettings(game),
       getStoreCombos(game),
       getItemMarkups(game),
     ]);
     if (!latest) return null;
     const products = [
-      ...buildStoreProducts(latest.rows, settings, itemMarkups),
-      ...buildComboProducts(latest.rows, combos, settings, itemMarkups),
+      ...buildStoreProducts(latest.rows, itemMarkups),
+      ...buildComboProducts(latest.rows, combos, itemMarkups),
     ];
     return products.length > 0 ? products : null;
   } catch (error) {

@@ -9,14 +9,11 @@ interface ItemMarkupEditorProps {
   game: string;
   /** Storefront product id (package slug or "combo-<uuid>"). */
   itemKey: string;
-  /** Effective markups right now (override if set, else the game defaults). */
+  /** Effective markups right now (the item's own, or 0 when unset). */
   markupUsd: number;
   markupEur: number;
-  /** True when this item has its own override (enables the reset button). */
+  /** True when this item has markup stored; false = sells AT COST. */
   hasOverride: boolean;
-  /** Game-level defaults, shown as placeholder/hint. */
-  defaultUsd: number;
-  defaultEur: number;
   /** Compact rendering for table cells. */
   compact?: boolean;
 }
@@ -24,8 +21,8 @@ interface ItemMarkupEditorProps {
 /**
  * Per-item markup editor: USD/LATAM and EUR/EU percentages next to each
  * price-list row. Values are entered in percent (5 = 5%); the server stores
- * fractions. A reset button removes the override and re-applies the game
- * defaults.
+ * fractions. There is no game-level default anymore: an item without markup
+ * sells at supplier cost, and is flagged as SIN MARKUP here.
  */
 export function ItemMarkupEditor({
   game,
@@ -33,8 +30,6 @@ export function ItemMarkupEditor({
   markupUsd,
   markupEur,
   hasOverride,
-  defaultUsd,
-  defaultEur,
   compact = false,
 }: ItemMarkupEditorProps) {
   const router = useRouter();
@@ -70,9 +65,10 @@ export function ItemMarkupEditor({
     startTransition(async () => {
       const res = await resetItemMarkup(game, itemKey);
       if (res.success) {
-        setUsdPct(formatPct(defaultUsd));
-        setEurPct(formatPct(defaultEur));
-        setFeedback({ ok: true, text: "Restablecido al default." });
+        // No markup row => the item sells at supplier cost (0%).
+        setUsdPct("0");
+        setEurPct("0");
+        setFeedback({ ok: true, text: "Markup eliminado: venderá a costo." });
         router.refresh();
       } else {
         setFeedback({ ok: false, text: res.error });
@@ -82,7 +78,7 @@ export function ItemMarkupEditor({
 
   return (
     <div className={compact ? "flex flex-col items-end gap-1" : "flex flex-col gap-1.5"}>
-      <div className="flex items-center gap-1" title="Markup de este item — USD (LATAM) / EUR (Europa). Vacío no es válido: usa el botón de restablecer para volver al default.">
+      <div className="flex items-center gap-1" title="Markup de este item — USD (LATAM) / EUR (Europa). Sin markup propio el item vende al costo del proveedor.">
         <input
           type="number"
           inputMode="decimal"
@@ -92,7 +88,7 @@ export function ItemMarkupEditor({
           value={usdPct}
           onChange={(e) => setUsdPct(e.target.value)}
           aria-label="Markup USD %"
-          placeholder={(defaultUsd * 100).toString()}
+          placeholder="0"
           className={inputClass}
         />
         <span className="text-[10px] text-gray-500 font-bold">US%</span>
@@ -105,7 +101,7 @@ export function ItemMarkupEditor({
           value={eurPct}
           onChange={(e) => setEurPct(e.target.value)}
           aria-label="Markup EUR %"
-          placeholder={(defaultEur * 100).toString()}
+          placeholder="0"
           className={inputClass}
         />
         <span className="text-[10px] text-gray-500 font-bold">€%</span>
@@ -124,15 +120,17 @@ export function ItemMarkupEditor({
             onClick={handleReset}
             disabled={isPending}
             className="p-1.5 rounded-lg border border-[#1c2534] text-gray-400 hover:text-white hover:border-gray-500 transition-colors disabled:opacity-50"
-            aria-label="Restablecer al markup por defecto"
-            title="Quitar el override: vuelve al markup por defecto del juego"
+            aria-label="Quitar markup (vender a costo)"
+            title="Quitar el markup del item: pasará a venderse al costo del proveedor"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
         )}
       </div>
-      {hasOverride && (
-        <span className="text-[9px] uppercase tracking-wider text-[#ffaa00] font-bold">Propio</span>
+      {!hasOverride && (
+        <span className="text-[9px] uppercase tracking-wider text-red-400 font-bold">
+          Sin markup — vende a costo
+        </span>
       )}
       {feedback && (
         <span className={`text-[11px] font-semibold ${feedback.ok ? "text-green-400" : "text-red-400"}`} role={feedback.ok ? "status" : "alert"}>

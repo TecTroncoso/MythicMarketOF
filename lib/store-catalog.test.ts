@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from "vitest";
 // @/lib/db (libsql client) through the async helpers, so it is stubbed here.
 vi.mock("@/lib/db", () => ({ db: {} }));
 
-import { applyMarkupCents } from "@/lib/pricing-settings";
+import { applyMarkupCents } from "@/lib/markup";
 import {
   buildComboProducts,
   buildStoreProducts,
@@ -24,7 +24,15 @@ const ROWS: SupplierCostRow[] = [
   { packageName: "Starlight Member", checkoutUsdCents: null, checkoutEurCents: null },
 ];
 
-const SETTINGS = { markupUsd: 0.05, markupEur: 0.05 };
+// No game-level default markup anymore: items without an explicit override
+// sell AT COST. The 5% used across these fixtures is an item override map.
+const PER_ITEM_5 = new Map([
+  ["78-diamonds-8-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
+  ["weekly-diamond-pass", { markupUsd: 0.05, markupEur: 0.05 }],
+  ["156-diamonds-16-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
+  ["twilight-pass", { markupUsd: 0.05, markupEur: 0.05 }],
+  ["7740-diamonds-1548-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
+]);
 
 describe("applyMarkupCents()", () => {
   it("applies the markup and rounds to whole cents", () => {
@@ -39,7 +47,7 @@ describe("applyMarkupCents()", () => {
 });
 
 describe("buildStoreProducts()", () => {
-  const products = buildStoreProducts(ROWS, SETTINGS);
+  const products = buildStoreProducts(ROWS, PER_ITEM_5);
 
   it("drops rows without any checkout price", () => {
     expect(products).toHaveLength(5);
@@ -81,27 +89,32 @@ describe("buildStoreProducts()", () => {
     expect(diamonds?.priceEurCents).toBe(119); // EU sale price
   });
 
-  it("applies a per-item markup override instead of the game default", () => {
-    // "78 Diamonds": default 5% would give 135¢ USD / 119¢ EUR; the override
-    // sets 2% USD / 10% EUR for this package only.
+  it("sells AT COST for any item without its own markup", () => {
+    const noMarkups = buildStoreProducts(ROWS, new Map());
+    const diamonds = noMarkups.find((p) => p.id === "78-diamonds-8-bonus");
+    expect(diamonds?.priceUsdCents).toBe(129); // == supplier checkout cost
+    expect(diamonds?.priceEurCents).toBe(113);
+  });
+
+  it("applies a per-item markup override only to that package", () => {
+    // "78 Diamonds": 2% USD / 10% EUR for this package only.
     const overrides = new Map([
       ["78-diamonds-8-bonus", { markupUsd: 0.02, markupEur: 0.1 }],
     ]);
-    const withOverrides = buildStoreProducts(ROWS, SETTINGS, overrides);
+    const withOverrides = buildStoreProducts(ROWS, overrides);
     const tuned = withOverrides.find((p) => p.id === "78-diamonds-8-bonus");
     expect(tuned?.priceUsdCents).toBe(132); // 129 * 1.02
     expect(tuned?.priceEurCents).toBe(124); // 113 * 1.10 -> 124.3
-    // Other packages keep the game default markup.
+    // Other packages have no markup: they sell at cost.
     const untouched = withOverrides.find((p) => p.id === "156-diamonds-16-bonus");
-    expect(untouched?.priceUsdCents).toBe(Math.round(258 * 1.05));
+    expect(untouched?.priceUsdCents).toBe(258);
   });
 
   it("keeps a region unsellable when its checkout price is missing", () => {
     const usdOnly = buildStoreProducts(
-      [{ packageName: "100 Diamonds", checkoutUsdCents: 200, checkoutEurCents: null }],
-      SETTINGS
+      [{ packageName: "100 Diamonds", checkoutUsdCents: 200, checkoutEurCents: null }]
     );
-    expect(usdOnly[0]?.priceUsdCents).toBe(210);
+    expect(usdOnly[0]?.priceUsdCents).toBe(200); // no markup -> at cost
     expect(usdOnly[0]?.priceEurCents).toBeNull();
   });
 
@@ -110,8 +123,7 @@ describe("buildStoreProducts()", () => {
       [
         { packageName: "78 Diamonds + 8 Bonus", checkoutUsdCents: 129, checkoutEurCents: 113 },
         { packageName: "78 Diamonds + 8 Bonus", checkoutUsdCents: 130, checkoutEurCents: 114 },
-      ],
-      SETTINGS
+      ]
     );
     expect(dupes[0]?.id).toBe("78-diamonds-8-bonus");
     expect(dupes[1]?.id).toBe("78-diamonds-8-bonus-2");
@@ -119,8 +131,7 @@ describe("buildStoreProducts()", () => {
 
   it("falls back to a generic image for pass categories without art", () => {
     const bundle = buildStoreProducts(
-      [{ packageName: "Special Bundle x5", checkoutUsdCents: 500, checkoutEurCents: 450 }],
-      SETTINGS
+      [{ packageName: "Special Bundle x5", checkoutUsdCents: 500, checkoutEurCents: 450 }]
     );
     expect(bundle[0]?.category).toBe("bundle");
     expect(bundle[0]?.image).toBe("/products/baul6.png");
@@ -134,13 +145,13 @@ describe("buildComboProducts()", () => {
     components,
   });
 
-  it("sums component checkout costs with quantities, then applies the markup", () => {
+  it("sums component checkout costs with quantities, then applies the combo's markup", () => {
     // 3x Weekly Diamond Pass (165 USD / 144 EUR each) = 495 USD / 432 EUR
-    // With 5% markup: 495*1.05 = 519.75 -> 520 ; 432*1.05 = 453.6 -> 454
+    // With the combo's own 5%: 495*1.05 = 519.75 -> 520 ; 432*1.05 = 453.6 -> 454
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly Diamond Pass")],
-      SETTINGS
+      new Map([["combo-abc123", { markupUsd: 0.05, markupEur: 0.05 }]])
     );
     expect(combo).toMatchObject({
       id: "combo-abc123",
@@ -151,17 +162,16 @@ describe("buildComboProducts()", () => {
     });
   });
 
-  it("combines different packages into a mixed bundle", () => {
+  it("combines different packages into a mixed bundle (at cost without markup)", () => {
     // 1x Weekly (165 USD) + 2x 78 Diamonds (129 USD each) = 423 USD
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([
         { packageName: "Weekly Diamond Pass", qty: 1 },
         { packageName: "78 Diamonds + 8 Bonus", qty: 2 },
-      ])],
-      SETTINGS
+      ])]
     );
-    expect(combo.priceUsdCents).toBe(Math.round(423 * 1.05));
+    expect(combo.priceUsdCents).toBe(423); // no combo markup -> at cost
     // Components span two categories -> lands in "bundle".
     expect(combo.category).toBe("bundle");
     expect(combo.image).toBe("/products/baul6.png");
@@ -170,8 +180,7 @@ describe("buildComboProducts()", () => {
   it("keeps the component category and art when every component matches", () => {
     const [combo] = buildComboProducts(
       ROWS,
-      [makeCombo([{ packageName: "Twilight Pass", qty: 2 }])],
-      SETTINGS
+      [makeCombo([{ packageName: "Twilight Pass", qty: 2 }])]
     );
     expect(combo.category).toBe("twilight-pass");
     expect(combo.image).toBe("/products/pass5.png");
@@ -181,32 +190,29 @@ describe("buildComboProducts()", () => {
     const rows: SupplierCostRow[] = [
       { packageName: "USD only pack", checkoutUsdCents: 500, checkoutEurCents: null },
     ];
-    const [combo] = buildComboProducts(rows, [makeCombo([{ packageName: "USD only pack", qty: 2 }])], SETTINGS);
-    expect(combo.priceUsdCents).toBe(1050); // 500 * 2 = 1000, * 1.05 = 1050
+    const [combo] = buildComboProducts(rows, [makeCombo([{ packageName: "USD only pack", qty: 2 }])]);
+    expect(combo.priceUsdCents).toBe(1000); // 500 * 2, no markup
     expect(combo.priceEurCents).toBeNull();
   });
 
   it("drops combos whose components are not in the latest snapshot", () => {
     const combos = buildComboProducts(
       ROWS,
-      [makeCombo([{ packageName: "Paquete eliminado", qty: 1 }])],
-      SETTINGS
+      [makeCombo([{ packageName: "Paquete eliminado", qty: 1 }])]
     );
     expect(combos).toEqual([]);
   });
 
   it("ignores combos with an empty component list", () => {
-    expect(buildComboProducts(ROWS, [makeCombo([])], SETTINGS)).toEqual([]);
+    expect(buildComboProducts(ROWS, [makeCombo([])])).toEqual([]);
   });
 
-  it("applies a per-combo markup override", () => {
-    // Default 5% on 495 USD -> 520; override 10% -> 545.
-    const overrides = new Map([["combo-abc123", { markupUsd: 0.1, markupEur: 0.1 }]]);
+  it("applies the combo's own per-currency markup", () => {
+    // At cost it would be 495 USD / 432 EUR; with 10%: 545 / 475.
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly")],
-      SETTINGS,
-      overrides
+      new Map([["combo-abc123", { markupUsd: 0.1, markupEur: 0.1 }]])
     );
     expect(combo.priceUsdCents).toBe(545); // 495 * 1.10 = 544.5 -> 545
     expect(combo.priceEurCents).toBe(475); // 432 * 1.10 = 475.2 -> 475
