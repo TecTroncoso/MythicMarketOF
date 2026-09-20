@@ -71,3 +71,6 @@ Desktop.ini
 
 # sprite fuente de referencia (no se usa en la app)
 /public/products/dimante y pases.png
+
+# página de prueba manual de fondos (no va a producción)
+/public/test-bg.html
