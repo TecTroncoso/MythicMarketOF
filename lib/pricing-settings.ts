@@ -10,25 +10,16 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { pricingSettings } from "@/lib/db/schema";
+import { DEFAULT_PRICING_SETTINGS, type GamePricingSettings } from "@/lib/markup";
 
-export interface GamePricingSettings {
-  markupUsd: number;
-  markupEur: number;
-}
-
-// 5% mirrors the historical markup baked into the static catalog prices.
-export const DEFAULT_PRICING_SETTINGS: GamePricingSettings = {
-  markupUsd: 0.05,
-  markupEur: 0.05,
-};
-
-/**
- * Sale price in integer cents after applying the markup. Rounds to the
- * nearest cent so the storefront never exposes fractional cents.
- */
-export function applyMarkupCents(cents: number, markup: number): number {
-  return Math.round(cents * (1 + markup));
-}
+// The pure markup primitives live in lib/markup.ts (client-safe); consumers
+// of that module must never pull this DB-backed file into a client bundle.
+// This file re-exports them for its server-side consumers.
+export {
+  DEFAULT_PRICING_SETTINGS,
+  applyMarkupCents,
+  type GamePricingSettings,
+} from "@/lib/markup";
 
 /**
  * Reads the settings row for a game, falling back to the defaults when no

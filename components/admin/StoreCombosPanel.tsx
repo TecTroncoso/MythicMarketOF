@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Layers, Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import { createStoreCombo, deleteStoreCombo } from "@/lib/actions/combos";
-import { applyMarkupCents } from "@/lib/pricing-settings";
+// Pure markup helper from lib/markup — importing from "@/lib/pricing-settings"
+// would drag the DB client into the browser bundle.
+import { applyMarkupCents } from "@/lib/markup";
 import { formatAmount } from "@/lib/orders";
 
 interface ComboPackageRow {
