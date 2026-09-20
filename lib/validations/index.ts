@@ -34,3 +34,17 @@ export const MLBBLookupSchema = z.object({
   zoneId: z.string().regex(/^\d{3,5}$/, "Zone ID debe tener entre 3 y 5 dígitos"),
 });
 export type MLBBLookupInput = z.infer<typeof MLBBLookupSchema>;
+
+// Retail markups per game (admin-editable). Stored as fractions: 0.05 = 5%.
+export const PricingSettingsSchema = z.object({
+  game: z.string().min(1, "Juego inválido."),
+  markupUsd: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
+  markupEur: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
+});
+export type PricingSettingsInput = z.infer<typeof PricingSettingsSchema>;

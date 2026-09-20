@@ -30,18 +30,45 @@ import { ShareButton } from './ShareButton';
 const CARD_BG = "#110c2c";
 const CARD_BORDER = "rgba(147, 51, 234, 0.25)";
 
-// Filtros del grid "Choose your diamonds" (estilo panel de proveedor:
-// All + una categoría por tipo de producto).
+// Filtros del grid "Select Top-Up" (estilo panel de proveedor:
+// All + una pestaña por cada categoría PRESENTE en los productos).
 type CategoryFilter = "all" | ProductCategory;
 
-const CATEGORY_TABS: { id: CategoryFilter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "diamonds", label: "Diamonds" },
-  { id: "weekly-pass", label: "Weekly Pass" },
-  { id: "twilight-pass", label: "Twilight Pass" },
-  { id: "starlight", label: "Starlight" },
-  { id: "bundle", label: "Bundles" },
+interface GridProduct {
+  id: string;
+  name: string;
+  bonus: string;
+  image: string;
+  category: ProductCategory;
+  price: number;
+}
+
+// Fallback estático mientras carga el contexto del servidor (o si falla):
+// mismo catálogo de siempre con precios base en USD.
+const STATIC_GRID_PRODUCTS: GridProduct[] = PRODUCTS.map((p) => ({
+  id: p.id,
+  name: p.name,
+  bonus: p.bonus,
+  image: p.image,
+  category: p.category,
+  price: p.price,
+}));
+
+const CATEGORY_ORDER: ProductCategory[] = [
+  "diamonds",
+  "weekly-pass",
+  "twilight-pass",
+  "starlight",
+  "bundle",
 ];
+
+const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  diamonds: "Diamonds",
+  "weekly-pass": "Weekly Pass",
+  "twilight-pass": "Twilight Pass",
+  starlight: "Starlight",
+  bundle: "Bundles",
+};
 
 /** "86 Diamonds" + "8 Diamonds" -> "86 Diamonds + 8 Bonus" (estilo proveedor). */
 function bonusLabel(bonus: string): string {
@@ -267,7 +294,28 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     });
   };
 
-  const selectedProductData = PRODUCTS.find(p => p.id === selectedProduct);
+  // Grid source: the server context (live supplier snapshot prices, per
+  // region) when loaded; otherwise the static catalog as a visual fallback.
+  const gridProducts: GridProduct[] = context?.products ?? STATIC_GRID_PRODUCTS;
+
+  const selectedProductData = gridProducts.find(p => p.id === selectedProduct);
+
+  // One tab per category actually present in the grid; empty categories are
+  // hidden instead of showing an empty state.
+  const categoryTabs: { id: CategoryFilter; label: string }[] = [
+    { id: "all", label: "All" },
+    ...CATEGORY_ORDER.filter((c) => gridProducts.some((p) => p.category === c)).map(
+      (c) => ({ id: c as CategoryFilter, label: CATEGORY_LABELS[c] })
+    ),
+  ];
+
+  useEffect(() => {
+    // The live catalog may drop the active category when the snapshot changes.
+    if (activeCategory !== "all" && !gridProducts.some((p) => p.category === activeCategory)) {
+      queueMicrotask(() => setActiveCategory("all"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gridProducts]);
 
   // Manual PayPal (EU) notice: the buyer already paid through PayPal.Me and
   // wants to alert the store's WhatsApp with the receipt details (method,
@@ -297,17 +345,15 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     window.open(url, "_blank");
   }
 
-  // Region-aware price: the server context is authoritative when loaded;
-  // otherwise fall back to the catalog price (latam/USD is the default).
-  const shownPriceFor = (productId: string, fallback: number): number =>
-    context ? (context.products.find((x) => x.id === productId)?.price ?? fallback) : fallback;
-  const summaryPrice = selectedProductData ? shownPriceFor(selectedProductData.id, selectedProductData.price) : 0;
+  // The server context bakes the region price into each product, so the
+  // summary is just the selected product's price.
+  const summaryPrice = selectedProductData?.price ?? 0;
 
   // Grid filtrado por la pestaña activa del selector de categorías.
   const visibleProducts =
     activeCategory === "all"
-      ? PRODUCTS
-      : PRODUCTS.filter((product) => product.category === activeCategory);
+      ? gridProducts
+      : gridProducts.filter((product) => product.category === activeCategory);
 
   const inputClassName =
     "w-full bg-[#0a061e] border border-[rgba(147,51,234,0.35)] rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#a855f7] focus:ring-1 focus:ring-[#a855f7] transition-all";
@@ -600,7 +646,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
           {/* Tabs de filtro por categoría (estilo segmented control) */}
           <div className="flex gap-1 bg-[#0d0926] border border-purple-900/40 rounded-xl p-1 overflow-x-auto w-full md:w-auto">
-            {CATEGORY_TABS.map((tab) => {
+            {categoryTabs.map((tab) => {
               const isActive = activeCategory === tab.id;
               return (
                 <button
@@ -629,7 +675,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {visibleProducts.map((prod) => {
               const isSelected = selectedProduct === prod.id;
-              const shownPrice = shownPriceFor(prod.id, prod.price);
+              const shownPrice = prod.price;
               return (
                 <button
                   key={prod.id}

@@ -8,6 +8,7 @@ import { db } from "@/lib/db"
 import { orders } from "@/lib/db/schema"
 import { generateOrderNumber } from "@/lib/order-number"
 import { getProductById, PRODUCTS } from "@/lib/catalog"
+import { getStoreProducts, type StoreProduct } from "@/lib/store-catalog"
 import {
   convertPrice,
   countryToRegion,
@@ -30,14 +31,52 @@ export type CheckoutResult =
 
 const failure = (error: string): CheckoutResult => ({ success: false, error });
 
+// The storefront top-up page sells MLBB packages; the live catalog comes from
+// the latest supplier snapshot of this game (see lib/store-catalog.ts).
+const STORE_GAME_ID = "mlbb";
+
+/** Sale price (units, 2 decimals) of a live product for the buyer's region. */
+function livePriceFor(product: StoreProduct, region: "eu" | "latam"): number | null {
+  const cents = region === "eu" ? product.priceEurCents : product.priceUsdCents;
+  return cents === null ? null : cents / 100;
+}
+
 // Region + pricing context for the checkout UI. The client never decides the
 // currency: the server maps the buyer's country header to a region and prices
-// every product through convertPrice (the catalog stays the price authority).
+// every product itself. With an imported supplier snapshot the grid shows the
+// live packages (checkout cost + admin markup, per region currency); without
+// one it falls back to the static catalog priced through convertPrice.
 export async function getCheckoutContext() {
   const h = await headers()
   const country = h.get("x-vercel-ip-country") ?? h.get("cf-ipcountry")
   const region = countryToRegion(country)
   const cfg = PAYMENT_REGIONS[region]
+
+  const storeProducts = await getStoreProducts(STORE_GAME_ID)
+
+  const products = storeProducts
+    ? storeProducts.flatMap((p) => {
+        const price = livePriceFor(p, region)
+        // Packages without a checkout price in this region's currency are not
+        // sellable there, so they are hidden from the grid entirely.
+        if (price === null) return []
+        return [{
+          id: p.id,
+          name: p.name,
+          bonus: p.bonus,
+          image: p.image,
+          category: p.category,
+          price,
+        }]
+      })
+    : PRODUCTS.map((p) => ({
+        id: p.id,
+        name: p.name,
+        bonus: p.bonus,
+        image: p.image,
+        category: p.category,
+        price: convertPrice(p.price, cfg.currency),
+      }))
 
   return {
     region,
@@ -55,11 +94,7 @@ export async function getCheckoutContext() {
         patternHint: patternHint ?? null,
       })
     ),
-    products: PRODUCTS.map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: convertPrice(p.price, cfg.currency),
-    })),
+    products,
   }
 }
 
@@ -103,11 +138,34 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
     return failure(detailError)
   }
 
-  // 4. Verificar autoridad sobre el precio (el catálogo vive en lib/catalog.ts)
-  const secureProduct = getProductById(productId)
+  // 4. Verificar autoridad sobre el precio. Con snapshot de proveedor
+  //    importado, el precio de venta es checkout del proveedor + markup del
+  //    admin (por moneda); sin snapshot, el catálogo estático sigue siendo la
+  //    autoridad. En ambos casos el precio se resuelve SOLO en el servidor.
+  const storeProducts = await getStoreProducts(STORE_GAME_ID)
+  const currency = PAYMENT_REGIONS[region].currency
 
-  if (!secureProduct) {
-    return failure("El producto seleccionado no es válido o ya no existe.")
+  let productName: string
+  let amountCents: number
+
+  if (storeProducts) {
+    const liveProduct = storeProducts.find((p) => p.id === productId)
+    if (!liveProduct) {
+      return failure("El producto seleccionado no es válido o ya no existe.")
+    }
+    const cents = region === "eu" ? liveProduct.priceEurCents : liveProduct.priceUsdCents
+    if (cents === null) {
+      return failure("Este paquete no está disponible en tu región.")
+    }
+    productName = liveProduct.label
+    amountCents = cents
+  } else {
+    const secureProduct = getProductById(productId)
+    if (!secureProduct) {
+      return failure("El producto seleccionado no es válido o ya no existe.")
+    }
+    productName = secureProduct.name
+    amountCents = Math.round(convertPrice(secureProduct.price, currency) * 100)
   }
 
   // 5. Rate Limiting por usuario
@@ -116,18 +174,14 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
     return failure("Estás intentando crear demasiadas órdenes muy rápido. Espera un minuto.")
   }
 
-  // 6. Derive the currency from the buyer's region (server-side authority)
-  const currency = PAYMENT_REGIONS[region].currency
-  const amountCents = Math.round(convertPrice(secureProduct.price, currency) * 100)
-
   // 7. Registrar la orden en la base de datos
   const orderNumber = generateOrderNumber()
   try {
     await db.insert(orders).values({
       orderNumber,
       userId: session.user.id,
-      productId,
-      productName: secureProduct.name,
+        productId,
+        productName,
       amountCents,
       currency,
       paymentMethod,
@@ -144,9 +198,10 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
   // 8. Simulación de procesamiento de la orden
   try {
     // Aquí iría la integración con Lootbar, Stripe, PayPal, etc.
-    // Usando `secureProduct.price` en vez de cualquier precio enviado por el cliente.
+    // Usando el amountCents resuelto en el servidor (nunca un precio enviado
+    // por el cliente).
 
-    console.log(`Procesando orden ${orderNumber} para ${session.user.email}: Producto ${secureProduct.name} (${currency} ${(amountCents / 100).toFixed(2)}) a la cuenta MLBB ${userId}(${zoneId}) por ${paymentMethod}`)
+    console.log(`Procesando orden ${orderNumber} para ${session.user.email}: Producto ${productName} (${currency} ${(amountCents / 100).toFixed(2)}) a la cuenta MLBB ${userId}(${zoneId}) por ${paymentMethod}`)
 
     // Simular un delay de API
     await new Promise(resolve => setTimeout(resolve, 1500))

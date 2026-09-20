@@ -31,6 +31,14 @@ vi.mock("next/headers", () => ({
   headers: () => Promise.resolve({ get: mockHeadersGet }),
 }));
 
+// The live store catalog (supplier snapshot + markups) is mocked: tests opt
+// into the live path per-case; the default null keeps the static-catalog
+// behavior as the baseline.
+const mockGetStoreProducts = vi.fn();
+vi.mock("@/lib/store-catalog", () => ({
+  getStoreProducts: mockGetStoreProducts,
+}));
+
 // Import after mocks.
 const { processCheckout, getCheckoutContext } = await import("./checkout");
 import type { CheckoutResult } from "./checkout";
@@ -72,6 +80,8 @@ beforeEach(() => {
   mockCheckoutRateLimit.mockResolvedValue({ success: true, reset: 0 });
   mockInsertValues.mockResolvedValue(undefined);
   mockHeadersGet.mockReturnValue(null);
+  // Static catalog by default; live tests override per-case.
+  mockGetStoreProducts.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -320,6 +330,13 @@ describe("getCheckoutContext()", () => {
       pattern: "^\\S+@\\S+\\.\\S+$",
     });
     expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.24);
+    // Static fallback also exposes the visual fields the grid needs.
+    expect(ctx.products.find((p) => p.id === "1")).toMatchObject({
+      name: "78 Diamonds",
+      bonus: "8 Diamonds",
+      image: "/products/diamantes.png",
+      category: "diamonds",
+    });
   });
 
   it("falls back to latam when no country header is present", async () => {
@@ -329,5 +346,155 @@ describe("getCheckoutContext()", () => {
     expect(ctx.symbol).toBe("US$");
     expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "paypal", "pix", "binance"]);
     expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.35);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Live supplier catalog (snapshot imported + admin markups)
+// ---------------------------------------------------------------------------
+
+// Shaped like lib/store-catalog StoreProduct; prices below mirror the real
+// snapshot with the default 5% markup ("78 Diamonds + 8 Bonus": 129¢ USD /
+// 113¢ EUR cost → 135¢ / 119¢ sale).
+const LIVE_PRODUCTS = [
+  {
+    id: "78-diamonds-8-bonus",
+    name: "78 Diamonds",
+    bonus: "8 Diamonds",
+    label: "78 Diamonds + 8 Bonus",
+    image: "/products/diamantes.png",
+    category: "diamonds" as const,
+    priceUsdCents: 135,
+    priceEurCents: 119,
+  },
+  {
+    id: "weekly-diamond-pass",
+    name: "Weekly Diamond Pass",
+    bonus: "",
+    label: "Weekly Diamond Pass",
+    image: "/products/pass1.png",
+    category: "weekly-pass" as const,
+    priceUsdCents: 173,
+    priceEurCents: null, // EUR checkout missing -> unsellable in the EU
+  },
+];
+
+describe("processCheckout() with a live supplier catalog", () => {
+  it("charges the USD sale price to latam buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    vi.useFakeTimers();
+    try {
+      const promise = processCheckout(
+        fd({
+          userId: "12345678",
+          zoneId: "10012",
+          productId: "78-diamonds-8-bonus",
+          paymentMethod: "mercadopago",
+          paymentDetail: "compra@ejemplo.com",
+          paymentRegion: "latam",
+        })
+      );
+      await vi.advanceTimersByTimeAsync(1500);
+      const result = assertSuccess(await promise);
+
+      const rowArg = mockInsertValues.mock.calls[0]?.[0];
+      expect(rowArg).toMatchObject({
+        productId: "78-diamonds-8-bonus",
+        productName: "78 Diamonds + 8 Bonus",
+        amountCents: 135,
+        currency: "USD",
+        status: "pending",
+      });
+      expect(result.orderNumber).toMatch(/^MM-/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("charges the EUR sale price to eu buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    vi.useFakeTimers();
+    try {
+      const promise = processCheckout(
+        fd({
+          userId: "12345678",
+          zoneId: "10012",
+          productId: "78-diamonds-8-bonus",
+          paymentMethod: "sepa",
+          paymentDetail: "DE89370400440532013000",
+          paymentRegion: "eu",
+        })
+      );
+      await vi.advanceTimersByTimeAsync(1500);
+      await promise;
+
+      const rowArg = mockInsertValues.mock.calls[0]?.[0];
+      expect(rowArg).toMatchObject({ amountCents: 119, currency: "EUR" });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rejects a product that is not in the live catalog", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    const result = await processCheckout(validForm()); // productId "1" (static id)
+    expect(result).toEqual({
+      success: false,
+      error: "El producto seleccionado no es válido o ya no existe.",
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects a package without a checkout price in the buyer region currency", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    const result = await processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "weekly-diamond-pass",
+        paymentMethod: "sepa",
+        paymentDetail: "DE89370400440532013000",
+        paymentRegion: "eu",
+      })
+    );
+    expect(result).toEqual({
+      success: false,
+      error: "Este paquete no está disponible en tu región.",
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCheckoutContext() with a live supplier catalog", () => {
+  it("prices products in EUR for eu buyers and hides unsellable packages", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    mockHeadersGet.mockReturnValueOnce("ES");
+
+    const ctx = await getCheckoutContext();
+    expect(ctx.region).toBe("eu");
+    expect(ctx.currency).toBe("EUR");
+
+    const ids = ctx.products.map((p) => p.id);
+    expect(ids).not.toContain("weekly-diamond-pass"); // no EUR checkout price
+
+    const diamonds = ctx.products.find((p) => p.id === "78-diamonds-8-bonus");
+    expect(diamonds).toMatchObject({
+      name: "78 Diamonds",
+      bonus: "8 Diamonds",
+      image: "/products/diamantes.png",
+      category: "diamonds",
+      price: 1.19,
+    });
+  });
+
+  it("prices products in USD for latam buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+
+    const ctx = await getCheckoutContext();
+    expect(ctx.region).toBe("latam");
+    const diamonds = ctx.products.find((p) => p.id === "78-diamonds-8-bonus");
+    expect(diamonds?.price).toBe(1.35);
+    // Weekly pass keeps its USD price in latam even without an EUR price.
+    expect(ctx.products.find((p) => p.id === "weekly-diamond-pass")?.price).toBe(1.73);
   });
 });

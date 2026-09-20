@@ -11,7 +11,7 @@ checkout regional multi-método de pago y una arquitectura *security-first* end-
 [![TypeScript](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/tests-229%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-256%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/db-Turso-FFEE58?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PC9zdmc+&logoColor=black)](https://turso.tech/)
 
 </div>
@@ -45,7 +45,8 @@ El comprador elige su paquete, verifica la cuenta de MLBB destino en tiempo real
 
 | Área | Detalle |
 |---|---|
-| 🛒 **Catálogo server-side** | Precios y productos viven solo en el servidor (`lib/catalog.ts`). El cliente envía únicamente el ID del producto. |
+| 🛒 **Catálogo server-side** | Con snapshot del proveedor importado, el Select Top-Up muestra sus paquetes con precio = **checkout del proveedor × (1 + markup)** por moneda; sin snapshot cae al catálogo estático (`lib/catalog.ts`). El cliente solo envía el ID del producto. |
+| 🏷️ **Markup admin por moneda** | Markups USD (LATAM) y EUR (Europa) editables desde `/admin/precios/[game]`, con vista previa del precio de venta por paquete. |
 | 🌎 **Checkout regional** | Detección automática de país (`x-vercel-ip-country` / `cf-ipcountry`) → región **EU (€)** o **LATAM (US$)** con conversión de moneda en el servidor. |
 | 💳 **9 métodos de pago** | PayPal, Tarjeta, SEPA, Bizum, N26 y Revolut (EU) · Mercado Pago, Pix, Binance USDT y PayPal (LATAM), con badges SVG de marca y validación por patrón. |
 | 🔍 **Verificación MLBB en vivo** | Nickname y país del jugador mostrados antes de pagar, con debounce de 300 ms y triple cadena de fallback entre upstreams. |
@@ -167,6 +168,7 @@ El panel admin incluye tracking de costos del proveedor (Eneba) por juego y mone
 ```
 
 - **Datos**: cada corrida crea un *snapshot* (`supplier_price_snapshots` + `supplier_price_rows`) con precios en centavos; los snapshots antiguos se conservan como historial.
+- **Markup de venta por moneda**: la misma página permite editar el markup USD (LATAM) y EUR (Europa) que la tienda aplica sobre el checkout del proveedor, y muestra la columna "Venta" con el precio final ya calculado. La tienda (`/topup/mlbb`) se alimenta del **último snapshot + markups** (`lib/store-catalog.ts`): el precio autoritativo de cada orden se resuelve en el servidor con esos mismos datos, y sin snapshot la tienda cae al catálogo estático sin romperse.
 - **Botón "Actualizar precios"**: dispara el scraper desde el panel.
   - **Local**: spawn directo de `venv/Scripts/python.exe` (se resuelve solo; `ENEBA_PYTHON_PATH` como override).
   - **Vercel**: serverless no puede correr Python, así que se dispara el workflow `.github/workflows/scrape-prices.yml` (Actions), que scrapea e importa a Turso con el mismo código del repo. El panel consulta el estado de la run vía API de GitHub.
@@ -203,8 +205,10 @@ components/
 ├── WhatsAppWidget.tsx          # Soporte geo-horario
 └── ...
 lib/
-├── actions/                    # Server Actions (auth, checkout, admin, reviews)
-├── catalog.ts                  # Fuente única de verdad del catálogo
+├── actions/                    # Server Actions (auth, checkout, admin, reviews, pricing)
+├── catalog.ts                  # Catálogo estático de respaldo
+├── store-catalog.ts            # Catálogo live: snapshot proveedor + markup → productos
+├── pricing-settings.ts         # Markups USD/EUR por juego (tabla pricing_settings)
 ├── payments.ts                 # Regiones, métodos y validaciones de pago
 ├── mlbb/client.ts              # Único punto que conoce los upstreams
 ├── supplier-games.ts           # Registro de juegos con tracking de precios
@@ -277,7 +281,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ## 🧪 Testing
 
-**229 tests en 18 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
+**256 tests en 21 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, el catálogo live y los markups de venta, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
 
 ```bash
 npm run test          # modo watch

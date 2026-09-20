@@ -4,9 +4,11 @@ import { ArrowLeft, CircleDollarSign } from "lucide-react";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/Navbar";
 import { ScrapePricesButton } from "@/components/admin/ScrapePricesButton";
+import { PricingSettingsForm } from "@/components/admin/PricingSettingsForm";
 import { getScraperForGame } from "@/lib/scrapers";
 import { getSupplierGame } from "@/lib/supplier-games";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
+import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
 import { formatAmount } from "@/lib/orders";
 import type { SupplierPriceRow } from "@/lib/db/schema";
 
@@ -29,7 +31,15 @@ function PriceCell({ cents, currency }: { cents: number | null; currency: string
   return <>{formatAmount(cents, currency)}</>;
 }
 
-function PriceCatalogGroup({ row }: { row: SupplierPriceRow }) {
+function PriceCatalogGroup({
+  row,
+  markupUsd,
+  markupEur,
+}: {
+  row: SupplierPriceRow;
+  markupUsd: number;
+  markupEur: number;
+}) {
   return (
     <>
       <td className="px-3 py-3 text-right text-gray-300">
@@ -44,11 +54,23 @@ function PriceCatalogGroup({ row }: { row: SupplierPriceRow }) {
       <td className="px-3 py-3 text-right text-white font-semibold">
         <PriceCell cents={row.checkoutUsdCents} currency="USD" />
       </td>
+      <td className="px-3 py-3 text-right text-[#7dd87d] font-semibold bg-green-500/[0.04]">
+        <PriceCell
+          cents={row.checkoutUsdCents === null ? null : applyMarkupCents(row.checkoutUsdCents, markupUsd)}
+          currency="USD"
+        />
+      </td>
       <td className="px-3 py-3 text-right text-gray-300">
         <PriceCell cents={row.catalogEurCents} currency="EUR" />
       </td>
       <td className="px-3 py-3 text-right text-white font-semibold">
         <PriceCell cents={row.checkoutEurCents} currency="EUR" />
+      </td>
+      <td className="px-3 py-3 text-right text-[#7dd87d] font-semibold bg-green-500/[0.04]">
+        <PriceCell
+          cents={row.checkoutEurCents === null ? null : applyMarkupCents(row.checkoutEurCents, markupEur)}
+          currency="EUR"
+        />
       </td>
     </>
   );
@@ -71,7 +93,10 @@ export default async function AdminGamePricesPage({
   }
 
   const scraper = getScraperForGame(game.id);
-  const latest = await getLatestSupplierSnapshot(game.id);
+  const [latest, pricing] = await Promise.all([
+    getLatestSupplierSnapshot(game.id),
+    getPricingSettings(game.id),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#0a0f1a] text-white font-sans pb-20">
@@ -111,6 +136,14 @@ export default async function AdminGamePricesPage({
           </div>
         </header>
 
+        <div className="mb-6">
+          <PricingSettingsForm
+            game={game.id}
+            markupUsd={pricing.markupUsd}
+            markupEur={pricing.markupEur}
+          />
+        </div>
+
         {!latest ? (
           <div className="bg-[#121824] border border-[#1c2534] rounded-2xl p-10 text-center">
             <p className="text-gray-300 font-semibold mb-2">
@@ -134,10 +167,10 @@ export default async function AdminGamePricesPage({
                     <th colSpan={2} className="px-3 py-2 text-center border-l border-[#1c2534]">
                       BRL
                     </th>
-                    <th colSpan={2} className="px-3 py-2 text-center border-l border-[#1c2534]">
+                    <th colSpan={3} className="px-3 py-2 text-center border-l border-[#1c2534]">
                       USD
                     </th>
-                    <th colSpan={2} className="px-3 py-2 text-center border-l border-[#1c2534]">
+                    <th colSpan={3} className="px-3 py-2 text-center border-l border-[#1c2534]">
                       EUR
                     </th>
                     <th rowSpan={2} className="px-4 py-3 text-right align-bottom">
@@ -149,8 +182,10 @@ export default async function AdminGamePricesPage({
                     <th className="px-3 py-2 text-right">Chk.</th>
                     <th className="px-3 py-2 text-right border-l border-[#1c2534]">Cat.</th>
                     <th className="px-3 py-2 text-right">Chk.</th>
+                    <th className="px-3 py-2 text-right text-green-500/80 bg-green-500/[0.04]">Venta</th>
                     <th className="px-3 py-2 text-right border-l border-[#1c2534]">Cat.</th>
                     <th className="px-3 py-2 text-right">Chk.</th>
+                    <th className="px-3 py-2 text-right text-green-500/80 bg-green-500/[0.04]">Venta</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1c2534]">
@@ -159,7 +194,11 @@ export default async function AdminGamePricesPage({
                       <td className="px-4 py-3 font-semibold text-gray-100">
                         {row.packageName}
                       </td>
-                      <PriceCatalogGroup row={row} />
+                      <PriceCatalogGroup
+                        row={row}
+                        markupUsd={pricing.markupUsd}
+                        markupEur={pricing.markupEur}
+                      />
                       <td className="px-4 py-3 text-right text-[#ffaa00] font-semibold">
                         {row.cashbackPercent !== null
                           ? `${row.cashbackPercent}%`
@@ -172,7 +211,8 @@ export default async function AdminGamePricesPage({
             </div>
             <p className="px-4 py-3 text-xs text-gray-600 border-t border-[#1c2534]">
               Cat. = precio de lista en el proveedor · Chk. = total real en
-              checkout.
+              checkout · Venta = Chk. × (1 + markup) — el precio que ve el
+              comprador en la tienda (USD en LATAM, EUR en Europa).
               {scraper
                 ? ` Scraper: ${scraper.description} (corre en esta máquina vía el botón de arriba).`
                 : " Este juego aún no tiene scraper automatizado."}

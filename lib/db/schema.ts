@@ -152,3 +152,23 @@ export const supplierPriceRows = sqliteTable("supplier_price_rows", {
 });
 
 export type SupplierPriceRow = typeof supplierPriceRows.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Per-game retail pricing settings. The storefront price is derived from the
+// latest supplier snapshot: salePriceCents = checkoutCents * (1 + markup).
+// Markups are stored as fractions (0.05 = 5%) and are editable per game from
+// /admin/precios/[game]. USD markup feeds the LATAM region (charged in US$),
+// EUR markup feeds the EU region (charged in €).
+// ---------------------------------------------------------------------------
+
+export const pricingSettings = sqliteTable("pricing_settings", {
+  game: text("game").primaryKey(),
+  markupUsd: real("markupUsd").notNull().default(0.05),
+  markupEur: real("markupEur").notNull().default(0.05),
+  updatedAt: integer("updatedAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedBy: text("updatedBy"),
+});
+
+export type PricingSettings = typeof pricingSettings.$inferSelect;
