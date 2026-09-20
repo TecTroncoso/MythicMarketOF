@@ -1,188 +1,182 @@
 <div align="center">
 
+<img src="public/logo.png" alt="Mythic Market" width="88" />
+
 # ⚔️ Mythic Market
 
-**La tienda de recargas para gamers — rápida, segura y sin fricción.**
+**Tienda de recargas para gamers — rápida, segura y sin fricción.**
 
-Top-up de diamantes y pases de *Mobile Legends* con verificación de jugador en tiempo real,
-checkout regional multi-método de pago y una arquitectura *security-first* end-to-end.
+Top-up de *Mobile Legends* con verificación de jugador en tiempo real, precios vivos del proveedor con markup por item, y una arquitectura **Zero-Trust** de punta a punta.
 
-[![Next.js](https://img.shields.io/badge/Next.js%2015-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React%2019-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/tests-281%20passing-brightgreen?style=flat-square&logo=vitest&logoColor=white)](#-testing)
-[![Turso](https://img.shields.io/badge/db-Turso-FFEE58?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PC9zdmc+&logoColor=black)](https://turso.tech/)
+[![Next.js 15](https://img.shields.io/badge/Next.js%2015-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React%2019-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript 5.9](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind v4](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
+[![Tests 281](https://img.shields.io/badge/tests-281%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
+[![Turso](https://img.shields.io/badge/Turso-LibSQL-4EBBB7?style=for-the-badge&logo=turso&logoColor=white)](https://turso.tech/)
+[![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
+[![NextAuth v5](https://img.shields.io/badge/NextAuth-v5-7B16D0?style=for-the-badge)](https://authjs.dev/)
 
 </div>
 
 ---
 
-## 📖 Tabla de contenidos
+## 🚀 Puesta en marcha
 
-- [Sobre el proyecto](#-sobre-el-proyecto)
-- [Características](#-características)
-- [Stack tecnológico](#-stack-tecnológico)
-- [Arquitectura de seguridad](#-arquitectura-de-seguridad)
-- [Checkout regional y pagos](#-checkout-regional-y-pagos)
-- [Verificación de jugador MLBB](#-verificación-de-jugador-mlbb)
-- [Panel de administración](#-panel-de-administración)
-- [Scraper de precios de proveedor](#-scraper-de-precios-de-proveedor)
-- [Estructura del proyecto](#-estructura-del-proyecto)
-- [Puesta en marcha](#-puesta-en-marcha)
-- [Variables de entorno](#-variables-de-entorno)
-- [Testing](#-testing)
-- [Scripts disponibles](#-scripts-disponibles)
-- [Notas de arquitectura](#-notas-de-arquitectura)
+```bash
+git clone https://github.com/TecTroncoso/MythicMarketOF.git
+cd MythicMarket
+npm install
+cp .env.example .env   # completa las credenciales (ver tabla)
+npm run db:push        # crea el schema en Turso
+npm run dev            # → http://localhost:3000
+```
+
+Para probar el panel admin: `npm run set-admin -- tu@email.com` → [http://localhost:3000/admin](http://localhost:3000/admin).
+
+## 📖 Contenido
+
+| | | |
+|---|---|---|
+| [Sobre el proyecto](#-sobre-el-proyecto) | [Motor de precios](#-motor-de-precios-live) | [Verificación MLBB](#-verificación-de-jugador-mlbb) |
+| [Características](#-características) | [Checkout regional](#-checkout-regional-y-pagos) | [Panel admin & scraper](#-panel-de-administración) |
+| [Stack](#-stack-tecnológico) | [Seguridad Zero-Trust](#-seguridad-zero-trust) | [Estructura](#-estructura-del-proyecto) |
+| [Variables de entorno](#-variables-de-entorno) | [Testing](#-testing) | [Scripts](#-scripts-disponibles) |
 
 ## 🎮 Sobre el proyecto
 
-Mythic Market es una tienda de recargas digitales construida con **Next.js 15 (App Router)** y un modelo **Zero-Trust**: ningún valor enviado por el cliente es confiable, cada frontera se valida en el servidor.
+Venta de diamantes y pases de *Mobile Legends* con márgenes controlados al centavo: el comprador elige paquete, **verifica la cuenta destino en tiempo real**, paga con el método de su región y recibe instrucciones + factura PDF. El operador administra todo desde un panel con RBAC: órdenes, precios del proveedor, márgenes por item y combos promocionales.
 
-El comprador elige su paquete, verifica la cuenta de MLBB destino en tiempo real, paga con el método de su región (Europa o Latinoamérica) y recibe instrucciones claras + factura PDF. Un panel de administración con RBAC permite seguir todas las órdenes del negocio.
+Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente solo donde hay interacción real.
 
 ## ✨ Características
 
 | Área | Detalle |
 |---|---|
-| 🛒 **Catálogo server-side** | Con snapshot del proveedor importado, el Select Top-Up muestra sus paquetes con precio = **checkout del proveedor × (1 + markup)** por moneda; sin snapshot cae al catálogo estático (`lib/catalog.ts`). El cliente solo envía el ID del producto. |
-| 🏷️ **Markup por item y por moneda** | Cada paquete (y cada combo) lleva su propio markup USD (LATAM) y EUR (Europa), editable desde `/admin/precios/[game]` con vista previa de venta; un item sin markup se vende a costo y el panel lo marca como "SIN MARKUP". |
-| 🧩 **Combos del admin** | Paquetes compuestos creados en el panel combinando items del proveedor con cantidades (ej. 3× Weekly Pass); su coste es la suma de los checkouts, llevan el mismo markup y se revalúan solos con cada snapshot. |
-| 🌎 **Checkout regional** | Detección automática de país (`x-vercel-ip-country` / `cf-ipcountry`) → región **EU (€)** o **LATAM (US$)** con conversión de moneda en el servidor. |
-| 💳 **9 métodos de pago** | PayPal, Tarjeta, SEPA, Bizum, N26 y Revolut (EU) · Mercado Pago, Pix, Binance USDT y PayPal (LATAM), con badges SVG de marca y validación por patrón. |
-| 🔍 **Verificación MLBB en vivo** | Nickname y país del jugador mostrados antes de pagar, con debounce de 300 ms y triple cadena de fallback entre upstreams. |
-| 🤖 **Anti-bot** | Cloudflare Turnstile en registro y login, con verificación server-side del token. |
-| 🚦 **Rate limiting distribuido** | Ventanas deslizantes por IP/usuario sobre Upstash Redis en login, registro, checkout y lookup. |
-| 🧾 **Facturas PDF** | Generación on-demand de facturas A4 con la identidad visual de la marca (`@react-pdf/renderer`). |
-| 💬 **Soporte geo-horario** | Widget de WhatsApp que enruta al agente correcto (AR/ES) según país y horario laboral, con turnos por zona horaria IANA. |
-| ⭐ **Reseñas verificadas** | Sistema de reseñas ligado a usuarios autenticados, cargado de forma diferida. |
-| 🛡️ **Panel admin con RBAC** | Órdenes, estadísticas y filtros protegidos doblemente: Edge Middleware (JWT role) + verificación server-side. |
-| 📊 **Precios de proveedor por juego** | Snapshots históricos de costos Eneba (Cat/Chk en BRL/USD/EUR) por juego, con scraper Python disparable desde el panel (spawn local · GitHub Actions en Vercel). |
+| 🛒 **Catálogo vivo** | El grid "Select Top-Up" se alimenta del **último snapshot del proveedor** (Eneba) con markups por item; sin snapshot cae al catálogo estático sin romperse. El cliente jamás envía precios. |
+| 🏷️ **Markup por item** | Cada paquete y cada combo define su USD (LATAM) y EUR (Europa) en `/admin/precios/mlbb`. Sin markup → vende a costo y el panel lo marca "SIN MARKUP". |
+| 🧩 **Combos** | El admin combina paquetes con cantidades (ej. `3x Weekly Diamond Pass`); el coste se resuelve en vivo contra el último snapshot. |
+| 🌎 **Checkout regional** | País detectado vía headers del edge → región **EU (€)** o **LATAM (US$)**; la moneda la decide el servidor, nunca el cliente. |
+| 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM), con validación regex por método en cliente y servidor. |
+| 🔍 **Verificación MLBB en vivo** | Nickname y país antes de pagar; 3 upstreams en paralelo con `Promise.any`, timeout 12 s y caché 24 h / 5 min. |
+| 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro y login. |
+| 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario sobre Upstash Redis (fallback en memoria para dev). |
+| 🧾 **Facturas PDF** | A4 con la identidad de marca, generadas on-demand por orden. |
+| 💬 **Soporte geo-horario** | Widget WhatsApp que enruta al agente correcto (AR/ES) según país y turno IANA. |
+| 🛡️ **RBAC triple capa** | Edge Middleware → página server-side → cada Server Action/API repite el check de rol. |
 
 ## 🛠 Stack tecnológico
 
 | Capa | Tecnología |
 |---|---|
-| Framework | [Next.js 15](https://nextjs.org/) · App Router · React 19 · Server Components por defecto |
-| Lenguaje | [TypeScript 5.9](https://www.typescriptlang.org/) en modo `strict` |
-| Base de datos | [Turso](https://turso.tech/) (LibSQL/SQLite distribuido) |
-| ORM | [Drizzle ORM](https://orm.drizzle.team/) + migraciones versionadas |
-| Autenticación | [Auth.js / NextAuth v5](https://authjs.dev/) · Google OAuth + credenciales (bcrypt) |
-| Rate limiting & caché | [Upstash Redis](https://upstash.com/) con fallback in-memory |
-| Anti-bot | [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) vía `@marsidev/react-turnstile` |
-| Validación | [Zod v4](https://zod.dev/) en cada frontera de confianza |
-| Estilos | [Tailwind CSS v4](https://tailwindcss.com/) · contraste WCAG AAA |
-| PDF | [@react-pdf/renderer](https://react-pdf.org/) |
-| Testing | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + happy-dom |
+| Framework | Next.js 15 · App Router · React 19 · Server Components por defecto |
+| Lenguaje | TypeScript 5.9 `strict` |
+| Datos | Turso (LibSQL) · Drizzle ORM · migraciones versionadas en `drizzle/` |
+| Auth | NextAuth v5 · Google OAuth + credenciales (bcrypt) · JWT con rol |
+| Infra edge | Upstash Redis (rate limit + caché, fallback in-memory) · Cloudflare Turnstile |
+| Validación | Zod v4 en cada frontera |
+| Estilos | Tailwind CSS v4 · contraste WCAG AAA |
+| PDF | @react-pdf/renderer |
+| Testing | Vitest · Testing Library · happy-dom |
+| Scraper | Python 3.13 · curl_cffi · ScrapingAnt (GitHub Actions en producción) |
 
-## 🔐 Arquitectura de seguridad
+## 💰 Motor de precios live
 
-El principio rector es **Zero-Trust**: nada que llegue del cliente se confía, todo se valida y autoriza en el servidor.
+El corazón del negocio. Tres fuentes componen el catálogo que ve el comprador:
 
 ```
-Cliente ──► Edge Middleware (RBAC /admin) ──► Server Action / Route Handler
-                                                ├─ 1. Sesión obligatoria (auth())
-                                                ├─ 2. Zod schema estricto
-                                                ├─ 3. Reglas de negocio (región, método, producto)
-                                                ├─ 4. Precio resuelto SERVER-SIDE
-                                                └─ 5. Rate limit por usuario/IP
-                                                      │
-                                                      ▼
-                                                 Turso (LibSQL)
+scrapers/eneba_mlbb.py ──► supplier_price_snapshots ─┐
+   (Eneba: Cat/Chk en BRL/USD/EUR)                   ├─► lib/store-catalog.ts ──► /topup/mlbb
+store_combos (admin: sumas con cantidades) ──────────┤        ▲
+item_markups (admin: % USD y EUR por item) ──────────┘   precio autoritativo
+                                                  en el servidor (checkout)
 ```
 
-- **Precio autoritativo en el servidor** — el frontend nunca envía montos; el servidor resuelve el precio desde el catálogo antes de persistir la orden.
-- **Validación estricta con Zod** — cada Server Action y Route Handler rechaza payloads inválidos en la frontera, no dentro de la lógica de negocio.
-- **Rate limiting distribuido** — limitadores de ventana deslizante en `lib/rate-limit.ts`, respaldados por Upstash Redis. Sin credenciales, caen a un Map en memoria (solo desarrollo).
-- **RBAC en el Edge** — `middleware.ts` bloquea `/admin` según el rol del JWT, sin APIs exclusivas de Node.
-- **Turnstile verificado server-side** — los tokens falsificados se rechazan en `lib/turnstile.ts`.
+| Regla | Detalle |
+|---|---|
+| Paquete del proveedor | `venta = checkoutProveedor × (1 + markupDelItem)` por moneda. |
+| Combo | `venta = Σ(checkout × cantidad) × (1 + markupDelCombo)` — los markups de los componentes **no** se heredan. |
+| Item sin markup | Vende **a costo** (0%) y el panel lo marca en rojo "SIN MARKUP". |
+| Moneda faltante | Un paquete sin checkout EUR no se muestra a compradores EU (en vez de cobrar con la moneda equivocada). |
+| Snapshot nuevo | Los precios se revalúan solos: costos y combos siguen el último scrape. |
+
+Dashboard: [localhost:3000/dashboard](http://localhost:3000/dashboard) muestra al comprador sus órdenes `pending` con factura descargable.
 
 ## 💳 Checkout regional y pagos
-
-El servidor detecta el país del comprador y deriva **región → moneda → métodos disponibles**. La moneda nunca la decide el cliente ni el método de pago: la decide la región elegida por el comprador (auto-detectada o sobrescrita en la UI).
 
 | Región | Moneda | Métodos |
 |---|---|---|
 | 🇪🇺 Europa | EUR € | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut |
-| 🌎 Latinoamérica | USD $ | Mercado Pago · PayPal · Pix · Binance (USDT) |
+| 🌎 LATAM | USD $ | Mercado Pago · PayPal · Pix · Binance USDT |
 
-Cada método define su campo propio (email, IBAN, teléfono, clave Pix…) con validación por regex tanto en cliente como en servidor. Al confirmar, la orden se registra como `pending` y se generan:
+Región auto-detectada (`x-vercel-ip-country` / `cf-ipcountry`), sobrescribible en el modal. Cada método exige su campo (email, IBAN, teléfono, clave Pix…) con regex validada en ambos lados. Al confirmar, la orden queda `pending` con instrucciones de pago + comprobante WhatsApp pre-armado (`wa.me`) + factura PDF.
 
-1. **Instrucciones de pago** específicas del método (con referencia de orden).
-2. **Comprobante de WhatsApp** pre-armado (`wa.me` deep link) con producto, monto, cuenta MLBB y método.
-3. **Factura PDF** descargable desde el dashboard.
+> [!NOTE]
+> El cobro real está pendiente de integración (Stripe / PayPal API / Mercado Pago). Los puntos de extensión están marcados en `lib/actions/checkout.ts`.
 
-> ℹ️ El procesamiento de cobro es actualmente una simulación: los puntos de integración reales (Stripe, PayPal API, proveedores de top-up) están marcados en `lib/actions/checkout.ts`.
+## 🔐 Seguridad Zero-Trust
+
+Nada que llegue del cliente es confiable; cada frontera valida en el servidor:
+
+```
+Cliente ──► Edge Middleware (RBAC) ──► Server Action / Route Handler
+                                          ├─ 1. Sesión obligatoria (auth())
+                                          ├─ 2. Zod estricto en el payload
+                                          ├─ 3. Reglas de negocio (región ↔ método)
+                                          ├─ 4. Precio resuelto EN EL SERVIDOR
+                                          └─ 5. Rate limit por IP/usuario
+                                                ▼
+                                            Turso (LibSQL)
+```
+
+- **RBAC en 3 capas**: middleware bloquea `/admin`, la página repite el check de rol, y cada action/API lo verifica otra vez.
+- **Precio autoritativo**: el grid muestra precios calculados en servidor; la orden persiste los centavos resueltos allí mismo.
+- **IP de cliente** para rate limiting via `x-real-ip` / `x-forwarded-for` del proxy de confianza.
 
 ## 🔍 Verificación de jugador MLBB
 
-Al ingresar un `userId` (5–10 dígitos) y `zoneId` (3–5 dígitos) válidos, la UI muestra el nickname y país del jugador en tiempo real, evitando recargas a cuentas equivocadas.
-
-### Cadena triple de fallback
-
 ```
-CheckoutSection (cliente, debounce 300 ms)
-   ↓ POST /api/mlbb/lookup
-app/api/mlbb/lookup/route.ts
-   ├─ Rate limit: 30 req / 60 s por IP (ventana deslizante)
-   ├─ Validación Zod: MLBBLookupSchema
-   ├─ Cache check (Upstash: 24 h positiva / 5 min negativa)
-   ├─ lib/mlbb/client.ts → cadena de 3 upstreams (timeout 12 s c/u)
-   └─ Cache write
+CheckoutSection (debounce 300 ms)
+   ↓ POST /api/mlbb/lookup       (rate limit 30/min por IP · Zod)
+lib/mlbb/client.ts (Promise.any, 12 s por upstream)
+   ├─ 1. bananagameshop.com/api/mlbb/validasi   (GET)
+   ├─ 2. gopay.co.id/games/v1/order/user-account (POST)
+   └─ 3. api.isan.eu.org/nickname/ml            (GET)
+Caché: 24 h positiva / 5 min negativa (sentinela anti-martilleo)
 ```
 
-| Orden | Endpoint | Método |
-|---|---|---|
-| 1 | `bananagameshop.com/api/mlbb/validasi` | GET |
-| 2 | `gopay.co.id/games/v1/order/user-account` | POST |
-| 3 | `api.isan.eu.org/nickname/ml` | GET |
+Si los tres fallan → fallo suave `LOOKUP_FAILED` y la compra sigue habilitada. Cambiar de proveedor exige tocar **un solo archivo**.
 
-Las respuestas se normalizan a `{ nickname, country }`. Si los tres fallan, la API devuelve un fallo *suave* (`LOOKUP_FAILED`) y el checkout permanece habilitado.
+## 🛡️ Panel de administración
 
-### Estrategia de caché
+Ruta protegida en tres niveles (`role = "admin"`):
 
-- **Positiva** (`{ nickname, country }`): TTL 24 h — un nickname exitoso no cambia.
-- **Negativa** (sentinela vacío): TTL 5 min — evita martillar endpoints caídos y recupera rápido ante cortes temporales.
+- `/admin` — órdenes con stats agregadas, filtros sanitizados, cambio de estado (`pending` → `paid`/`cancelled`).
+- `/admin/precios` — catálogo de juegos con fecha del último scrape.
+- `/admin/precios/mlbb` — tabla Cat/Chk BRL/USD/EUR del proveedor, columna **Venta**, editor de **markup por item**, gestión de **combos** y botón **"Actualizar precios"**.
 
-## 🛡 Panel de administración
+Para promover un admin: `npm run set-admin -- usuario@email.com`.
 
-Accesible solo para usuarios con `role = "admin"` (doble control: Edge Middleware + verificación en el Server Component):
+## 🕷️ Scraper de precios
 
-- Listado completo de órdenes con **estadísticas agregadas**.
-- Filtros sanitizados server-side (`sanitizeAdminFilters`).
-- Cambio de estado de órdenes (`pending` → `paid` / `cancelled`).
-- `/admin/precios` — selector de juegos y listas de precios de proveedor (ver siguiente sección).
+El botón del panel dispara el mismo scraper con dos motores según el entorno:
 
-Para promover un administrador:
+| Entorno | Mecanismo |
+|---|---|
+| Local | `spawn` directo de `venv/Scripts/python.exe` (auto-detectado; `ENEBA_PYTHON_PATH` como override). |
+| Vercel | Dispatch de `.github/workflows/scrape-prices.yml` (GitHub Actions) + lectura de estado por API. |
 
-```bash
-npm run set-admin -- usuario@email.com
-```
+Cada corrida crea un snapshot inmutable (`supplier_price_snapshots` + `supplier_price_rows`, precios en centavos); el historial sirve para auditar márgenes. Consola alternativa: `python scrapers/eneba_mlbb.py` → `npm run import-eneba`.
 
-## 🕷 Scraper de precios de proveedor
+<details>
+<summary><b>Añadir un juego nuevo</b></summary>
 
-El panel admin incluye tracking de costos del proveedor (Eneba) por juego y moneda, para calcular márgenes de reventa con datos reales de checkout.
-
-```
-/admin/precios              → selector de juegos (última actualización por juego)
-/admin/precios/mlbb         → tabla Cat/Chk en BRL/USD/EUR + cashback + historial
-```
-
-- **Datos**: cada corrida crea un *snapshot* (`supplier_price_snapshots` + `supplier_price_rows`) con precios en centavos; los snapshots antiguos se conservan como historial.
-- **Markup de venta por item y moneda**: la página permite editar el markup USD (LATAM) y EUR (Europa) **de cada paquete del proveedor y de cada combo** (columna "Markup %"), para no inflar de más los paquetes caros con un % plano. No existe markup global: un item sin markup propio se vende **a costo** y el panel lo marca como "SIN MARKUP". La columna "Venta" muestra el precio final (Chk × 1+markup). La tienda (`/topup/mlbb`) se alimenta del **último snapshot + markups por item** (`lib/store-catalog.ts` + `lib/item-markups.ts`): el precio autoritativo de cada orden se resuelve en el servidor con esos mismos datos, y sin snapshot la tienda cae al catálogo estático sin romperse.
-- **Combos personalizados**: desde el panel se crean paquetes compuestos (`store_combos`) eligiendo items del snapshot con cantidades (p. ej. 3× Weekly Diamond Pass). Su coste se resuelve en vivo contra el último snapshot (`lib/store-combos.ts` + `buildComboProducts`), pasan por el mismo markup y aparecen en el grid de la tienda; si un componente desaparece del proveedor, el combo deja de mostrarse en vez de malvenderse.
-- **Botón "Actualizar precios"**: dispara el scraper desde el panel.
-  - **Local**: spawn directo de `venv/Scripts/python.exe` (se resuelve solo; `ENEBA_PYTHON_PATH` como override).
-  - **Vercel**: serverless no puede correr Python, así que se dispara el workflow `.github/workflows/scrape-prices.yml` (Actions), que scrapea e importa a Turso con el mismo código del repo. El panel consulta el estado de la run vía API de GitHub.
-- **Multi-juego**: `lib/supplier-games.ts` define los juegos y `lib/scrapers.ts` mapea juego → script. Un juego sin entrada muestra la tabla pero no el botón.
-
-Alternativa por consola: `python scrapers/eneba_mlbb.py` → `npm run import-eneba`.
-
-### Añadir un juego nuevo
-
-1. Crear el script `scrapers/eneba_<juego>.py` que escriba su JSON en `scrapers/output/` con `"game": "<id>"` en la metadata.
+1. Crear `scrapers/eneba_<juego>.py` que escriba `scrapers/output/` con `"game": "<id>"`.
 2. Registrar el juego en `lib/supplier-games.ts` y el script en `lib/scrapers.ts`.
-3. Registrar el caso en el workflow (paso `if: inputs.game == '<id>'` + opción en `options`).
+3. Registrar el caso en el workflow (`if: inputs.game == '<id>'` + opción en `options`).
+
+</details>
 
 ## 📁 Estructura del proyecto
 
@@ -190,140 +184,102 @@ Alternativa por consola: `python scrapers/eneba_mlbb.py` → `npm run import-ene
 app/
 ├── api/
 │   ├── admin/scrape-prices/    # POST dispara scraper · GET estado (local | GitHub Actions)
-│   ├── auth/[...nextauth]/     # Handlers de NextAuth
-│   ├── mlbb/lookup/            # POST /api/mlbb/lookup (rate limit + cache + fallback)
+│   ├── auth/[...nextauth]/     # Handlers NextAuth
+│   ├── mlbb/lookup/            # POST lookup con rate limit + cache + fallback
 │   ├── orders/[id]/invoice/    # Factura PDF on-demand
-│   └── support/on-duty/        # Agente de soporte activo según geo/horario
-├── admin/                      # Panel de administración (RBAC)
-│   └── precios/                # Selector de juegos + [game] con tabla de precios proveedor
+│   └── support/on-duty/        # Agente activo según geo/horario
+├── admin/                      # Panel RBAC · precios/[game] con tablas y markups
 ├── dashboard/                  # Órdenes del usuario + facturas
-├── login/, register/           # Auth pages (Server Components)
+├── login/, register/           # Auth (Server Components)
 └── topup/mlbb/                 # Flujo de compra
+
 components/
-├── home/                       # Hero, categorías, best-sellers, trust banner
-├── admin/                      # Panel de órdenes + botón de actualización de precios
-├── CheckoutSection.tsx         # Checkout client-side (lazy-loaded)
+├── admin/                      # AdminOrdersPanel · ScrapePricesButton · StoreCombosPanel · ItemMarkupEditor
+├── home/                       # Hero · categorías · best-sellers
+├── CheckoutSection.tsx         # Checkout client-side (lazy)
 ├── PaymentModal.tsx            # Instrucciones + comprobante WhatsApp
-├── WhatsAppWidget.tsx          # Soporte geo-horario
-└── ...
+└── WhatsAppWidget.tsx          # Soporte geo-horario
+
 lib/
-├── actions/                    # Server Actions (auth, checkout, admin, reviews, pricing)
-├── catalog.ts                  # Catálogo estático de respaldo
-├── store-catalog.ts            # Catálogo live: snapshot proveedor + markup → productos
-├── item-markups.ts             # Markups por item (tabla item_markups; 0% si falta)
+├── actions/                    # Server Actions: auth · checkout · admin · reviews · combos · item-markups
+├── store-catalog.ts            # Catálogo live: snapshot + combos + markups → productos
+├── item-markups.ts             # Markup por item (tabla item_markups; 0% si falta)
+├── store-combos.ts             # Combos del admin (tabla store_combos)
 ├── markup.ts                   # Primitivas de markup PURAS (seguro en cliente)
-├── store-combos.ts             # Combos del admin (tabla store_combos, suma de checkouts)
-├── payments.ts                 # Regiones, métodos y validaciones de pago
-├── mlbb/client.ts              # Único punto que conoce los upstreams
-├── supplier-games.ts           # Registro de juegos con tracking de precios
-├── scrapers.ts                 # Registro juego → script scraper
-├── scrape-jobs.ts              # Runner: spawn local · dispatch GitHub Actions en Vercel
+├── catalog.ts                  # Catálogo estático de respaldo
+├── payments.ts                 # Regiones, métodos, validaciones, conversión
+├── mlbb/client.ts              # Único punto que conoce los 3 upstreams
+├── supplier-games.ts           # Registro de juegos con tracking
+├── scrapers.ts / scrape-jobs.ts# Registro y runner del scraper (local · GitHub Actions)
 ├── supplier-prices.ts          # Parser JSON → snapshot + consultas del panel
-├── cache.ts                    # Upstash ↔ in-memory auto-seleccionado
-├── rate-limit.ts               # Ventanas deslizantes + fallback
+├── cache.ts / rate-limit.ts    # Upstash ↔ in-memory auto-seleccionados
 ├── validations/                # Schemas Zod de todas las fronteras
 ├── db/                         # Schema Drizzle + cliente LibSQL
-├── invoice-pdf.tsx             # Plantilla de factura A4
+├── invoice-pdf.tsx             # Plantilla factura A4
 └── support-schedule.ts         # Turnos AR/ES por zona horaria
-scrapers/                       # Tooling Python por juego (output/ ignorado por git)
-├── eneba_mlbb.py               # Scraper Eneba de MLBB (curl_cffi + ScrapingAnt)
-└── output/                     # JSONs resultantes de cada corrida
-scripts/
-├── set-admin.ts                # Promoción de admins por email
-└── import-eneba-prices.ts      # Importa el JSON del scraper a Turso
-.github/workflows/              # scrape-prices.yml (workflow_dispatch desde el admin)
-drizzle/                        # Migraciones SQL versionadas
+
+scrapers/                       # Python + output/ (JSON del último scrape, ignorado por git)
+scripts/                        # set-admin.ts · import-eneba-prices.ts
+.github/workflows/              # scrape-prices.yml
+drizzle/                        # Migraciones SQL versionadas (0000–0008)
 ```
-
-## 🚀 Puesta en marcha
-
-### 1. Clonar e instalar
-
-```bash
-git clone https://github.com/TecTroncoso/MythicMarket.git
-cd MythicMarket
-npm install
-```
-
-### 2. Variables de entorno
-
-```bash
-cp .env.example .env
-```
-
-Completa las credenciales reales (ver tabla abajo). Para Turnstile puedes usar las claves de prueba incluidas en `.env.example`.
-
-### 3. Base de datos
-
-```bash
-npm run db:push        # aplica el schema Drizzle a tu Turso DB
-```
-
-### 4. Levantar en desarrollo
-
-```bash
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000).
 
 ## 🔑 Variables de entorno
 
 | Variable | Requerida | Propósito |
 |---|---|---|
-| `AUTH_SECRET` | ✅ | Firma de sesiones NextAuth. Genera una con `npx auth secret`. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ | Credenciales OAuth de Google. |
-| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | ✅ | Conexión a la base Turso. |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Recomendada | Rate limiting + caché en producción. Sin ellas cae a memoria local (solo dev). |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ✅ | Cloudflare Turnstile. `.env.example` incluye claves de prueba. |
-| `SCRAPINGANT_API_KEY` | Scraper | Token de ScrapingAnt (proxy BR para checkout). |
-| `ENEBA_USER_ID` / `ENEBA_ZONE_ID` | Scraper | Cuenta MLBB usada para simular el checkout. |
-| `ENEBA_PYTHON_PATH` | Opcional | Ruta absoluta al Python del venv si no se detecta solo (local). |
-| `GITHUB_REPO` / `GITHUB_TOKEN` | Solo Vercel | El botón de precios dispara el workflow vía API (PAT con `actions:write`). |
+| `AUTH_SECRET` | ✅ | Firma de sesiones (`npx auth secret` genera una). |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ | OAuth de Google. |
+| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | ✅ | Base de datos. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ✅ | Anti-bot (`.env.example` trae claves de prueba). |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Recomendada | Rate limit + caché; sin ellas cae a memoria (solo dev). |
+| `SCRAPINGANT_API_KEY` | Scraper | Proxy BR para consultar checkout real. |
+| `ENEBA_USER_ID` / `ENEBA_ZONE_ID` | Scraper | Cuenta MLBB de simulación de checkout. |
+| `ENEBA_PYTHON_PATH` | Opcional | Ruta al Python del venv si no se detecta solo. |
+| `GITHUB_REPO` / `GITHUB_TOKEN` | Solo Vercel | Disparo del workflow por API (PAT con `actions:write`). |
 
-> Los mismos 5 valores del scraper/Turso deben existir también como **GitHub Actions secrets** (`SCRAPINGANT_API_KEY`, `ENEBA_USER_ID`, `ENEBA_ZONE_ID`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`) para el modo Vercel. Si falta alguno, el workflow lo reporta en su primer paso.
+> [!IMPORTANT]
+> Los 5 valores del scraper/Turso deben existir como **secrets de GitHub Actions** para el modo Vercel: `SCRAPINGANT_API_KEY`, `ENEBA_USER_ID`, `ENEBA_ZONE_ID`, `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`. Si falta alguno, el workflow lo reporta en su primer paso.
 
 ## 🧪 Testing
 
-**281 tests en 23 archivos — todos en verde**, cubriendo Server Actions, Route Handlers, el cliente MLBB, el parser del scraper, el catálogo live con combos, los markups por item, la capa de caché, rate limiting, pagos, horarios de soporte y componentes React.
+**281 tests · 23 archivos · todos en verde.**
+
+| Capa | Cubierto |
+|---|---|
+| Lógica pura | Pagos, catálogo, store-catalog (combo/markup/overrides), parser del scraper, horarios, order-number, caché, rate-limit, IP |
+| Server Actions | auth · checkout · admin · reviews · combos · item-markups |
+| Route handlers | `/api/mlbb/lookup` · `/api/orders/[id]/invoice` |
+| Componentes | `CheckoutSection` · `WhatsAppWidget` (happy-dom opt-in) |
 
 ```bash
-npm run test          # modo watch
-npm run test:run      # suite completa una vez
-npm run test:coverage # cobertura v8 sobre lib/**
+npm run test            # watch
+npm run test:run        # suite completa
+npm run test:coverage   # cobertura v8 sobre lib/**
 ```
 
-### Estrategia por capas
+Convenciones: tests colocalizados (`foo.ts` → `foo.test.ts`), entorno global `node`, mocks acotados por test.
 
-- **Unitarios** (`lib/*.test.ts`): mockean dependencias externas (SDK de Upstash, `global.fetch`) y verifican normalización, TTLs y orden de fallback.
-- **Route Handlers** (`app/api/**/*.test.ts`): mockean cliente/caché/limiter para validar respuestas de rate-limit, hits de caché y semántica de fallo suave.
-- **Componentes** (`*.test.tsx`): happy-dom opt-in por archivo con `// @vitest-environment happy-dom`, sin contaminar el entorno global.
-
-Convenciones: los tests viven junto al archivo que prueban (`foo.ts` → `foo.test.ts`); el entorno global es `node`.
-
-> 🪟 **Nota Windows:** antepón `NODE_OPTIONS="--max-semi-space-size=512 --max-old-space-size=4096"` a `tsc --noEmit` y `eslint .` para evitar OOM de NewSpace con `eslint-config-next@16`.
+> [!TIP]
+> En Windows, antepón `NODE_OPTIONS="--max-semi-space-size=512 --max-old-space-size=4096"` a `tsc --noEmit` y `eslint .` para evitar OOM de NewSpace con `eslint-config-next@16`.
 
 ## 📜 Scripts disponibles
 
-| Script | Descripción |
+| Script | Qué hace |
 |---|---|
-| `npm run dev` | Servidor de desarrollo en el puerto 3000. |
-| `npm run build` | Build de producción. |
-| `npm run start` | Servidor de producción (tras `build`). |
-| `npm run lint` | ESLint con flat config. |
-| `npm run clean` | Limpia artefactos de build de Next. |
-| `npm run db:generate` | Genera archivos de migración Drizzle. |
-| `npm run db:push` | Aplica el schema a Turso. |
-| `npm run set-admin -- <email>` | Promueve un usuario a admin (idempotente). |
-| `npm run import-eneba` | Importa `scrapers/output/ml_diamonds_results.json` a Turso como snapshot. |
-| `npm run test` / `test:run` / `test:coverage` | Suite Vitest (watch / una vez / cobertura). |
+| `npm run dev` / `build` / `start` | Ciclo de desarrollo habitual. |
+| `npm run lint` | ESLint flat config. |
+| `npm run db:generate` / `db:push` | Migraciones Drizzle → Turso. |
+| `npm run set-admin -- <email>` | Promueve a admin (idempotente). |
+| `npm run import-eneba` | Importa el JSON del scraper como snapshot. |
+| `npm run test` / `test:run` / `test:coverage` | Suite Vitest. |
+| `npm run clean` | Borra artefactos de build. |
 
-## 🏗 Notas de arquitectura
+## 🏗️ Notas de arquitectura
 
-- **Degradación elegante** — toda dependencia externa (Upstash, Turnstile, los tres upstreams de MLBB) tiene un modo de fallo documentado que mantiene el flujo del usuario funcionando.
-- **Swap de proveedor en un archivo** — `lib/mlbb/client.ts` es el único módulo que conoce los upstreams; migrar a una API paga (RapidAPI, etc.) es un cambio de un solo archivo más sus tests.
-- **Backends condicionados por entorno** — caché y rate limiters detectan la configuración de Upstash al inicializar el módulo y caen a implementaciones in-memory cuando faltan las variables, así el desarrollo local no requiere servicios externos.
-- **Módulos puros compartidos** — `catalog.ts` y `payments.ts` no importan nada de Node ni del servidor: son seguros para ambos bundles (cliente y servidor) y testeables sin mocks.
+- **Degradación elegante por diseño**: cada dependencia externa (Upstash, Turnstile, los tres upstreams MLBB, el snapshot) tiene un modo de fallo documentado que mantiene el flujo del usuario funcionando.
+- **Módulos puros compartidos**: `markup.ts`, `catalog.ts` y `payments.ts` no importan nada de servidor — seguros en ambos bundles y testeables sin mocks. Los paneles del admin (componentes cliente) nunca importan directamente módulos DB, para no arrastrar libsql al navegador.
+- **Swap de upstreams en un archivo**: `lib/mlbb/client.ts` concentra los 3 endpoints de lookup; migrar a API paga es un cambio acotado con sus tests.
 
 ## 📄 Licencia
 
