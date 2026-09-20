@@ -16,7 +16,6 @@ import {
   HelpCircle,
   Crown,
   Lock,
-  CircleDollarSign,
   Heart,
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
@@ -385,7 +384,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
           {/* Personaje en el hueco central con máscara doble: sin bordes visibles por ningún lado */}
           <div className="hidden lg:block absolute -top-8 right-[380px] xl:right-[450px] pointer-events-none z-0 w-[680px] xl:w-[800px] h-[560px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_75%)]">
             <Image
-              src="/images/personaje.png"
+              src="/images/nanalayla.png"
               alt="Personaje Mobile Legends"
               width={1200}
               height={1600}
@@ -544,15 +543,11 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
               {/* Precio y resumen */}
               <div className="mt-4 pt-4 border-t border-[rgba(147,51,234,0.25)]">
-                {/* Precio grande + cashback debajo (solo con paquete seleccionado) */}
+                {/* Precio grande (solo con paquete seleccionado) */}
                 {selectedProductData && (
                   <div className="mb-3">
                     <div className="text-3xl font-black text-white tracking-tight">
                       {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-1 text-emerald-400 text-xs font-bold">
-                      <CircleDollarSign className="w-3.5 h-3.5" />
-                      10% Cashback
                     </div>
                   </div>
                 )}
@@ -705,13 +700,10 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     />
                   </div>
 
-                  {/* Pie: precio a la izquierda, cashback plano a la derecha */}
+                  {/* Pie: solo el precio */}
                   <div className="flex items-end justify-between w-full">
                     <span className="text-lg font-black text-white whitespace-nowrap">
                       {effectiveCfg.symbol}{shownPrice.toFixed(2)}
-                    </span>
-                    <span className="text-xs font-semibold text-emerald-400 whitespace-nowrap">
-                      10% Cashback
                     </span>
                   </div>
                 </button>
