@@ -172,3 +172,27 @@ export const pricingSettings = sqliteTable("pricing_settings", {
 });
 
 export type PricingSettings = typeof pricingSettings.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Admin-defined combo packages: custom sellable items whose cost is the sum
+// of other supplier packages' checkout prices times their quantities
+// (e.g. "3x Weekly Diamond Pass"). Costs are resolved live against the latest
+// supplier snapshot, so combos track supplier prices automatically.
+// ---------------------------------------------------------------------------
+
+export const storeCombos = sqliteTable("store_combos", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  game: text("game").notNull(),
+  // Display name shown in the storefront grid and stored on orders.
+  name: text("name").notNull(),
+  // JSON array of { packageName, qty } referencing supplier_price_rows of the
+  // latest snapshot by exact package name.
+  components: text("components").notNull(),
+  createdAt: integer("createdAt", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export type StoreCombo = typeof storeCombos.$inferSelect;

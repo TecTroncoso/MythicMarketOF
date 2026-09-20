@@ -48,3 +48,24 @@ export const PricingSettingsSchema = z.object({
     .max(1, "El markup no puede superar el 100%."),
 });
 export type PricingSettingsInput = z.infer<typeof PricingSettingsSchema>;
+
+// Admin combo definition: 1-10 supplier packages with quantities, combined
+// into a new sellable item whose cost is the sum of their checkout prices.
+export const CreateStoreComboSchema = z.object({
+  game: z.string().min(1, "Juego inválido."),
+  name: z.string().trim().max(80, "El nombre es demasiado largo.").optional(),
+  components: z
+    .array(
+      z.object({
+        packageName: z.string().trim().min(1).max(120),
+        qty: z
+          .number()
+          .int("La cantidad debe ser un número entero.")
+          .min(1, "La cantidad mínima es 1.")
+          .max(10, "La cantidad máxima por paquete es 10."),
+      })
+    )
+    .min(1, "Añade al menos un paquete al combo.")
+    .max(10, "Un combo puede combinar hasta 10 paquetes distintos."),
+});
+export type CreateStoreComboInput = z.infer<typeof CreateStoreComboSchema>;

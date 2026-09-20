@@ -13,6 +13,7 @@
 
 import type { ProductCategory } from "@/lib/catalog";
 import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
+import { getStoreCombos, type StoreComboDef } from "@/lib/store-combos";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 
 /** Minimal row shape the pure builder needs (subset of SupplierPriceRow). */
@@ -135,18 +136,91 @@ export function buildStoreProducts(
 }
 
 /**
+ * Sums a combo's component checkout costs. Returns null for a currency when
+ * any component is missing from the snapshot or unpriced in that currency —
+ * an unpriceable combo is unsellable there rather than mispriced.
+ */
+function comboCostCents(
+  components: StoreComboDef["components"],
+  rows: SupplierCostRow[],
+  pick: (row: SupplierCostRow) => number | null
+): number | null {
+  let total = 0;
+  for (const component of components) {
+    const row = rows.find((r) => r.packageName === component.packageName);
+    const cost = row ? pick(row) : null;
+    if (cost === null) return null;
+    total += cost * component.qty;
+  }
+  return total;
+}
+
+/**
+ * Admin-defined combos become sellable products priced by summing their
+ * components' CURRENT checkout costs, then marked-up like any other product.
+ * Combos of same-category components inherit that category (and its art);
+ * mixed sets land in "bundle".
+ */
+export function buildComboProducts(
+  rows: SupplierCostRow[],
+  combos: StoreComboDef[],
+  settings: { markupUsd: number; markupEur: number }
+): StoreProduct[] {
+  const products: StoreProduct[] = [];
+
+  for (const combo of combos) {
+    if (combo.components.length === 0) continue;
+
+    const costUsd = comboCostCents(combo.components, rows, (r) => r.checkoutUsdCents);
+    const costEur = comboCostCents(combo.components, rows, (r) => r.checkoutEurCents);
+    if (costUsd === null && costEur === null) continue;
+
+    const categories = new Set(
+      combo.components.map((c) => categorize(c.packageName))
+    );
+    const category: ProductCategory =
+      categories.size === 1 ? [...categories][0] : "bundle";
+    const image =
+      categories.size === 1
+        ? imageFor(category, combo.components[0]?.packageName ?? "")
+        : (PASS_IMAGES.bundle ?? "/products/baul6.png");
+
+    products.push({
+      // "combo-" prefix keeps admin combos collision-free with package slugs.
+      id: `combo-${combo.id}`,
+      name: combo.name,
+      bonus: "",
+      label: combo.name,
+      image,
+      category,
+      priceUsdCents:
+        costUsd === null ? null : applyMarkupCents(costUsd, settings.markupUsd),
+      priceEurCents:
+        costEur === null ? null : applyMarkupCents(costEur, settings.markupEur),
+    });
+  }
+
+  return products;
+}
+
+/**
  * Live products for a game from its newest supplier snapshot, or null when
  * the game has no imported prices yet (or the read fails) — callers then fall
- * back to the static catalog.
+ * back to the static catalog. Admin combos are appended after the plain
+ * supplier packages.
  */
 export async function getStoreProducts(game: string): Promise<StoreProduct[] | null> {
   try {
-    const [latest, settings] = await Promise.all([
+    const [latest, settings, combos] = await Promise.all([
       getLatestSupplierSnapshot(game),
       getPricingSettings(game),
+      getStoreCombos(game),
     ]);
     if (!latest) return null;
-    const products = buildStoreProducts(latest.rows, settings);
+    const products = [
+      ...buildStoreProducts(latest.rows, settings),
+      ...buildComboProducts(latest.rows, combos, settings),
+    ];
     return products.length > 0 ? products : null;
   } catch (error) {
     console.error(`No se pudo construir el catálogo live de "${game}":`, error);

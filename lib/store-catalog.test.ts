@@ -5,7 +5,12 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("@/lib/db", () => ({ db: {} }));
 
 import { applyMarkupCents } from "@/lib/pricing-settings";
-import { buildStoreProducts, type SupplierCostRow } from "@/lib/store-catalog";
+import {
+  buildComboProducts,
+  buildStoreProducts,
+  type SupplierCostRow,
+} from "@/lib/store-catalog";
+import type { StoreComboDef } from "@/lib/store-combos";
 
 // Fixture shaped like the real scraper output (scrapers/output/*.json after
 // parsing), with checkout prices in integer cents.
@@ -104,5 +109,78 @@ describe("buildStoreProducts()", () => {
     );
     expect(bundle[0]?.category).toBe("bundle");
     expect(bundle[0]?.image).toBe("/products/baul6.png");
+  });
+});
+
+describe("buildComboProducts()", () => {
+  const makeCombo = (components: StoreComboDef["components"], name = "Mi combo"): StoreComboDef => ({
+    id: "abc123",
+    name,
+    components,
+  });
+
+  it("sums component checkout costs with quantities, then applies the markup", () => {
+    // 3x Weekly Diamond Pass (165 USD / 144 EUR each) = 495 USD / 432 EUR
+    // With 5% markup: 495*1.05 = 519.75 -> 520 ; 432*1.05 = 453.6 -> 454
+    const [combo] = buildComboProducts(
+      ROWS,
+      [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly Diamond Pass")],
+      SETTINGS
+    );
+    expect(combo).toMatchObject({
+      id: "combo-abc123",
+      name: "3x Weekly Diamond Pass",
+      label: "3x Weekly Diamond Pass",
+      priceUsdCents: 520,
+      priceEurCents: 454,
+    });
+  });
+
+  it("combines different packages into a mixed bundle", () => {
+    // 1x Weekly (165 USD) + 2x 78 Diamonds (129 USD each) = 423 USD
+    const [combo] = buildComboProducts(
+      ROWS,
+      [makeCombo([
+        { packageName: "Weekly Diamond Pass", qty: 1 },
+        { packageName: "78 Diamonds + 8 Bonus", qty: 2 },
+      ])],
+      SETTINGS
+    );
+    expect(combo.priceUsdCents).toBe(Math.round(423 * 1.05));
+    // Components span two categories -> lands in "bundle".
+    expect(combo.category).toBe("bundle");
+    expect(combo.image).toBe("/products/baul6.png");
+  });
+
+  it("keeps the component category and art when every component matches", () => {
+    const [combo] = buildComboProducts(
+      ROWS,
+      [makeCombo([{ packageName: "Twilight Pass", qty: 2 }])],
+      SETTINGS
+    );
+    expect(combo.category).toBe("twilight-pass");
+    expect(combo.image).toBe("/products/pass5.png");
+  });
+
+  it("is unsellable in a currency when a component lacks that price", () => {
+    const rows: SupplierCostRow[] = [
+      { packageName: "USD only pack", checkoutUsdCents: 500, checkoutEurCents: null },
+    ];
+    const [combo] = buildComboProducts(rows, [makeCombo([{ packageName: "USD only pack", qty: 2 }])], SETTINGS);
+    expect(combo.priceUsdCents).toBe(1050); // 500 * 2 = 1000, * 1.05 = 1050
+    expect(combo.priceEurCents).toBeNull();
+  });
+
+  it("drops combos whose components are not in the latest snapshot", () => {
+    const combos = buildComboProducts(
+      ROWS,
+      [makeCombo([{ packageName: "Paquete eliminado", qty: 1 }])],
+      SETTINGS
+    );
+    expect(combos).toEqual([]);
+  });
+
+  it("ignores combos with an empty component list", () => {
+    expect(buildComboProducts(ROWS, [makeCombo([])], SETTINGS)).toEqual([]);
   });
 });

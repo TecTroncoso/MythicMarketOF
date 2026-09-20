@@ -8,6 +8,8 @@ import { PricingSettingsForm } from "@/components/admin/PricingSettingsForm";
 import { getScraperForGame } from "@/lib/scrapers";
 import { getSupplierGame } from "@/lib/supplier-games";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
+import { getStoreCombos } from "@/lib/store-combos";
+import { StoreCombosPanel } from "@/components/admin/StoreCombosPanel";
 import { applyMarkupCents, getPricingSettings } from "@/lib/pricing-settings";
 import { formatAmount } from "@/lib/orders";
 import type { SupplierPriceRow } from "@/lib/db/schema";
@@ -93,9 +95,10 @@ export default async function AdminGamePricesPage({
   }
 
   const scraper = getScraperForGame(game.id);
-  const [latest, pricing] = await Promise.all([
+  const [latest, pricing, combos] = await Promise.all([
     getLatestSupplierSnapshot(game.id),
     getPricingSettings(game.id),
+    getStoreCombos(game.id),
   ]);
 
   return (
@@ -143,6 +146,18 @@ export default async function AdminGamePricesPage({
             markupEur={pricing.markupEur}
           />
         </div>
+
+        <StoreCombosPanel
+          game={game.id}
+          packages={(latest?.rows ?? []).map((row) => ({
+            packageName: row.packageName,
+            checkoutUsdCents: row.checkoutUsdCents,
+            checkoutEurCents: row.checkoutEurCents,
+          }))}
+          combos={combos}
+          markupUsd={pricing.markupUsd}
+          markupEur={pricing.markupEur}
+        />
 
         {!latest ? (
           <div className="bg-[#121824] border border-[#1c2534] rounded-2xl p-10 text-center">
