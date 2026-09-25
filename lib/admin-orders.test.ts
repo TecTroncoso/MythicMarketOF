@@ -46,6 +46,18 @@ const STATS_ROW = {
   cancelledCount: 1,
 };
 
+// Aggregates for the "vs. ayer" deltas (today totals + yesterday baseline).
+// Amounts are typed to cover drizzle's sqlite sum() result (string | null).
+const DAY_ROW = {
+  todayTotal: 3,
+  yesterdayTotal: 5,
+  todayAmount: 420 as number | string | null,
+  yesterdayAmount: 700 as number | string | null,
+  todayPending: 2,
+  todayPaid: 1,
+  todayCancelled: 0,
+};
+
 const limitFn = vi.fn(async () => ORDERS_ROWS);
 const orderByFn = vi.fn(() => ({ limit: limitFn }));
 const ordersWhereFn = vi.fn((_conditions: unknown[]) => ({ orderBy: orderByFn }));
@@ -60,8 +72,19 @@ const statsInnerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
 const statsWhereFn = vi.fn(async (_conditions: unknown[]) => [STATS_ROW]);
 const statsFromFn = vi.fn(() => ({ innerJoin: statsInnerJoinFn }));
 
+const dayStatsWhereFn = vi.fn(async (_conditions: unknown[]) => [DAY_ROW]);
+const dayInnerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
+  where: dayStatsWhereFn,
+}));
+const dayStatsFromFn = vi.fn(() => ({ innerJoin: dayInnerJoinFn }));
+
 const mockSelect = vi.fn((config: Record<string, unknown>) => ({
-  from: "orderNumber" in config ? ordersFromFn : statsFromFn,
+  from:
+    "orderNumber" in config
+      ? ordersFromFn
+      : "todayTotal" in config
+        ? dayStatsFromFn
+        : statsFromFn,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -144,7 +167,8 @@ describe("getAdminOrders()", () => {
   it("queries orders joined with users, ordered by date, limited to 200", async () => {
     const result = await getAdminOrders({});
 
-    expect(mockSelect).toHaveBeenCalledTimes(2);
+    // Three DB queries run in parallel: rows, stats, today/yesterday deltas.
+    expect(mockSelect).toHaveBeenCalledTimes(3);
     expect(ordersFromFn).toHaveBeenCalledWith(orders);
     expect(innerJoinFn).toHaveBeenCalledWith(users, expect.anything());
     expect(orderByFn).toHaveBeenCalledTimes(1);
@@ -237,6 +261,17 @@ describe("getAdminOrders()", () => {
       pendingCount: 3,
       paidCount: 38,
       cancelledCount: 1,
+      today: {
+        totalCount: 3,
+        totalAmountCents: 420,
+        pendingCount: 2,
+        paidCount: 1,
+        cancelledCount: 0,
+      },
+      yesterday: {
+        totalCount: 5,
+        totalAmountCents: 700,
+      },
     });
   });
 
@@ -267,5 +302,26 @@ describe("getAdminOrders()", () => {
 
     expect(statsInnerJoinFn).toHaveBeenCalledWith(users, expect.anything());
     expect(statsWhereFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the same filters to the day-delta query", async () => {
+    await getAdminOrders({ status: "pending" });
+
+    const listSql = serialize(ordersWhereFn.mock.calls[0]?.[0]);
+    const daySql = serialize(dayStatsWhereFn.mock.calls[0]?.[0]);
+    expect(daySql.sql).toBe(listSql.sql);
+    expect(daySql.params).toEqual(listSql.params);
+  });
+
+  it("coerces day-delta sums to numbers and treats missing rows as zeros", async () => {
+    dayStatsWhereFn.mockResolvedValueOnce([{ ...DAY_ROW, todayAmount: "1500", yesterdayAmount: null }]);
+    const asString = await getAdminOrders({});
+    expect(asString.stats.today.totalAmountCents).toBe(1500);
+    expect(asString.stats.yesterday.totalAmountCents).toBe(0);
+
+    dayStatsWhereFn.mockResolvedValueOnce([]);
+    const empty = await getAdminOrders({});
+    expect(empty.stats.today.totalCount).toBe(0);
+    expect(empty.stats.yesterday.totalCount).toBe(0);
   });
 });

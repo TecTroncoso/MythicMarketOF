@@ -42,6 +42,18 @@ export interface AdminStats {
   pendingCount: number;
   paidCount: number;
   cancelledCount: number;
+  /** Real daily figures for the "vs. ayer" deltas on the stat cards (same filters applied). */
+  today: {
+    totalCount: number;
+    totalAmountCents: number;
+    pendingCount: number;
+    paidCount: number;
+    cancelledCount: number;
+  };
+  yesterday: {
+    totalCount: number;
+    totalAmountCents: number;
+  };
 }
 
 /** Read a single string value from searchParams (arrays -> first element). */
@@ -132,7 +144,13 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
     if (searchCondition) conditions.push(searchCondition);
   }
 
-  const [rows, statsRows] = await Promise.all([
+  // Day boundaries in UTC for the "vs. ayer" deltas on the stat cards.
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setUTCDate(startOfYesterday.getUTCDate() - 1);
+
+  const [rows, statsRows, dayRows] = await Promise.all([
     db
       .select({
         orderNumber: orders.orderNumber,
@@ -165,10 +183,25 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
       .from(orders)
       .innerJoin(users, eq(orders.userId, users.id))
       .where(and(...conditions)),
+    // Real today/yesterday aggregates for the delta badges; same filters.
+    db
+      .select({
+        todayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()})`,
+        yesterdayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()})`,
+        todayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfToday.getTime()}), 0)`,
+        yesterdayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()}), 0)`,
+        todayPending: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "pending")})`,
+        todayPaid: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "paid")})`,
+        todayCancelled: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "cancelled")})`,
+      })
+      .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
+      .where(and(...conditions)),
   ]);
 
   // Stats come from the aggregate query, never from the limited 200-row list.
   const statsRow = statsRows[0];
+  const dayRow = dayRows[0];
 
   return {
     orders: rows.map((row) => ({
@@ -190,6 +223,17 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
       pendingCount: statsRow?.pendingCount ?? 0,
       paidCount: statsRow?.paidCount ?? 0,
       cancelledCount: statsRow?.cancelledCount ?? 0,
+      today: {
+        totalCount: dayRow?.todayTotal ?? 0,
+        totalAmountCents: Number(dayRow?.todayAmount ?? 0),
+        pendingCount: dayRow?.todayPending ?? 0,
+        paidCount: dayRow?.todayPaid ?? 0,
+        cancelledCount: dayRow?.todayCancelled ?? 0,
+      },
+      yesterday: {
+        totalCount: dayRow?.yesterdayTotal ?? 0,
+        totalAmountCents: Number(dayRow?.yesterdayAmount ?? 0),
+      },
     },
   };
 }
