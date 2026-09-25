@@ -15,7 +15,14 @@ const QUICK_LINKS: { label: string; href?: string; badge?: string }[] = [
   { label: 'GTA 6' },
 ];
 
-export function Navbar({ session }: { session?: Session | null }) {
+export function Navbar({
+  session,
+  currency = "USD",
+}: {
+  session?: Session | null;
+  /** ISO currency shown next to the locale ("USD" | "EUR"), region-derived by the page. */
+  currency?: string;
+}) {
   return (
     <header className="sticky top-0 z-50">
       {/* ============ NAVBAR 1: BARRA PRINCIPAL SUPERIOR ============ */}
@@ -35,10 +42,10 @@ export function Navbar({ session }: { session?: Session | null }) {
 
         {/* Acciones y usuario */}
         <div className="flex items-center gap-4 text-slate-300">
-          {/* Selector de moneda/idioma */}
+          {/* Selector de moneda/idioma: la moneda refleja la región del visitante (EUR en Europa, USD en LATAM) */}
           <button className="hidden sm:flex items-center gap-1.5 text-xs font-semibold hover:text-white cursor-pointer px-2 py-1">
             <Globe className="w-3.5 h-3.5" />
-            Español | USD
+            Español | {currency}
             <ChevronDown className="w-3 h-3 opacity-60" />
           </button>
 

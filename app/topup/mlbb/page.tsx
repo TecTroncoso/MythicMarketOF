@@ -1,17 +1,26 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { ChevronRight, Home, HelpCircle } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { ReviewsSectionLoader } from '@/components/ReviewsSectionLoader';
+import { countryToRegion, PAYMENT_REGIONS } from '@/lib/payments';
 import dynamic from 'next/dynamic';
 
 const CheckoutSection = dynamic(() => import('@/components/CheckoutSection').then(mod => mod.CheckoutSection));
 
 const CARD_BORDER = "rgba(147, 51, 234, 0.25)";
 
-export default function MobileLegendsStore() {
+export default async function MobileLegendsStore() {
+  // Currency shown in the navbar = the visitor's region (EU -> EUR, LATAM -> USD),
+  // same detection the checkout uses (edge geo headers).
+  const h = await headers();
+  const country = h.get('x-vercel-ip-country') ?? h.get('cf-ipcountry');
+  const region = countryToRegion(country);
+  const currency = PAYMENT_REGIONS[region].currency;
+
   return (
     <main className="min-h-screen bg-[#070417] text-white font-sans selection:bg-[#d946ef] selection:text-white pb-10">
-      <Navbar />
+      <Navbar currency={currency} />
 
       {/* Breadcrumbs + compartir (directamente sobre el hero) */}
       <div className="px-4 lg:px-8 py-3 flex items-center justify-between text-xs text-slate-400 max-w-7xl mx-auto w-full">
