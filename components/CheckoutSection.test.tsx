@@ -239,6 +239,23 @@ describe("CheckoutSection MLBB lookup UX", () => {
     const warningButton = screen.getByRole("button", { name: /Buy now/i }) as HTMLButtonElement;
     expect(warningButton.disabled).toBe(false);
   });
+
+  // The summary shows either the placeholder ("Elegí un paquete abajo") or a
+  // dark box with the product name + "Mobile Legends · Global" sub-line.
+  it("pre-selects the package from the ?product= deep link", async () => {
+    render(<CheckoutSection isLoggedIn={false} initialProductId="2" />);
+    await act(async () => {});
+    // Placeholder gone + the summary box renders its "Mobile Legends · Global" line.
+    expect(screen.queryByText(/Elegí un paquete abajo/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Mobile Legends · Global/)).toBeInTheDocument();
+  });
+
+  it("ignores a deep link to an unknown product id", async () => {
+    render(<CheckoutSection isLoggedIn={false} initialProductId="no-existe" />);
+    await act(async () => {});
+    expect(screen.getByText(/Elegí un paquete abajo/)).toBeInTheDocument();
+    expect(screen.queryByText(/Mobile Legends · Global/)).not.toBeInTheDocument();
+  });
 });
 
 describe("CheckoutSection payment modal flow", () => {

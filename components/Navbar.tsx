@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { Session } from 'next-auth';
-import { Search, Heart, ShoppingCart, ChevronDown, Globe, Menu } from 'lucide-react';
+import { Heart, ShoppingCart, ChevronDown, Globe, Menu } from 'lucide-react';
 import { UserMenu } from './UserMenu';
 import { BrandLogo } from './BrandLogo';
+import { NavbarSearch } from './NavbarSearch';
 
 // Enlaces rápidos de la sub-barra de categorías.
 const QUICK_LINKS: { label: string; href?: string; badge?: string }[] = [
@@ -30,15 +31,8 @@ export function Navbar({
         {/* Marca / Logo */}
         <BrandLogo size="sm" />
 
-        {/* Buscador ancho (centro) */}
-        <div className="flex-1 max-w-xl hidden md:flex items-center relative">
-          <Search className="absolute left-3 text-slate-400 h-4 w-4 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Buscar juegos, recargas, tarjetas..."
-            className="w-full bg-[#120c2e] border border-purple-500/25 focus:border-purple-500/80 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-slate-400 outline-none transition-all shadow-inner"
-          />
-        </div>
+        {/* Buscador ancho con resultados en vivo (centro) */}
+        <NavbarSearch />
 
         {/* Acciones y usuario */}
         <div className="flex items-center gap-4 text-slate-300">

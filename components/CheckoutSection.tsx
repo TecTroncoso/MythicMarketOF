@@ -74,10 +74,17 @@ function bonusLabel(bonus: string): string {
   return bonus.endsWith("Diamonds") ? ` + ${bonus.replace("Diamonds", "Bonus")}` : "";
 }
 
-export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
+export function CheckoutSection({
+  isLoggedIn: isLoggedInProp,
+  initialProductId,
+}: {
+  isLoggedIn?: boolean;
+  /** Deep-link target (?product=<id>): pre-selects this package when present. */
+  initialProductId?: string;
+}) {
   // Effective login state: the explicit prop when provided, otherwise resolved
   // once from /api/auth/session on the client (default false).
-  const [loggedIn, setLoggedIn] = useState(isLoggedIn ?? false);
+  const [loggedIn, setLoggedIn] = useState(isLoggedInProp ?? false);
   const [userId, setUserId] = useState('');
   const [zoneId, setZoneId] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -105,7 +112,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
   useEffect(() => {
     // When the parent does not pass `isLoggedIn`, resolve the session once on
     // the client. Explicit props (e.g. isLoggedIn={false} in tests) skip the fetch.
-    if (isLoggedIn === undefined) {
+    if (isLoggedInProp === undefined) {
       const controller = new AbortController();
       (async () => {
         try {
@@ -120,7 +127,7 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
       })();
       return () => controller.abort();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedInProp]);
 
   useEffect(() => {
     // Load the server-derived region/pricing context once. Server actions do
@@ -315,6 +322,14 @@ export function CheckoutSection({ isLoggedIn }: { isLoggedIn?: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridProducts]);
+
+  // Deep-link pre-selection: ?product=<id> selects a package once its grid
+  // data exists (works with both the static fallback and the live context).
+  useEffect(() => {
+    if (!initialProductId) return;
+    if (!gridProducts.some((p) => p.id === initialProductId)) return;
+    queueMicrotask(() => setSelectedProduct((prev) => prev ?? initialProductId));
+  }, [initialProductId, gridProducts]);
 
   // Manual PayPal (EU) notice: the buyer already paid through PayPal.Me and
   // wants to alert the store's WhatsApp with the receipt details (method,

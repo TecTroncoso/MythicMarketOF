@@ -19,6 +19,14 @@ export interface CatalogProduct {
   category: ProductCategory;
 }
 
+export const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  diamonds: 'Diamonds',
+  'weekly-pass': 'Weekly Pass',
+  'twilight-pass': 'Twilight Pass',
+  starlight: 'Starlight',
+  bundle: 'Bundles',
+};
+
 export const PRODUCTS: CatalogProduct[] = [
   { id: '1', name: '78 Diamonds', price: 1.35, bonus: '8 Diamonds', image: '/products/diamantes.png', category: 'diamonds' },
   { id: '2', name: '156 Diamonds', price: 2.69, bonus: '16 Diamonds', image: '/products/baul.png', category: 'diamonds' },

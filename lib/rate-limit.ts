@@ -50,3 +50,5 @@ export const authRateLimiter = getLimiter(5, 60);
 // legítimos con varios dispositivos. El registro mantiene 5/min.
 export const loginRateLimiter = getLimiter(10, 60);
 export const mlbbLookupRateLimiter = getLimiter(30, 60);
+// Búsqueda pública del catálogo (navbar): consultas tipeadas por IP.
+export const searchRateLimiter = getLimiter(30, 60);
