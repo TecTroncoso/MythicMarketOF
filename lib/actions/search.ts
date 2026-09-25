@@ -5,6 +5,7 @@ import { getClientIp } from "@/lib/client-ip";
 import { PRODUCTS, CATEGORY_LABELS, type ProductCategory } from "@/lib/catalog";
 import { searchRateLimiter } from "@/lib/rate-limit";
 import { getStoreProducts } from "@/lib/store-catalog";
+import { SUPPLIER_GAMES } from "@/lib/supplier-games";
 
 export interface SearchResult {
   id: string;
@@ -51,4 +52,38 @@ export async function searchStore(query: string): Promise<SearchResult[]> {
         p.category.includes(q)
     )
     .slice(0, MAX_RESULTS);
+}
+
+// ---------------------------------------------------------------------------
+// Game search for the HOME navbar: the home sells games, not packages, so the
+// query resolves against the tracked games catalog and routes to its top-up
+// page.
+// ---------------------------------------------------------------------------
+
+export interface GameSearchResult {
+  id: string;
+  name: string;
+  shortName: string;
+  image: string;
+  /** Where this game's storefront lives ("/topup/mlbb"). */
+  path: string;
+}
+
+/**
+ * Public game search: matches the tracked games list (name / shortName),
+ * rate-limited by IP. Returns at most 6 hits.
+ */
+export async function searchGames(query: string): Promise<GameSearchResult[]> {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+
+  const h = await headers();
+  const { success } = await searchRateLimiter.limit(getClientIp(h));
+  if (!success) return [];
+
+  return SUPPLIER_GAMES.filter(
+    (g) => g.name.toLowerCase().includes(q) || g.shortName.toLowerCase().includes(q)
+  )
+    .slice(0, MAX_RESULTS)
+    .map((g) => ({ id: g.id, name: g.name, shortName: g.shortName, image: g.image, path: g.topUpPath }));
 }

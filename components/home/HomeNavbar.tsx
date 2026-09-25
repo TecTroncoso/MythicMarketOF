@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Heart, ShoppingCart, User, LogOut } from "lucide-react";
+import { Heart, ShoppingCart, User, LogOut } from "lucide-react";
 import type { Session } from "next-auth";
 import { auth } from "@/auth";
 import { signOutAction } from "@/lib/actions/auth";
+import { HomeSearchBar } from "./HomeSearchBar";
 
 export async function HomeNavbar() {
   const session = await auth();
@@ -11,7 +12,7 @@ export async function HomeNavbar() {
     <nav className="border-b border-border-dark bg-bg-dark/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-4 py-4 flex items-center justify-between gap-6">
         <Logo />
-        <SearchBar />
+        <HomeSearchBar />
         <Actions session={session} />
     </div>
   </nav>
@@ -31,19 +32,6 @@ function Logo() {
       <span className="text-xl font-black tracking-tight text-white hidden sm:block">
         Mythic<span className="text-neon-pink">Market</span>
     </span>
-  </div>
-  );
-}
-
-function SearchBar() {
-  return (
-    <div className="flex-1 max-w-2xl hidden md:flex items-center bg-panel-dark border border-[#9E40C0]/70 rounded-xl px-4 py-2.5 shadow-[0_0_12px_rgba(158,64,192,0.25)] focus-within:border-neon-pink focus-within:shadow-[0_0_14px_rgba(255,0,255,0.35)] transition-all">
-      <Search className="w-5 h-5 text-muted" />
-      <input
-        type="text"
-        placeholder="Busca juegos, tarjetas regalo, DLC y más..."
-        className="bg-transparent border-none outline-none w-full px-3 text-sm text-white placeholder-gray-500"
-      />
   </div>
   );
 }

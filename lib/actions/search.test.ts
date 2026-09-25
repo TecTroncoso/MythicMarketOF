@@ -20,7 +20,7 @@ vi.mock("@/lib/store-catalog", () => ({
   getStoreProducts: mockGetStoreProducts,
 }));
 
-const { searchStore } = await import("@/lib/actions/search");
+const { searchStore, searchGames } = await import("@/lib/actions/search");
 
 const LIVE = [
   {
@@ -104,5 +104,36 @@ describe("searchStore()", () => {
     );
     const results = await searchStore("diamonds");
     expect(results).toHaveLength(6);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// searchGames(): the home searches GAMES, not packages
+// ---------------------------------------------------------------------------
+
+describe("searchGames()", () => {
+  it("matches by full name (case-insensitive)", async () => {
+    const results = await searchGames("mobile legends");
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      id: "mlbb",
+      name: "Mobile Legends: Bang Bang",
+      path: "/topup/mlbb",
+    });
+  });
+
+  it("matches by short name", async () => {
+    const results = await searchGames("MLBB");
+    expect(results[0]?.id).toBe("mlbb");
+  });
+
+  it("returns [] for short queries and rate-limited IPs", async () => {
+    expect(await searchGames("m")).toEqual([]);
+    mockSearchRateLimit.mockResolvedValueOnce({ success: false, reset: 0 });
+    expect(await searchGames("legends")).toEqual([]);
+  });
+
+  it("returns [] when no game matches", async () => {
+    expect(await searchGames("fortnite")).toEqual([]);
   });
 });
