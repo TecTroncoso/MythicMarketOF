@@ -133,7 +133,7 @@ export function ScrapePricesButton({ game }: { game: string }) {
         type="button"
         onClick={startScrape}
         disabled={running}
-        className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors bg-[#ffaa00] text-[#0a0f1a] hover:bg-[#ffc233] disabled:opacity-60 disabled:cursor-wait"
+        className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:opacity-60 disabled:cursor-wait shadow-[0_0_16px_rgba(217,70,239,0.3)]"
       >
         {running ? (
           <Loader2 className="w-4 h-4 animate-spin" />

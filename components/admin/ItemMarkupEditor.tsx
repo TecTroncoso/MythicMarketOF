@@ -39,7 +39,7 @@ export function ItemMarkupEditor({
   const [isPending, startTransition] = useTransition();
 
   const inputClass =
-    "w-14 bg-[#0a0f1a] border border-[#1c2534] rounded-lg px-1.5 py-1 text-xs font-bold text-white text-center focus:outline-none focus:border-[#ffaa00]/60 transition-colors";
+    "w-14 bg-[#070417] border border-purple-800/40 rounded-lg px-1.5 py-1 text-xs font-bold text-white text-center focus:outline-none focus:border-fuchsia-500/60 transition-colors";
 
   const handleSave = () => {
     setFeedback(null);
@@ -109,7 +109,7 @@ export function ItemMarkupEditor({
           type="button"
           onClick={handleSave}
           disabled={isPending}
-          className="p-1.5 rounded-lg bg-[#ffaa00] text-[#0a0f1a] hover:bg-[#ffc233] transition-colors disabled:opacity-50"
+          className="p-1.5 rounded-lg bg-fuchsia-600 text-white hover:bg-fuchsia-500 transition-colors disabled:opacity-50"
           aria-label="Guardar markups del item"
         >
           {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
@@ -119,7 +119,7 @@ export function ItemMarkupEditor({
             type="button"
             onClick={handleReset}
             disabled={isPending}
-            className="p-1.5 rounded-lg border border-[#1c2534] text-gray-400 hover:text-white hover:border-gray-500 transition-colors disabled:opacity-50"
+            className="p-1.5 rounded-lg border border-purple-800/50 text-gray-400 hover:text-white hover:border-fuchsia-500/60 transition-colors disabled:opacity-50"
             aria-label="Quitar markup (vender a costo)"
             title="Quitar el markup del item: pasará a venderse al costo del proveedor"
           >

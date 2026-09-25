@@ -110,10 +110,10 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
   };
 
   return (
-    <section className="bg-[#121824] border border-[#1c2534] rounded-2xl p-5 mb-6 flex flex-col gap-5">
+    <section className="bg-[#0d0824]/80 border border-purple-900/40 rounded-2xl p-5 mb-6 flex flex-col gap-5">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Layers className="w-4 h-4 text-[#ffaa00]" />
+          <Layers className="w-4 h-4 text-fuchsia-400" />
           <h2 className="text-sm font-black uppercase tracking-widest text-white">
             Combos personalizados
           </h2>
@@ -140,7 +140,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
             return (
               <li
                 key={combo.id}
-                className="flex flex-wrap items-center justify-between gap-3 bg-[#0a0f1a] border border-[#1c2534] rounded-xl px-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 bg-[#070417] border border-purple-800/40 rounded-xl px-4 py-3"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-white truncate">{combo.name}</p>
@@ -192,7 +192,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
         <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
           Nuevo combo — elige paquetes y cantidades
         </p>
-        <ul className="flex flex-col divide-y divide-[#1c2534]">
+        <ul className="flex flex-col divide-y divide-purple-900/30">
           {packages.map((pkg) => {
             const qty = selected[pkg.packageName] ?? 0;
             return (
@@ -210,7 +210,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
                     type="button"
                     onClick={() => setQty(pkg.packageName, qty - 1)}
                     disabled={isPending || qty === 0}
-                    className="w-7 h-7 rounded-lg border border-[#1c2534] text-gray-300 hover:border-[#ffaa00]/60 disabled:opacity-30 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg border border-[#1c2534] text-gray-300 hover:border-fuchsia-500/60 disabled:opacity-30 flex items-center justify-center transition-colors"
                     aria-label={`Quitar un ${pkg.packageName}`}
                   >
                     <Minus className="w-3.5 h-3.5" />
@@ -220,7 +220,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
                     type="button"
                     onClick={() => setQty(pkg.packageName, qty + 1)}
                     disabled={isPending || qty >= 10}
-                    className="w-7 h-7 rounded-lg border border-[#1c2534] text-gray-300 hover:border-[#ffaa00]/60 disabled:opacity-30 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 rounded-lg border border-[#1c2534] text-gray-300 hover:border-fuchsia-500/60 disabled:opacity-30 flex items-center justify-center transition-colors"
                     aria-label={`Añadir un ${pkg.packageName}`}
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -232,7 +232,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
         </ul>
 
         {pickedPackages.length > 0 && (
-          <div className="flex flex-wrap items-center gap-4 bg-[#0a0f1a] border border-[#1c2534] rounded-lg px-3 py-2">
+          <div className="flex flex-wrap items-center gap-4 bg-[#070417] border border-purple-800/40 rounded-lg px-3 py-2">
             <span className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Coste</span>
             <span className="text-xs text-gray-300">
               USD:{" "}
@@ -255,13 +255,13 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
             onChange={(e) => setName(e.target.value)}
             maxLength={80}
             placeholder="Nombre del combo (opcional — se genera solo)"
-            className="flex-1 min-w-56 bg-[#0a0f1a] border border-[#1c2534] rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#ffaa00]/60 transition-colors"
+            className="flex-1 min-w-56 bg-[#070417] border border-purple-800/40 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-fuchsia-500/60 transition-colors"
           />
           <button
             type="button"
             onClick={handleCreate}
             disabled={isPending || pickedPackages.length === 0}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors bg-[#ffaa00] text-[#0a0f1a] hover:bg-[#ffc233] disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:opacity-50"
           >
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             Crear combo
