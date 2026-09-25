@@ -120,40 +120,8 @@ export type Product = {
   href?: string;
 };
 
+// Solo se vende top-up de Mobile Legends: el grid muestra la única tarjeta real.
 export const BEST_SELLERS: Product[] = [
-  {
-    id: "fc24",
-    title: "EA SPORTS FC™ 24",
-    image: "/images/soccer_cover.png",
-    badge: "-72%",
-    badgeClass: "bg-[#9E40C0] text-white",
-    price: "US$19.99",
-    originalPrice: "US$69.99",
-    accent: "neon-pink",
-    platform: "STEAM",
-  },
-  {
-    id: "cod-mw3",
-    title: "Call of Duty: MWIII",
-    image: "/images/shooter_cover.png",
-    badge: "-45%",
-    badgeClass: "bg-[#9E40C0] text-white",
-    price: "US$38.99",
-    originalPrice: "US$69.99",
-    accent: "neon-cyan",
-    platform: "STEAM",
-  },
-  {
-    id: "elden-ring",
-    title: "ELDEN RING",
-    image: "/images/fantasy_cover.png",
-    badge: "-34%",
-    badgeClass: "bg-[#9E40C0] text-white",
-    price: "US$39.59",
-    originalPrice: "US$59.99",
-    accent: "neon-purple",
-    platform: "STEAM",
-  },
   {
     id: "mlbb-topup",
     title: "Recarga Mobile Legends",
@@ -165,28 +133,6 @@ export const BEST_SELLERS: Product[] = [
     platform: "TOP-UP",
     meta: "ID verification active",
     href: "/topup/mlbb",
-  },
-  {
-    id: "spider-man-2",
-    title: "Marvel's Spider-Man 2",
-    image: "/images/hero_cover.png",
-    badge: "-29%",
-    badgeClass: "bg-[#9E40C0] text-white",
-    price: "US$49.99",
-    originalPrice: "US$69.99",
-    accent: "neon-pink",
-    platform: "PS5",
-  },
-  {
-    id: "fortnite",
-    title: "Fortnite — V-Bucks",
-    image: "/images/fortnite_cover.png",
-    badge: "-15%",
-    badgeClass: "bg-[#9E40C0] text-white",
-    price: "US$10.19",
-    originalPrice: "US$11.99",
-    accent: "neon-cyan",
-    platform: "EPIC GAMES",
   },
 ];
 
