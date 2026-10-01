@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CircleDollarSign, ShieldCheck, Zap } from "lucide-react";
 import { auth } from "@/auth";
 import { AdminOrdersPanel } from "@/components/admin/AdminOrdersPanel";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { getAdminOrders, sanitizeAdminFilters } from "@/lib/admin-orders";
 import { TRUST_ITEMS } from "@/lib/home-data";
 
@@ -25,7 +26,10 @@ export default async function AdminPage({
   const { orders, stats } = await getAdminOrders(filters);
 
   return (
-    <>
+    <div className="flex min-h-[calc(100vh-100px)]">
+      <AdminSidebar />
+
+      <div className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-8 pb-16">
       {/* Hero del panel (modal visual de la maqueta) */}
       <header
         className="relative overflow-hidden rounded-2xl border border-purple-900/40 mb-8 px-6 py-6 md:py-8"
@@ -90,6 +94,7 @@ export default async function AdminPage({
           </div>
         </div>
       </footer>
-    </>
+      </div>
+    </div>
   );
 }

@@ -9,6 +9,7 @@ import { getSupplierGame } from "@/lib/supplier-games";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 import { getStoreCombos } from "@/lib/store-combos";
 import { StoreCombosPanel } from "@/components/admin/StoreCombosPanel";
+import { PricesGameShell } from "@/components/admin/PricesGameShell";
 import { ItemMarkupEditor } from "@/components/admin/ItemMarkupEditor";
 import { getItemMarkups, itemMarkupFor } from "@/lib/item-markups";
 import { slugifyPackageName } from "@/lib/store-catalog";
@@ -166,112 +167,117 @@ export default async function AdminGamePricesPage({
         </div>
       </header>
 
-      <StoreCombosPanel
-        game={game.id}
-        packages={(latest?.rows ?? []).map((row) => ({
-          packageName: row.packageName,
-          checkoutUsdCents: row.checkoutUsdCents,
-          checkoutEurCents: row.checkoutEurCents,
-        }))}
-        combos={combos}
-        itemMarkups={Object.fromEntries(itemMarkups)}
-      />
-
-      {!latest ? (
-        <div className="relative rounded-xl border border-purple-900/40 bg-[#0d0824]/80 py-20 flex flex-col items-center text-center gap-4">
-          <CornerFrame />
-          <span className="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_24px_rgba(34,211,238,0.25)]">
-            <PackageOpen className="w-8 h-8 text-cyan-400" />
-          </span>
-          <div>
-            <p className="text-gray-300 font-semibold mb-1">
-              Todavía no hay precios importados para {game.shortName}.
-            </p>
-            <p className="text-sm text-gray-500">
-              {scraper
-                ? 'Usa el botón "Actualizar precios ahora" para lanzar el scraper desde aquí.'
-                : "Este juego todavía no tiene scraper configurado en lib/scrapers.ts."}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-purple-900/40 bg-[#0d0824]/80 overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-purple-900/40 text-gray-500 uppercase text-[11px] tracking-widest">
-                  <th rowSpan={2} className="px-4 py-3 text-left align-bottom">
-                    Paquete
-                  </th>
-                  <th colSpan={2} className="px-3 py-2 text-center border-l border-purple-900/40">
-                    BRL
-                  </th>
-                  <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
-                    USD
-                  </th>
-                  <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
-                    EUR
-                  </th>
-                  <th rowSpan={2} className="px-4 py-3 text-center align-bottom">
-                    Markup %
-                  </th>
-                  <th rowSpan={2} className="px-4 py-3 text-right align-bottom">
-                    Cashback
-                  </th>
-                </tr>
-                <tr className="border-b border-purple-900/40 text-gray-600 text-[10px] uppercase tracking-wider">
-                  <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
-                  <th className="px-3 py-2 text-right">Chk.</th>
-                  <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
-                  <th className="px-3 py-2 text-right">Chk.</th>
-                  <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
-                  <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
-                  <th className="px-3 py-2 text-right">Chk.</th>
-                  <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-purple-900/20">
-                {latest.rows.map((row) => {
-                  const itemKey = slugifyPackageName(row.packageName);
-                  const rowMarkup = itemMarkupFor(itemKey, itemMarkups);
-                  return (
-                    <tr key={row.id} className="hover:bg-purple-500/[0.04] transition-colors">
-                      <td className="px-4 py-3 font-semibold text-gray-100">
-                        {row.packageName}
-                      </td>
-                      <PriceCatalogGroup row={row} markup={rowMarkup} />
-                      <td className="px-3 py-3">
-                        <ItemMarkupEditor
-                          game={game.id}
-                          itemKey={itemKey}
-                          markupUsd={rowMarkup.markupUsd}
-                          markupEur={rowMarkup.markupEur}
-                          hasOverride={itemMarkups.has(itemKey)}
-                          compact
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-right text-fuchsia-300 font-semibold">
-                        {row.cashbackPercent !== null
-                          ? `${row.cashbackPercent}%`
-                          : "—"}
-                      </td>
+      <PricesGameShell
+        combosContent={
+          <StoreCombosPanel
+            game={game.id}
+            packages={(latest?.rows ?? []).map((row) => ({
+              packageName: row.packageName,
+              checkoutUsdCents: row.checkoutUsdCents,
+              checkoutEurCents: row.checkoutEurCents,
+            }))}
+            combos={combos}
+            itemMarkups={Object.fromEntries(itemMarkups)}
+          />
+        }
+        listContent={
+          !latest ? (
+            <div className="relative rounded-xl border border-purple-900/40 bg-[#0d0824]/80 py-20 flex flex-col items-center text-center gap-4">
+              <CornerFrame />
+              <span className="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center shadow-[0_0_24px_rgba(34,211,238,0.25)]">
+                <PackageOpen className="w-8 h-8 text-cyan-400" />
+              </span>
+              <div>
+                <p className="text-gray-300 font-semibold mb-1">
+                  Todavía no hay precios importados para {game.shortName}.
+                </p>
+                <p className="text-sm text-gray-500">
+                  {scraper
+                    ? 'Usa el botón "Actualizar precios ahora" para lanzar el scraper desde aquí.'
+                    : "Este juego todavía no tiene scraper configurado en lib/scrapers.ts."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-purple-900/40 bg-[#0d0824]/80 overflow-hidden shadow-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm whitespace-nowrap">
+                  <thead>
+                    <tr className="border-b border-purple-900/40 text-gray-500 uppercase text-[11px] tracking-widest">
+                      <th rowSpan={2} className="px-4 py-3 text-left align-bottom">
+                        Paquete
+                      </th>
+                      <th colSpan={2} className="px-3 py-2 text-center border-l border-purple-900/40">
+                        BRL
+                      </th>
+                      <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
+                        USD
+                      </th>
+                      <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
+                        EUR
+                      </th>
+                      <th rowSpan={2} className="px-4 py-3 text-center align-bottom">
+                        Markup %
+                      </th>
+                      <th rowSpan={2} className="px-4 py-3 text-right align-bottom">
+                        Cashback
+                      </th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <p className="px-4 py-3 text-xs text-gray-600 border-t border-purple-900/40">
-            Cat. = precio de lista en el proveedor · Chk. = total real en
-            checkout · Venta = Chk. × (1 + markup del item) — el precio que ve
-            el comprador en la tienda (USD en LATAM, EUR en Europa). Sin markup
-            propio el item se vende a costo.
-            {scraper
-              ? ` Scraper: ${scraper.description} (corre en esta máquina vía el botón de arriba).`
-              : " Este juego aún no tiene scraper automatizado."}
-          </p>
-        </div>
-      )}
+                    <tr className="border-b border-purple-900/40 text-gray-600 text-[10px] uppercase tracking-wider">
+                      <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
+                      <th className="px-3 py-2 text-right">Chk.</th>
+                      <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
+                      <th className="px-3 py-2 text-right">Chk.</th>
+                      <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
+                      <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
+                      <th className="px-3 py-2 text-right">Chk.</th>
+                      <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-purple-900/20">
+                    {latest.rows.map((row) => {
+                      const itemKey = slugifyPackageName(row.packageName);
+                      const rowMarkup = itemMarkupFor(itemKey, itemMarkups);
+                      return (
+                        <tr key={row.id} className="hover:bg-purple-500/[0.04] transition-colors">
+                          <td className="px-4 py-3 font-semibold text-gray-100">
+                            {row.packageName}
+                          </td>
+                          <PriceCatalogGroup row={row} markup={rowMarkup} />
+                          <td className="px-3 py-3">
+                            <ItemMarkupEditor
+                              game={game.id}
+                              itemKey={itemKey}
+                              markupUsd={rowMarkup.markupUsd}
+                              markupEur={rowMarkup.markupEur}
+                              hasOverride={itemMarkups.has(itemKey)}
+                              compact
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-right text-fuchsia-300 font-semibold">
+                            {row.cashbackPercent !== null
+                              ? `${row.cashbackPercent}%`
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <p className="px-4 py-3 text-xs text-gray-600 border-t border-purple-900/40">
+                Cat. = precio de lista en el proveedor · Chk. = total real en
+                checkout · Venta = Chk. × (1 + markup del item) — el precio que ve
+                el comprador en la tienda (USD en LATAM, EUR en Europa). Sin markup
+                propio el item se vende a costo.
+                {scraper
+                  ? ` Scraper: ${scraper.description} (corre en esta máquina vía el botón de arriba).`
+                  : " Este juego aún no tiene scraper automatizado."}
+              </p>
+            </div>
+          )
+        }
+      />
     </>
   );
 }
