@@ -19,6 +19,11 @@ vi.mock("@/lib/supplier-prices", () => ({
 const mockRevalidatePath = vi.fn();
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 
+const mockInvalidateStoreCatalog = vi.fn();
+vi.mock("@/lib/store-catalog", () => ({
+  invalidateStoreCatalog: mockInvalidateStoreCatalog,
+}));
+
 const { createStoreCombo, deleteStoreCombo } = await import("@/lib/actions/combos");
 
 const setAdmin = () =>
@@ -107,6 +112,7 @@ describe("createStoreCombo()", () => {
     ]);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/precios/mlbb");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/topup/mlbb");
+    expect(mockInvalidateStoreCatalog).toHaveBeenCalledWith("mlbb");
   });
 
   it("keeps a custom name when provided", async () => {
@@ -142,12 +148,13 @@ describe("deleteStoreCombo()", () => {
     expect(mockDelete).not.toHaveBeenCalled();
   });
 
-  it("deletes by id and revalidates", async () => {
+  it("deletes by id, revalidates and busts the catalog cache", async () => {
     const result = await deleteStoreCombo("mlbb", "c1");
     expect(result).toEqual({ success: true });
     expect(mockDeleteWhere).toHaveBeenCalled();
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/precios/mlbb");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/topup/mlbb");
+    expect(mockInvalidateStoreCatalog).toHaveBeenCalledWith("mlbb");
   });
 
   it("returns a friendly error when the delete throws", async () => {

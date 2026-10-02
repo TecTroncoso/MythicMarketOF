@@ -12,6 +12,7 @@
 // back to the static catalog when this returns null (no snapshot / DB error).
 
 import type { ProductCategory } from "@/lib/catalog";
+import { cacheGet, cacheSet, cacheDelete } from "@/lib/cache";
 import { itemMarkupFor, getItemMarkups, type ItemMarkupMap } from "@/lib/item-markups";
 import { applyMarkupCents } from "@/lib/markup";
 import { getStoreCombos, type StoreComboDef } from "@/lib/store-combos";
@@ -225,9 +226,18 @@ export function buildComboProducts(
  * the game has no imported prices yet (or the read fails) — callers then fall
  * back to the static catalog. Admin combos are appended after the plain
  * supplier packages.
+ *
+ * Cached 60s per game (Upstash in prod / in-memory in dev): without it, every
+ * storefront mount, every search keystroke and every checkout hits Turso 4
+ * times. Invalidated by the admin actions (markups, combos) that call
+ * cacheDelete("catalog:<game>"); a fresh scrape lands after at most one TTL.
  */
 export async function getStoreProducts(game: string): Promise<StoreProduct[] | null> {
+  const cacheKey = `catalog:${game}`;
   try {
+    const cached = await cacheGet<StoreProduct[]>(cacheKey);
+    if (cached) return cached;
+
     const [latest, combos, itemMarkups] = await Promise.all([
       getLatestSupplierSnapshot(game),
       getStoreCombos(game),
@@ -238,9 +248,17 @@ export async function getStoreProducts(game: string): Promise<StoreProduct[] | n
       ...buildStoreProducts(latest.rows, itemMarkups),
       ...buildComboProducts(latest.rows, combos, itemMarkups),
     ];
-    return products.length > 0 ? products : null;
+    if (products.length === 0) return null;
+
+    await cacheSet(cacheKey, products, 60);
+    return products;
   } catch (error) {
     console.error(`No se pudo construir el catálogo live de "${game}":`, error);
     return null;
   }
+}
+
+/** Bust the storefront cache after admin edits (markups, combos, imports). */
+export async function invalidateStoreCatalog(game: string): Promise<void> {
+  await cacheDelete(`catalog:${game}`);
 }

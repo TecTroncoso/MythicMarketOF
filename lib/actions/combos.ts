@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { storeCombos } from "@/lib/db/schema";
 import { getLatestSupplierSnapshot } from "@/lib/supplier-prices";
 import { CreateStoreComboSchema, type CreateStoreComboInput } from "@/lib/validations";
+import { invalidateStoreCatalog } from "@/lib/store-catalog";
 
 export type ComboActionResult =
   | { success: true }
@@ -76,6 +77,7 @@ export async function createStoreCombo(
 
   revalidatePath(`/admin/precios/${game}`);
   revalidatePath("/topup/mlbb");
+  await invalidateStoreCatalog(game);
   return { success: true };
 }
 
@@ -98,5 +100,6 @@ export async function deleteStoreCombo(game: string, id: string): Promise<ComboA
 
   revalidatePath(`/admin/precios/${game}`);
   revalidatePath("/topup/mlbb");
+  await invalidateStoreCatalog(game);
   return { success: true };
 }

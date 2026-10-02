@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { itemMarkups } from "@/lib/db/schema";
 import { ItemMarkupSchema, type ItemMarkupInput } from "@/lib/validations";
+import { invalidateStoreCatalog } from "@/lib/store-catalog";
 
 export type ItemMarkupResult =
   | { success: true }
@@ -61,6 +62,8 @@ export async function saveItemMarkup(
 
   revalidatePath(`/admin/precios/${game}`);
   revalidatePath("/topup/mlbb");
+  // Bust the cached storefront catalog: prices are now stale.
+  await invalidateStoreCatalog(game);
   return { success: true };
 }
 
@@ -91,5 +94,6 @@ export async function resetItemMarkup(
 
   revalidatePath(`/admin/precios/${game}`);
   revalidatePath("/topup/mlbb");
+  await invalidateStoreCatalog(game);
   return { success: true };
 }

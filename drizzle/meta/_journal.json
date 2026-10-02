@@ -71,6 +71,13 @@
       "when": 1790937506741,
       "tag": "0009_flat_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790939363385,
+      "tag": "0010_cool_vargas",
+      "breakpoints": true
     }
   ]
 }

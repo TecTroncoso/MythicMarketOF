@@ -1,4 +1,4 @@
-import { integer, real, sqliteTable, text, primaryKey, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, primaryKey, uniqueIndex, index } from "drizzle-orm/sqlite-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
 export const users = sqliteTable("user", {
@@ -67,7 +67,18 @@ export const orders = sqliteTable("orders", {
   createdAt: integer("createdAt", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
-});
+}, (table) => [
+  // Dashboard del usuario: WHERE userId ORDER BY createdAt DESC.
+  index("orders_user_created_idx").on(table.userId, table.createdAt),
+  // Panel admin: ORDER BY createdAt DESC + filtros por rango.
+  index("orders_created_idx").on(table.createdAt),
+  // Panel admin: filtro por estado.
+  index("orders_status_idx").on(table.status),
+  // Panel admin: filtro por producto.
+  index("orders_product_idx").on(table.productId),
+  // Búsqueda admin LIKE mlbbUserId.
+  index("orders_mlbb_user_idx").on(table.mlbbUserId),
+]);
 
 export type Order = typeof orders.$inferSelect;
 
@@ -109,7 +120,10 @@ export const supplierPriceSnapshots = sqliteTable("supplier_price_snapshots", {
   // JSON array of currency codes, e.g. ["BRL","USD","EUR"]
   currencies: text("currencies").notNull(),
   totalPackages: integer("totalPackages").notNull(),
-});
+}, (table) => [
+  // "Latest snapshot per game" lookup: WHERE game = ? ORDER BY scrapedAt DESC LIMIT 1.
+  index("supplier_price_snapshots_game_scraped_idx").on(table.game, table.scrapedAt),
+]);
 
 export type SupplierPriceSnapshot = typeof supplierPriceSnapshots.$inferSelect;
 
@@ -133,7 +147,10 @@ export const supplierPriceRows = sqliteTable("supplier_price_rows", {
   checkoutEurCents: integer("checkoutEurCents"),
   cashbackEurCents: integer("cashbackEurCents"),
   cashbackPercent: real("cashbackPercent"),
-});
+}, (table) => [
+  // Storefront hot path: rows of a snapshot ordered by position.
+  index("supplier_price_rows_snapshot_position_idx").on(table.snapshotId, table.position),
+]);
 
 export type SupplierPriceRow = typeof supplierPriceRows.$inferSelect;
 
@@ -157,7 +174,10 @@ export const storeCombos = sqliteTable("store_combos", {
   createdAt: integer("createdAt", { mode: "timestamp_ms" })
     .notNull()
     .$defaultFn(() => new Date()),
-});
+}, (table) => [
+  // Storefront reads combos per game: WHERE game = ?.
+  index("store_combos_game_idx").on(table.game),
+]);
 
 export type StoreCombo = typeof storeCombos.$inferSelect;
 

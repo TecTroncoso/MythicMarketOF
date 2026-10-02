@@ -13,6 +13,11 @@ vi.mock("@/lib/db", () => ({ db: { insert: mockInsert, delete: mockDelete } }));
 const mockRevalidatePath = vi.fn();
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 
+const mockInvalidateStoreCatalog = vi.fn();
+vi.mock("@/lib/store-catalog", () => ({
+  invalidateStoreCatalog: mockInvalidateStoreCatalog,
+}));
+
 const { saveItemMarkup, resetItemMarkup } = await import("@/lib/actions/item-markups");
 
 const setAdmin = () =>
@@ -65,6 +70,7 @@ describe("saveItemMarkup()", () => {
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/precios/mlbb");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/topup/mlbb");
+    expect(mockInvalidateStoreCatalog).toHaveBeenCalledWith("mlbb");
   });
 
   it("returns a friendly error when the write fails", async () => {
@@ -99,6 +105,7 @@ describe("resetItemMarkup()", () => {
     expect(mockDeleteWhere).toHaveBeenCalled();
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/precios/mlbb");
     expect(mockRevalidatePath).toHaveBeenCalledWith("/topup/mlbb");
+    expect(mockInvalidateStoreCatalog).toHaveBeenCalledWith("mlbb");
   });
 
   it("returns a friendly error when the delete throws", async () => {
