@@ -104,37 +104,31 @@ describe("processCheckout()", () => {
   });
 
   it("persists a pending order and returns success with the order number", async () => {
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(validForm());
-      await vi.advanceTimersByTimeAsync(1500);
-      const result = assertSuccess(await promise);
+    const promise = processCheckout(validForm());
+    const result = assertSuccess(await promise);
 
-      expect(result).toMatchObject({
-        success: true,
-        redirectUrl: "/dashboard",
-      });
-      expect(result.orderNumber).toMatch(/^MM-[A-HJ-NP-Z2-9]{8}$/);
-      expect(result.message).toContain("Te enviamos el link de pago a tu email de Mercado Pago.");
+    expect(result).toMatchObject({
+      success: true,
+      redirectUrl: "/dashboard",
+    });
+    expect(result.orderNumber).toMatch(/^MM-[A-HJ-NP-Z2-9]{8}$/);
+    expect(result.message).toContain("Te enviamos el link de pago a tu email de Mercado Pago.");
 
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({
-        orderNumber: result.orderNumber,
-        userId: "u1",
-        productId: "1",
-        productName: "78 Diamonds",
-        amountCents: 135,
-        currency: "USD",
-        paymentMethod: "mercadopago",
-        paymentDetail: "compra@ejemplo.com",
-        mlbbUserId: "12345678",
-        zoneId: "10012",
-        status: "pending",
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      orderNumber: result.orderNumber,
+      userId: "u1",
+      productId: "1",
+      productName: "78 Diamonds",
+      amountCents: 135,
+      currency: "USD",
+      paymentMethod: "mercadopago",
+      paymentDetail: "compra@ejemplo.com",
+      mlbbUserId: "12345678",
+      zoneId: "10012",
+      status: "pending",
+    });
   });
 
   it("returns a friendly failure when the DB insert throws", async () => {
@@ -194,118 +188,93 @@ describe("processCheckout() payment methods", () => {
   });
 
   it("stores a EUR sepa order with the converted amount and method instructions", async () => {
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(
-        fd({
-          userId: "12345678",
-          zoneId: "10012",
-          productId: "1",
-          paymentMethod: "sepa",
-          paymentDetail: "  DE89370400440532013000  ",
-          paymentRegion: "eu",
-        })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      const result = assertSuccess(await promise);
-
-      expect(result).toMatchObject({
-        success: true,
-        redirectUrl: "/dashboard",
-      });
-      expect(result.message).toContain("Transferí");
-      expect(result.message).toContain(result.orderNumber);
-
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({
+    const promise = processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "1",
         paymentMethod: "sepa",
-        paymentDetail: "DE89370400440532013000",
-        currency: "EUR",
-        amountCents: 124,
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+        paymentDetail: "  DE89370400440532013000  ",
+        paymentRegion: "eu",
+      })
+    );
+    const result = assertSuccess(await promise);
+
+    expect(result).toMatchObject({
+      success: true,
+      redirectUrl: "/dashboard",
+    });
+    expect(result.message).toContain("Transferí");
+    expect(result.message).toContain(result.orderNumber);
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      paymentMethod: "sepa",
+      paymentDetail: "DE89370400440532013000",
+      currency: "EUR",
+      amountCents: 124,
+    });
   });
 
   it("charges paypal in EUR for eu buyers and in USD for latam buyers", async () => {
-    vi.useFakeTimers();
-    try {
-      const euPromise = processCheckout(
-        fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "paypal", paymentDetail: "ana@x.com", paymentRegion: "eu" })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      await euPromise;
-      const euRow = mockInsertValues.mock.calls[0]?.[0];
-      expect(euRow).toMatchObject({ paymentMethod: "paypal", currency: "EUR", amountCents: 124 });
+    const euPromise = processCheckout(
+      fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "paypal", paymentDetail: "ana@x.com", paymentRegion: "eu" })
+    );
+    await euPromise;
+    const euRow = mockInsertValues.mock.calls[0]?.[0];
+    expect(euRow).toMatchObject({ paymentMethod: "paypal", currency: "EUR", amountCents: 124 });
 
-      const latamPromise = processCheckout(
-        fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "paypal", paymentDetail: "ana@x.com", paymentRegion: "latam" })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      await latamPromise;
-      const latamRow = mockInsertValues.mock.calls[1]?.[0];
-      expect(latamRow).toMatchObject({ paymentMethod: "paypal", currency: "USD", amountCents: 135 });
-    } finally {
-      vi.useRealTimers();
-    }
+    const latamPromise = processCheckout(
+      fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "paypal", paymentDetail: "ana@x.com", paymentRegion: "latam" })
+    );
+    await latamPromise;
+    const latamRow = mockInsertValues.mock.calls[1]?.[0];
+    expect(latamRow).toMatchObject({ paymentMethod: "paypal", currency: "USD", amountCents: 135 });
   });
 
   it("stores a USD mercadopago order with the detail and instructions", async () => {
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(
-        fd({
-          userId: "12345678",
-          zoneId: "10012",
-          productId: "1",
-          paymentMethod: "mercadopago",
-          paymentDetail: "compra@ejemplo.com",
-          paymentRegion: "latam",
-        })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      const result = assertSuccess(await promise);
-
-      expect(result).toMatchObject({
-        success: true,
-        redirectUrl: "/dashboard",
-      });
-      expect(result.message).toContain("Te enviamos el link de pago a tu email de Mercado Pago.");
-
-      expect(mockInsert).toHaveBeenCalledTimes(1);
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({
+    const promise = processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "1",
         paymentMethod: "mercadopago",
         paymentDetail: "compra@ejemplo.com",
-        currency: "USD",
-        amountCents: 135,
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+        paymentRegion: "latam",
+      })
+    );
+    const result = assertSuccess(await promise);
+
+    expect(result).toMatchObject({
+      success: true,
+      redirectUrl: "/dashboard",
+    });
+    expect(result.message).toContain("Te enviamos el link de pago a tu email de Mercado Pago.");
+
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      paymentMethod: "mercadopago",
+      paymentDetail: "compra@ejemplo.com",
+      currency: "USD",
+      amountCents: 135,
+    });
   });
 
   it("stores the trimmed payment detail for binance (email field)", async () => {
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(
-        fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "binance", paymentDetail: "  compra@ejemplo.com  ", paymentRegion: "latam" })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      await promise;
+    const promise = processCheckout(
+      fd({ userId: "12345678", zoneId: "10012", productId: "1", paymentMethod: "binance", paymentDetail: "  compra@ejemplo.com  ", paymentRegion: "latam" })
+    );
+    await promise;
 
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({
-        paymentMethod: "binance",
-        paymentDetail: "compra@ejemplo.com",
-        currency: "USD",
-        amountCents: 135,
-      });
-    } finally {
-      vi.useRealTimers();
-    }
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      paymentMethod: "binance",
+      paymentDetail: "compra@ejemplo.com",
+      currency: "USD",
+      amountCents: 135,
+    });
   });
 });
 
@@ -382,57 +351,45 @@ const LIVE_PRODUCTS = [
 describe("processCheckout() with a live supplier catalog", () => {
   it("charges the USD sale price to latam buyers", async () => {
     mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(
-        fd({
-          userId: "12345678",
-          zoneId: "10012",
-          productId: "78-diamonds-8-bonus",
-          paymentMethod: "mercadopago",
-          paymentDetail: "compra@ejemplo.com",
-          paymentRegion: "latam",
-        })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      const result = assertSuccess(await promise);
-
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({
+    const promise = processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
         productId: "78-diamonds-8-bonus",
-        productName: "78 Diamonds + 8 Bonus",
-        amountCents: 135,
-        currency: "USD",
-        status: "pending",
-      });
-      expect(result.orderNumber).toMatch(/^MM-/);
-    } finally {
-      vi.useRealTimers();
-    }
+        paymentMethod: "mercadopago",
+        paymentDetail: "compra@ejemplo.com",
+        paymentRegion: "latam",
+      })
+    );
+    const result = assertSuccess(await promise);
+
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      productId: "78-diamonds-8-bonus",
+      productName: "78 Diamonds + 8 Bonus",
+      amountCents: 135,
+      currency: "USD",
+      status: "pending",
+    });
+    expect(result.orderNumber).toMatch(/^MM-/);
   });
 
   it("charges the EUR sale price to eu buyers", async () => {
     mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
-    vi.useFakeTimers();
-    try {
-      const promise = processCheckout(
-        fd({
-          userId: "12345678",
-          zoneId: "10012",
-          productId: "78-diamonds-8-bonus",
-          paymentMethod: "sepa",
-          paymentDetail: "DE89370400440532013000",
-          paymentRegion: "eu",
-        })
-      );
-      await vi.advanceTimersByTimeAsync(1500);
-      await promise;
+    const promise = processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "78-diamonds-8-bonus",
+        paymentMethod: "sepa",
+        paymentDetail: "DE89370400440532013000",
+        paymentRegion: "eu",
+      })
+    );
+    await promise;
 
-      const rowArg = mockInsertValues.mock.calls[0]?.[0];
-      expect(rowArg).toMatchObject({ amountCents: 119, currency: "EUR" });
-    } finally {
-      vi.useRealTimers();
-    }
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({ amountCents: 119, currency: "EUR" });
   });
 
   it("rejects a product that is not in the live catalog", async () => {

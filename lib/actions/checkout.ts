@@ -195,16 +195,13 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
     return failure("No se pudo registrar la orden. Intentá de nuevo.")
   }
 
-  // 8. Simulación de procesamiento de la orden
+  // 8. Confirmación de la orden
+  // Punto de extensión para la pasarela real (Lootbar, Stripe, PayPal,
+  // Mercado Pago): la llamada va aquí usando el amountCents resuelto en el
+  // servidor (nunca un precio enviado por el cliente). Sin delay artificial:
+  // cada segundo aquí es cómputo serverless facturado y espera del comprador.
   try {
-    // Aquí iría la integración con Lootbar, Stripe, PayPal, etc.
-    // Usando el amountCents resuelto en el servidor (nunca un precio enviado
-    // por el cliente).
-
     console.log(`Procesando orden ${orderNumber} para ${session.user.email}: Producto ${productName} (${currency} ${(amountCents / 100).toFixed(2)}) a la cuenta MLBB ${userId}(${zoneId}) por ${paymentMethod}`)
-
-    // Simular un delay de API
-    await new Promise(resolve => setTimeout(resolve, 1500))
 
     return {
       success: true,
