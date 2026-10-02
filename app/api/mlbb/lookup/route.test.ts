@@ -120,6 +120,28 @@ describe("POST /api/mlbb/lookup", () => {
     expect(mockedCacheSet).not.toHaveBeenCalled();
   });
 
+  it("sets HTTP cache headers per outcome (private success / private negative / no-store errors)", async () => {
+    // Success path (cache hit): long-lived, private.
+    mockedCacheGet.mockResolvedValueOnce({
+      nickname: "CachedNick",
+      country: "ID",
+      cachedAt: 1,
+    });
+    const hit = await POST(buildRequest({ userId: "12345678", zoneId: "10012" }));
+    expect(hit.headers.get("Cache-Control")).toBe("private, max-age=3600");
+
+    // Negative path: short TTL so a recovering upstream is picked up fast.
+    mockedCacheGet.mockResolvedValueOnce(null);
+    mockedLookupPlayer.mockResolvedValueOnce(null);
+    const negative = await POST(buildRequest({ userId: "12345678", zoneId: "10012" }));
+    expect(negative.headers.get("Cache-Control")).toBe("private, max-age=300");
+
+    // Errors (validation): never cached.
+    const invalid = await POST(buildRequest({ userId: "1", zoneId: "10012" }));
+    expect(invalid.status).toBe(400);
+    expect(invalid.headers.get("Cache-Control")).toBe("no-store");
+  });
+
   it("returns cached:false on cache miss + lookup success, and writes 24h cache", async () => {
     const res = await POST(buildRequest({ userId: "12345678", zoneId: "10012" }));
     expect(res.status).toBe(200);

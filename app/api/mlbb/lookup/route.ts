@@ -9,6 +9,14 @@ const CACHE_TTL_SUCCESS = 86_400; // 24h
 const CACHE_TTL_NEGATIVE = 300;   // 5min
 const CACHE_KEY_PREFIX = "mlbb:lookup";
 
+// HTTP cache policy mirroring the Redis TTLs: a positive lookup is stable for
+// hours, a negative one must expire fast so a recovering upstream is picked up
+// quickly. `private` because the response is keyed to the caller's player id.
+// Errors are never cached (the limiter answer must be re-evaluated).
+const HTTP_SUCCESS_HEADERS = { "Cache-Control": "private, max-age=3600" };
+const HTTP_NEGATIVE_HEADERS = { "Cache-Control": "private, max-age=300" };
+const HTTP_NO_STORE_HEADERS = { "Cache-Control": "no-store" };
+
 interface CachedLookup {
   nickname: string;
   country: string;
@@ -16,7 +24,10 @@ interface CachedLookup {
 }
 
 function jsonError(status: number, error: string, message: string) {
-  return NextResponse.json({ success: false, error, message }, { status });
+  return NextResponse.json(
+    { success: false, error, message },
+    { status, headers: HTTP_NO_STORE_HEADERS }
+  );
 }
 
 export async function POST(request: Request) {
@@ -55,16 +66,19 @@ export async function POST(request: Request) {
   const cacheKey = `${CACHE_KEY_PREFIX}:${userId}:${zoneId}`;
   const cached = await cacheGet<CachedLookup>(cacheKey);
   if (cached && cached.nickname) {
-    return NextResponse.json({
-      success: true,
-      data: {
-        userId,
-        zoneId,
-        nickname: cached.nickname,
-        country: cached.country,
-        cached: true,
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          userId,
+          zoneId,
+          nickname: cached.nickname,
+          country: cached.country,
+          cached: true,
+        },
       },
-    });
+      { headers: HTTP_SUCCESS_HEADERS }
+    );
   }
 
   // 5. Upstream chain
@@ -83,7 +97,7 @@ export async function POST(request: Request) {
         error: "LOOKUP_FAILED",
         message: "No se pudo verificar el jugador",
       },
-      { status: 200 }
+      { status: 200, headers: HTTP_NEGATIVE_HEADERS }
     );
   }
 
@@ -93,14 +107,17 @@ export async function POST(request: Request) {
     { nickname: result.nickname, country: result.country, cachedAt: Date.now() },
     CACHE_TTL_SUCCESS
   );
-  return NextResponse.json({
-    success: true,
-    data: {
-      userId,
-      zoneId,
-      nickname: result.nickname,
-      country: result.country,
-      cached: false,
+  return NextResponse.json(
+    {
+      success: true,
+      data: {
+        userId,
+        zoneId,
+        nickname: result.nickname,
+        country: result.country,
+        cached: false,
+      },
     },
-  });
+    { headers: HTTP_SUCCESS_HEADERS }
+  );
 }
