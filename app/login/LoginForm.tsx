@@ -60,7 +60,7 @@ export function LoginForm() {
       {/* Background Image with Cyberpunk vibe */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-screen"
-        style={{ backgroundImage: "url('/images/bg.png')" }}
+        style={{ backgroundImage: "url('/images/bg.webp')" }}
       />
       
       {/* Neon glowing overlays for cyberpunk feel */}

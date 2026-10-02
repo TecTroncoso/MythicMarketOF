@@ -21,7 +21,7 @@ export function HeroBanner() {
     >
       {/* Imagen cyberpunk: encuadre del samurái a la derecha */}
       <Image
-        src="/images/hero_banner.png"
+        src="/images/hero_banner.webp"
         alt="Hero Banner"
         fill
         className="object-cover absolute inset-0 z-0"

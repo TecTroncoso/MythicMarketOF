@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/logo.png" alt="Mythic Market" width="88" />
+<img src="public/logo.webp" alt="Mythic Market" width="88" />
 
 # ⚔️ Mythic Market
 

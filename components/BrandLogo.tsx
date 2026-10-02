@@ -16,7 +16,7 @@ export function BrandLogo({ size = "md" }: { size?: BrandLogoSize }) {
         className={`${s.box} relative overflow-hidden rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform shrink-0`}
       >
         <Image
-          src="/logo.png"
+          src="/logo.webp"
           alt="Mythic Market"
           width={s.px}
           height={s.px}

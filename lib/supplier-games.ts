@@ -17,7 +17,7 @@ export const SUPPLIER_GAMES: SupplierGame[] = [
     id: "mlbb",
     name: "Mobile Legends: Bang Bang",
     shortName: "MLBB",
-    image: "/mlbb.png",
+    image: "/mlbb.webp",
     topUpPath: "/topup/mlbb",
   },
 ];

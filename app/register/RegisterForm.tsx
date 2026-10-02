@@ -105,7 +105,7 @@ export function RegisterForm() {
       {/* Fondo cyberpunk púrpura */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-screen"
-        style={{ backgroundImage: "url('/images/bg.png')" }}
+        style={{ backgroundImage: "url('/images/bg.webp')" }}
       />
 
       {/* Halos de neón */}

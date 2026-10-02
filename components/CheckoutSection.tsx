@@ -399,7 +399,7 @@ export function CheckoutSection({
           {/* Personaje en el hueco central con máscara doble: sin bordes visibles por ningún lado */}
           <div className="hidden lg:block absolute -top-8 right-[380px] xl:right-[450px] pointer-events-none z-0 w-[680px] xl:w-[800px] h-[560px] overflow-hidden [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_75%)]">
             <Image
-              src="/images/nanalayla.png"
+              src="/images/nanalayla.webp"
               alt="Personaje Mobile Legends"
               width={1200}
               height={1600}

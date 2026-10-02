@@ -25,7 +25,7 @@ const GAME_HIT = {
   id: "mlbb",
   name: "Mobile Legends: Bang Bang",
   shortName: "MLBB",
-  image: "/mlbb.png",
+  image: "/mlbb.webp",
   path: "/topup/mlbb",
 };
 
