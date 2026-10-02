@@ -1,20 +1,25 @@
 name: Scrape supplier prices
 
 # Runs the game's price scraper and imports the results into Turso.
-# Triggered from the admin panel (/admin/precios) via workflow_dispatch when
-# the app runs on Vercel (serverless cannot spawn Python). Can also be run
-# manually from the Actions tab.
+# Triggers:
+#   - workflow_dispatch from the admin panel (/admin/precios) on Vercel
+#     (serverless cannot spawn Python), or manually from the Actions tab.
+#   - schedule: daily at 06:00 UTC so storefront prices track the supplier
+#     even without a human clicking the button.
 
 on:
   workflow_dispatch:
     inputs:
       game:
         description: Game id (lib/supplier-games.ts)
-        required: true
+        required: false
         default: "mlbb"
         type: choice
         options:
           - mlbb
+  schedule:
+    # 06:00 UTC = 03:00 Buenos Aires / 08:00 Madrid — store fresh before business.
+    - cron: "0 6 * * *"
 
 concurrency:
   # One scrape at a time: the provider (ScrapingAnt free tier) caps concurrency.
@@ -28,6 +33,9 @@ jobs:
     # Los secrets viven en el environment "production" del repo; sin esta
     # línea el job no hereda sus valores (llegan vacíos).
     environment: production
+    env:
+      # En schedule no hay inputs de dispatch: el juego por defecto es "mlbb".
+      GAME: ${{ inputs.game || 'mlbb' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -57,7 +65,7 @@ jobs:
         run: pip install curl_cffi
 
       - name: Run MLBB scraper
-        if: inputs.game == 'mlbb'
+        if: env.GAME == 'mlbb'
         env:
           SCRAPINGANT_API_KEY: ${{ secrets.SCRAPINGANT_API_KEY }}
           ENEBA_USER_ID: ${{ secrets.ENEBA_USER_ID }}
@@ -65,9 +73,9 @@ jobs:
         run: python scrapers/eneba_mlbb.py
 
       - name: Unsupported game
-        if: inputs.game != 'mlbb'
+        if: env.GAME != 'mlbb'
         run: |
-          echo "Game '${{ inputs.game }}' has no scraper step in this workflow"
+          echo "Game '$GAME' has no scraper step in this workflow"
           exit 1
 
       - uses: actions/setup-node@v5

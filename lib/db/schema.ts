@@ -71,22 +71,6 @@ export const orders = sqliteTable("orders", {
 
 export type Order = typeof orders.$inferSelect;
 
-export const reviews = sqliteTable("reviews", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  userId: text("userId")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  rating: integer("rating").notNull(),
-  text: text("text").notNull(),
-  createdAt: integer("createdAt", { mode: "timestamp_ms" })
-    .notNull()
-    .$defaultFn(() => new Date()),
-});
-
-export type Review = typeof reviews.$inferSelect;
-
 export const verificationTokens = sqliteTable(
   "verificationToken",
   {

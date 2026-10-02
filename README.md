@@ -167,6 +167,8 @@ El botón del panel dispara el mismo scraper con dos motores según el entorno:
 | Local | `spawn` directo de `venv/Scripts/python.exe` (auto-detectado; `ENEBA_PYTHON_PATH` como override). |
 | Vercel | Dispatch de `.github/workflows/scrape-prices.yml` (GitHub Actions) + lectura de estado por API. |
 
+**Se actualiza solo**: el workflow corre a diario a las **06:00 UTC** (`schedule: cron`), sin tocar el botón ni nada. El disparo manual desde el panel sigue funcionando igual.
+
 Cada corrida crea un snapshot inmutable (`supplier_price_snapshots` + `supplier_price_rows`, precios en centavos); el historial sirve para auditar márgenes. Consola alternativa: `python scrapers/eneba_mlbb.py` → `npm run import-eneba`.
 
 <details>
@@ -201,7 +203,7 @@ components/
 └── WhatsAppWidget.tsx          # Soporte geo-horario
 
 lib/
-├── actions/                    # Server Actions: auth · checkout · admin · reviews · combos · item-markups
+├── actions/                    # Server Actions: auth · checkout · admin · search · combos · item-markups
 ├── store-catalog.ts            # Catálogo live: snapshot + combos + markups → productos
 ├── item-markups.ts             # Markup por item (tabla item_markups; 0% si falta)
 ├── store-combos.ts             # Combos del admin (tabla store_combos)
@@ -248,7 +250,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0008)
 | Capa | Cubierto |
 |---|---|
 | Lógica pura | Pagos, catálogo, store-catalog (combo/markup/overrides), parser del scraper, horarios, order-number, caché, rate-limit, IP |
-| Server Actions | auth · checkout · admin · reviews · combos · item-markups |
+| Server Actions | auth · checkout · admin · search · combos · item-markups |
 | Route handlers | `/api/mlbb/lookup` · `/api/orders/[id]/invoice` |
 | Componentes | `CheckoutSection` · `WhatsAppWidget` (happy-dom opt-in) |
 
