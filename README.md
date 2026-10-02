@@ -13,7 +13,7 @@ Top-up de *Mobile Legends* con verificación de jugador en tiempo real, precios 
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind v4](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-[![Tests 281](https://img.shields.io/badge/tests-281%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
+[![Tests 296](https://img.shields.io/badge/tests-296%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/Turso-LibSQL-4EBBB7?style=for-the-badge&logo=turso&logoColor=white)](https://turso.tech/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
 [![NextAuth v5](https://img.shields.io/badge/NextAuth-v5-7B16D0?style=for-the-badge)](https://authjs.dev/)
@@ -61,10 +61,13 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM), con validación regex por método en cliente y servidor. |
 | 🔍 **Verificación MLBB en vivo** | Nickname y país antes de pagar; 3 upstreams en paralelo con `Promise.any`, timeout 12 s y caché 24 h / 5 min. |
 | 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro y login. |
-| 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario sobre Upstash Redis (fallback en memoria para dev). |
+| 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario (Upstash Redis si se configura; sin ese servicio el límite es por instancia en memoria — ver nota de seguridad). |
 | 🗄️ **Índices en Turso** | Índices reales en las tablas calientes (`orders` userId/createdAt/status/productId/MLBB · `supplier_price_rows` snapshot+position · `supplier_price_snapshots` game+scrapedAt · `store_combos` game); nada de full-scan en el storefront. |
 | ⚡ **Caché del catálogo** | `getStoreProducts` se sirve desde la **Next.js Data Cache** (gratis en Vercel, 60 s, tag `catalog:<game>`) en vez de 4 llamadas HTTPS a Turso por request; las acciones admin la purgan con `revalidateTag`. |
 | 🧾 **Facturas PDF** | A4 con la identidad de marca, generadas on-demand por orden. |
+| 🔎 **Búsqueda en vivo** | El navbar busca **paquetes** del catálogo y lleva a `/topup/mlbb?product=<id>` con el paquete ya preseleccionado; en el home busca **juegos** y lleva a su top-up. Debounce 300 ms + rate limit por IP. |
+| 🖼️ **Assets livianos** | `public/` pesa **1,72 MB** (antes 13,9 MB): imágenes en WebP y redimensionadas al tamaño real de uso, con `Cache-Control` en las rutas públicas. |
+| 📋 **Historial paginado** | El dashboard del comprador trae 20 órdenes por página, apoyándose en el índice `(userId, createdAt)`. |
 | 💬 **Soporte geo-horario** | Widget WhatsApp que enruta al agente correcto (AR/ES) según país y turno IANA. |
 | 🛡️ **RBAC triple capa** | Edge Middleware → página server-side → cada Server Action/API repite el check de rol. |
 
@@ -76,7 +79,7 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | Lenguaje | TypeScript 5.9 `strict` |
 | Datos | Turso (LibSQL) · Drizzle ORM · migraciones versionadas en `drizzle/` |
 | Auth | NextAuth v5 · Google OAuth + credenciales (bcrypt) · JWT con rol |
-| Infra edge | Upstash Redis (rate limit + caché, fallback in-memory) · Cloudflare Turnstile |
+| Infra edge | Next.js Data Cache (catálogo, gratis en Vercel) · Cloudflare Turnstile · Upstash Redis *opcional* (rate limit compartido) |
 | Validación | Zod v4 en cada frontera |
 | Estilos | Tailwind CSS v4 · contraste WCAG AAA |
 | PDF | @react-pdf/renderer |
@@ -198,9 +201,10 @@ app/
 └── topup/mlbb/                 # Flujo de compra
 
 components/
-├── admin/                      # AdminOrdersPanel · ScrapePricesButton · StoreCombosPanel · ItemMarkupEditor
-├── home/                       # Hero · categorías · best-sellers
+├── admin/                      # AdminOrdersPanel · AdminSidebar · ScrapePricesButton · StoreCombosPanel · ItemMarkupEditor · PricesGameShell
+├── home/                       # Hero · categorías · best-sellers · HomeSearchBar (búsqueda de juegos)
 ├── CheckoutSection.tsx         # Checkout client-side (lazy)
+├── NavbarSearch.tsx            # Búsqueda de paquetes en el navbar
 ├── PaymentModal.tsx            # Instrucciones + comprobante WhatsApp
 └── WhatsAppWidget.tsx          # Soporte geo-horario
 
@@ -225,7 +229,7 @@ lib/
 scrapers/                       # Python + output/ (JSON del último scrape, ignorado por git)
 scripts/                        # set-admin.ts · import-eneba-prices.ts
 .github/workflows/              # scrape-prices.yml
-drizzle/                        # Migraciones SQL versionadas (0000–0008)
+drizzle/                        # Migraciones SQL versionadas (0000–0010)
 ```
 
 ## 🔑 Variables de entorno
@@ -236,7 +240,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0008)
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ | OAuth de Google. |
 | `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | ✅ | Base de datos. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ✅ | Anti-bot (`.env.example` trae claves de prueba). |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Recomendada | Rate limit + caché; sin ellas cae a memoria (solo dev). |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Opcional | Rate limit compartido. **Sin este servicio el límite queda por instancia en memoria**, y en Vercel eso no comparte estado entre lambdas. El catálogo **no** depende de él: usa la Next.js Data Cache. |
 | `SCRAPINGANT_API_KEY` | Scraper | Proxy BR para consultar checkout real. |
 | `ENEBA_USER_ID` / `ENEBA_ZONE_ID` | Scraper | Cuenta MLBB de simulación de checkout. |
 | `ENEBA_PYTHON_PATH` | Opcional | Ruta al Python del venv si no se detecta solo. |
@@ -247,7 +251,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0008)
 
 ## 🧪 Testing
 
-**281 tests · 23 archivos · todos en verde.**
+**296 tests · 28 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|
