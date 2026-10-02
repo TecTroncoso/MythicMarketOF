@@ -1,25 +1,38 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Covers the READ path of getStoreProducts: the Upstash/in-memory cache that
-// shields Turso from every storefront mount, search keystroke and checkout.
-// buildStoreProducts/buildComboProducts are covered by store-catalog.test.ts.
+// Covers the READ path of getStoreProducts: the Next.js Data Cache (free on
+// Vercel, no Upstash) that shields Turso from every storefront mount, search
+// keystroke and checkout read. The mock emulates unstable_cache with a real
+// in-memory store keyed by keyParts, plus revalidateTag as a spy.
 
 vi.mock("@/lib/db", () => ({ db: {} }));
 
-const { mockCacheGet, mockCacheSet, mockCacheDelete, mockGetLatest, mockGetCombos, mockGetMarkups } =
-  vi.hoisted(() => ({
-    mockCacheGet: vi.fn(),
-    mockCacheSet: vi.fn(),
-    mockCacheDelete: vi.fn(),
-    mockGetLatest: vi.fn(),
-    mockGetCombos: vi.fn(),
-    mockGetMarkups: vi.fn(),
-  }));
+const { mockGetLatest, mockGetCombos, mockGetMarkups, mockRevalidateTag } = vi.hoisted(() => ({
+  mockGetLatest: vi.fn(),
+  mockGetCombos: vi.fn(),
+  mockGetMarkups: vi.fn(),
+  mockRevalidateTag: vi.fn(),
+}));
 
-vi.mock("@/lib/cache", () => ({
-  cacheGet: mockCacheGet,
-  cacheSet: mockCacheSet,
-  cacheDelete: mockCacheDelete,
+const cacheStore = new Map<string, unknown>();
+const cacheTags: Record<string, string[]> = {};
+
+vi.mock("next/cache", () => ({
+  unstable_cache: (
+    fn: () => Promise<unknown>,
+    keyParts: string[],
+    opts?: { revalidate?: number; tags?: string[] }
+  ) => {
+    if (opts?.tags) cacheTags[keyParts.join("|")] = opts.tags;
+    return async () => {
+      const key = keyParts.join("|");
+      if (cacheStore.has(key)) return cacheStore.get(key);
+      const value = await fn();
+      cacheStore.set(key, value);
+      return value;
+    };
+  },
+  revalidateTag: mockRevalidateTag,
 }));
 vi.mock("@/lib/supplier-prices", () => ({ getLatestSupplierSnapshot: mockGetLatest }));
 vi.mock("@/lib/store-combos", () => ({ getStoreCombos: mockGetCombos }));
@@ -53,47 +66,45 @@ const SNAPSHOT = {
   ],
 };
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockCacheGet.mockResolvedValue(null);
-  mockGetLatest.mockResolvedValue(SNAPSHOT);
-  mockGetCombos.mockResolvedValue([]);
-  mockGetMarkups.mockResolvedValue(new Map());
-});
-
-describe("getStoreProducts() cache behaviour", () => {
-  it("serves from cache without touching Turso on a hit", async () => {
-    const CACHED = [{ id: "78-diamonds-8-bonus", name: "78 Diamonds", label: "78 Diamonds + 8 Bonus", priceUsdCents: 129, priceEurCents: 113, image: "/products/diamantes.png", category: "diamonds", bonus: "8 Diamonds" }];
-    mockCacheGet.mockResolvedValueOnce(CACHED);
-
-    const result = await getStoreProducts("mlbb");
-
-    expect(result).toEqual(CACHED);
-    expect(mockCacheGet).toHaveBeenCalledWith("catalog:mlbb");
-    expect(mockGetLatest).not.toHaveBeenCalled();
-    expect(mockCacheSet).not.toHaveBeenCalled();
+describe("getStoreProducts() Data Cache behaviour", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    cacheStore.clear();
+    for (const key of Object.keys(cacheTags)) delete cacheTags[key];
+    mockGetLatest.mockResolvedValue(SNAPSHOT);
+    mockGetCombos.mockResolvedValue([]);
+    mockGetMarkups.mockResolvedValue(new Map());
   });
 
-  it("misses build from Turso and write back with TTL 60s", async () => {
-    const result = await getStoreProducts("mlbb");
+  it("builds from Turso on a miss and reuses the Data Cache on a hit", async () => {
+    const first = await getStoreProducts("mlbb");
+    expect(first).not.toBeNull();
+    expect(first![0]).toMatchObject({ id: "78-diamonds-8-bonus", priceUsdCents: 129 });
+    expect(mockGetLatest).toHaveBeenCalledTimes(1);
 
-    expect(mockGetLatest).toHaveBeenCalledWith("mlbb");
-    expect(result).not.toBeNull();
-    expect(result![0]).toMatchObject({ id: "78-diamonds-8-bonus", priceUsdCents: 129 }); // markup 0 => at cost
-    expect(mockCacheSet).toHaveBeenCalledWith("catalog:mlbb", result, 60);
+    // Second call for the same game: served from the cache, Turso untouched.
+    const second = await getStoreProducts("mlbb");
+    expect(second).toEqual(first);
+    expect(mockGetLatest).toHaveBeenCalledTimes(1);
   });
 
-  it("returns null without caching when the game has no snapshot (fallback stays fast)", async () => {
+  it("registers the tag 'catalog:<game>' so admin actions can purge it", async () => {
+    await getStoreProducts("mlbb");
+    expect(cacheTags["store-catalog|mlbb"]).toEqual(["catalog:mlbb"]);
+  });
+
+  it("returns null (static fallback) when the game has no snapshot; the TTL bounds staleness", async () => {
     mockGetLatest.mockResolvedValueOnce(null);
     const result = await getStoreProducts("mlbb");
     expect(result).toBeNull();
-    expect(mockCacheSet).not.toHaveBeenCalled();
+    // unstable_cache also caches the null — the 60s TTL is the staleness bound
+    // until the first scrape lands. No bug: documented in store-catalog.ts.
   });
 });
 
 describe("invalidateStoreCatalog()", () => {
-  it("deletes the game catalog cache entry", async () => {
+  it("purges the catalog tag via revalidateTag", async () => {
     await invalidateStoreCatalog("mlbb");
-    expect(mockCacheDelete).toHaveBeenCalledWith("catalog:mlbb");
+    expect(mockRevalidateTag).toHaveBeenCalledWith("catalog:mlbb");
   });
 });

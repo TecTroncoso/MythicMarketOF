@@ -63,7 +63,7 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro y login. |
 | 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario sobre Upstash Redis (fallback en memoria para dev). |
 | 🗄️ **Índices en Turso** | Índices reales en las tablas calientes (`orders` userId/createdAt/status/productId/MLBB · `supplier_price_rows` snapshot+position · `supplier_price_snapshots` game+scrapedAt · `store_combos` game); nada de full-scan en el storefront. |
-| ⚡ **Caché del catálogo** | `getStoreProducts` se sirve desde Upstash (60 s) en vez de 4 llamadas HTTPS a Turso por request; las acciones admin invalidan (`catalog:<game>`) y el scraper lo renueva tras ≤60 s. |
+| ⚡ **Caché del catálogo** | `getStoreProducts` se sirve desde la **Next.js Data Cache** (gratis en Vercel, 60 s, tag `catalog:<game>`) en vez de 4 llamadas HTTPS a Turso por request; las acciones admin la purgan con `revalidateTag`. |
 | 🧾 **Facturas PDF** | A4 con la identidad de marca, generadas on-demand por orden. |
 | 💬 **Soporte geo-horario** | Widget WhatsApp que enruta al agente correcto (AR/ES) según país y turno IANA. |
 | 🛡️ **RBAC triple capa** | Edge Middleware → página server-side → cada Server Action/API repite el check de rol. |
@@ -206,7 +206,7 @@ components/
 
 lib/
 ├── actions/                    # Server Actions: auth · checkout · admin · search · combos · item-markups
-├── store-catalog.ts            # Catálogo live (TTL caché 60s): snapshot + combos + markups → productos
+├── store-catalog.ts            # Catálogo live (Data Cache 60s): snapshot + combos + markups → productos
 ├── item-markups.ts             # Markup por item (tabla item_markups; 0% si falta)
 ├── store-combos.ts             # Combos del admin (tabla store_combos)
 ├── markup.ts                   # Primitivas de markup PURAS (seguro en cliente)

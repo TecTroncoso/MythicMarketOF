@@ -11,8 +11,8 @@
 // getStoreProducts() adds the snapshot + combo + markup reads. Callers fall
 // back to the static catalog when this returns null (no snapshot / DB error).
 
+import { unstable_cache } from "next/cache";
 import type { ProductCategory } from "@/lib/catalog";
-import { cacheGet, cacheSet, cacheDelete } from "@/lib/cache";
 import { itemMarkupFor, getItemMarkups, type ItemMarkupMap } from "@/lib/item-markups";
 import { applyMarkupCents } from "@/lib/markup";
 import { getStoreCombos, type StoreComboDef } from "@/lib/store-combos";
@@ -221,44 +221,58 @@ export function buildComboProducts(
   return products;
 }
 
+// ── Storefront cache (Next.js Data Cache: FREE on Vercel, no Upstash) ───────
+// Without a cache, every storefront mount / search keystroke / checkout read
+// would hit Turso with 4 HTTPS round-trips. `unstable_cache` stores the built
+// product list in the platform Data Cache shared across lambdas; the tag lets
+// admin actions purge it instantly via revalidateTag. With NO purge the TTL
+// (60s) bounds staleness after each scrape.
+
+const CATALOG_TTL_SECONDS = 60;
+
+function catalogTag(game: string): string {
+  return `catalog:${game}`;
+}
+
+/** The real DB build, kept separate so the cached wrapper stays thin. */
+async function buildStoreProductsFromDb(game: string): Promise<StoreProduct[] | null> {
+  const [latest, combos, itemMarkups] = await Promise.all([
+    getLatestSupplierSnapshot(game),
+    getStoreCombos(game),
+    getItemMarkups(game),
+  ]);
+  if (!latest) return null;
+  const products = [
+    ...buildStoreProducts(latest.rows, itemMarkups),
+    ...buildComboProducts(latest.rows, combos, itemMarkups),
+  ];
+  return products.length > 0 ? products : null;
+}
+
+const cachedBuild = (game: string) =>
+  unstable_cache(
+    async () => buildStoreProductsFromDb(game),
+    ["store-catalog", game],
+    { revalidate: CATALOG_TTL_SECONDS, tags: [catalogTag(game)] }
+  );
+
 /**
  * Live products for a game from its newest supplier snapshot, or null when
  * the game has no imported prices yet (or the read fails) — callers then fall
  * back to the static catalog. Admin combos are appended after the plain
  * supplier packages.
- *
- * Cached 60s per game (Upstash in prod / in-memory in dev): without it, every
- * storefront mount, every search keystroke and every checkout hits Turso 4
- * times. Invalidated by the admin actions (markups, combos) that call
- * cacheDelete("catalog:<game>"); a fresh scrape lands after at most one TTL.
  */
 export async function getStoreProducts(game: string): Promise<StoreProduct[] | null> {
-  const cacheKey = `catalog:${game}`;
   try {
-    const cached = await cacheGet<StoreProduct[]>(cacheKey);
-    if (cached) return cached;
-
-    const [latest, combos, itemMarkups] = await Promise.all([
-      getLatestSupplierSnapshot(game),
-      getStoreCombos(game),
-      getItemMarkups(game),
-    ]);
-    if (!latest) return null;
-    const products = [
-      ...buildStoreProducts(latest.rows, itemMarkups),
-      ...buildComboProducts(latest.rows, combos, itemMarkups),
-    ];
-    if (products.length === 0) return null;
-
-    await cacheSet(cacheKey, products, 60);
-    return products;
+    return await cachedBuild(game)();
   } catch (error) {
     console.error(`No se pudo construir el catálogo live de "${game}":`, error);
     return null;
   }
 }
 
-/** Bust the storefront cache after admin edits (markups, combos, imports). */
+/** Purge the storefront cache after admin edits (markups, combos). */
 export async function invalidateStoreCatalog(game: string): Promise<void> {
-  await cacheDelete(`catalog:${game}`);
+  const { revalidateTag } = await import("next/cache");
+  revalidateTag(catalogTag(game));
 }
