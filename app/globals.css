@@ -20,14 +20,10 @@
 }
 
 body {
-  background-image: url('/images/bg.webp');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  /* The backdrop image lives in its own fixed layer in app/layout.tsx
+     (-z-20). Here we only keep the stacking context that guarantees the
+     overlays (::before/::after) paint between that layer and the content. */
   position: relative;
-  /* Stacking context propio: garantiza que los overlays (::before/::after)
-     pinten entre el fondo del body y el contenido de las páginas. */
   isolation: isolate;
 }
 

@@ -150,7 +150,47 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
   const startOfYesterday = new Date(startOfToday);
   startOfYesterday.setUTCDate(startOfYesterday.getUTCDate() - 1);
 
-  const [rows, statsRows, dayRows] = await Promise.all([
+  // The aggregates only need `users` when the search term is present (it is the
+// sole condition that references users.email). Joining on every keystroke when
+// nobody searches is pure overhead on the three queries that run per filter
+// change, so the join is applied conditionally.
+const STATS_SELECTION = {
+  totalCount: count(),
+  // Drizzle types sqlite sum() as string | null; SQLite returns a number
+  // for integer columns, so coerce defensively.
+  totalAmount: sum(orders.amountCents),
+  pendingCount: sql<number>`count(*) filter (where ${eq(orders.status, "pending")})`,
+  paidCount: sql<number>`count(*) filter (where ${eq(orders.status, "paid")})`,
+  cancelledCount: sql<number>`count(*) filter (where ${eq(orders.status, "cancelled")})`,
+} as const;
+
+const DAY_SELECTION = {
+  todayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()})`,
+  yesterdayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()})`,
+  todayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfToday.getTime()}), 0)`,
+  yesterdayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()}), 0)`,
+  todayPending: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "pending")})`,
+  todayPaid: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "paid")})`,
+  todayCancelled: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "cancelled")})`,
+} as const;
+
+const statsPromise = q
+  ? db
+      .select(STATS_SELECTION)
+      .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
+      .where(and(...conditions))
+  : db.select(STATS_SELECTION).from(orders).where(and(...conditions));
+
+const dayPromise = q
+  ? db
+      .select(DAY_SELECTION)
+      .from(orders)
+      .innerJoin(users, eq(orders.userId, users.id))
+      .where(and(...conditions))
+  : db.select(DAY_SELECTION).from(orders).where(and(...conditions));
+
+const [rows, statsRows, dayRows] = await Promise.all([
     db
       .select({
         orderNumber: orders.orderNumber,
@@ -170,33 +210,8 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
       .where(and(...conditions))
       .orderBy(desc(orders.createdAt))
       .limit(MAX_ORDERS),
-    db
-      .select({
-        totalCount: count(),
-        // Drizzle types sqlite sum() as string | null; SQLite returns a number
-        // for integer columns, so coerce defensively.
-        totalAmount: sum(orders.amountCents),
-        pendingCount: sql<number>`count(*) filter (where ${eq(orders.status, "pending")})`,
-        paidCount: sql<number>`count(*) filter (where ${eq(orders.status, "paid")})`,
-        cancelledCount: sql<number>`count(*) filter (where ${eq(orders.status, "cancelled")})`,
-      })
-      .from(orders)
-      .innerJoin(users, eq(orders.userId, users.id))
-      .where(and(...conditions)),
-    // Real today/yesterday aggregates for the delta badges; same filters.
-    db
-      .select({
-        todayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()})`,
-        yesterdayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()})`,
-        todayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfToday.getTime()}), 0)`,
-        yesterdayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()}), 0)`,
-        todayPending: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "pending")})`,
-        todayPaid: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "paid")})`,
-        todayCancelled: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "cancelled")})`,
-      })
-      .from(orders)
-      .innerJoin(users, eq(orders.userId, users.id))
-      .where(and(...conditions)),
+    statsPromise,
+    dayPromise,
   ]);
 
   // Stats come from the aggregate query, never from the limited 200-row list.

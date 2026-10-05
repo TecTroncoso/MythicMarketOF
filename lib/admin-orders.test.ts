@@ -70,13 +70,22 @@ const statsInnerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
   where: statsWhereFn,
 }));
 const statsWhereFn = vi.fn(async (_conditions: unknown[]) => [STATS_ROW]);
-const statsFromFn = vi.fn(() => ({ innerJoin: statsInnerJoinFn }));
+// Dual-shape: the aggregates join `users` ONLY when a search term is present
+// (it is the sole condition referencing users.email), so `from()` must expose
+// both the joined and the plain chain.
+const statsFromFn = vi.fn(() => ({
+  where: statsWhereFn,
+  innerJoin: statsInnerJoinFn,
+}));
 
 const dayStatsWhereFn = vi.fn(async (_conditions: unknown[]) => [DAY_ROW]);
 const dayInnerJoinFn = vi.fn((_table: unknown, _condition: unknown) => ({
   where: dayStatsWhereFn,
 }));
-const dayStatsFromFn = vi.fn(() => ({ innerJoin: dayInnerJoinFn }));
+const dayStatsFromFn = vi.fn(() => ({
+  where: dayStatsWhereFn,
+  innerJoin: dayInnerJoinFn,
+}));
 
 const mockSelect = vi.fn((config: Record<string, unknown>) => ({
   from:
@@ -302,6 +311,25 @@ describe("getAdminOrders()", () => {
 
     expect(statsInnerJoinFn).toHaveBeenCalledWith(users, expect.anything());
     expect(statsWhereFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips the users join on both aggregates when there is no search term", async () => {
+    // Perf: the join exists only for the users.email LIKE condition, so the
+    // three queries that run on every filter change must not pay for it.
+    await getAdminOrders({ status: "paid" });
+
+    expect(statsInnerJoinFn).not.toHaveBeenCalled();
+    expect(dayInnerJoinFn).not.toHaveBeenCalled();
+    // ...and they still produce their rows.
+    expect(statsWhereFn).toHaveBeenCalledTimes(1);
+    expect(dayStatsWhereFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps the join on both aggregates when searching by email", async () => {
+    await getAdminOrders({ q: "ana@x.com" });
+
+    expect(statsInnerJoinFn).toHaveBeenCalledWith(users, expect.anything());
+    expect(dayInnerJoinFn).toHaveBeenCalledWith(users, expect.anything());
   });
 
   it("applies the same filters to the day-delta query", async () => {

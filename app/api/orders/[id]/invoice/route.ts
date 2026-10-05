@@ -38,6 +38,11 @@ export async function GET(
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="factura-${order.orderNumber}.pdf"`,
+      // Rendering a PDF costs ~200-500ms, and buyers reprint from the
+      // dashboard. `private` (it is their document, served only after the
+      // ownership check) with a short TTL absorbs those reprints; after it
+      // expires the PDF is rendered again.
+      "Cache-Control": "private, max-age=300",
     },
   });
 }

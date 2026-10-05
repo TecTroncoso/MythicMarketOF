@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { ChevronRight, Home } from 'lucide-react';
+import { auth } from '@/auth';
 import { Navbar } from '@/components/Navbar';
 import { countryToRegion, PAYMENT_REGIONS } from '@/lib/payments';
 import dynamic from 'next/dynamic';
@@ -19,12 +20,17 @@ export default async function MobileLegendsStore({
   const region = countryToRegion(country);
   const currency = PAYMENT_REGIONS[region].currency;
 
+  // Resolve the session ONCE on the server (JWT strategy: no DB hit) and hand
+  // it to both the navbar and the checkout. Without this, UserMenu and
+  // CheckoutSection each fetched /api/auth/session on every page view.
+  const session = await auth();
+
   // Deep-link from the navbar search: ?product=<id> pre-selects the package.
   const { product: initialProductId } = await searchParams;
 
   return (
     <main className="min-h-screen bg-[#070417] text-white font-sans selection:bg-[#d946ef] selection:text-white pb-10">
-      <Navbar currency={currency} />
+      <Navbar session={session} currency={currency} />
 
       {/* Breadcrumbs + compartir (directamente sobre el hero) */}
       <div className="px-4 lg:px-8 py-3 flex items-center justify-between text-xs text-slate-400 max-w-7xl mx-auto w-full">
@@ -44,7 +50,10 @@ export default async function MobileLegendsStore({
       </div>
 
       {/* Checkout premium: hero 2 columnas + tarjeta flotante + grid de diamantes */}
-      <CheckoutSection initialProductId={initialProductId} />
+      <CheckoutSection
+        isLoggedIn={Boolean(session?.user)}
+        initialProductId={initialProductId}
+      />
     </main>
   );
 }

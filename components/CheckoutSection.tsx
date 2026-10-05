@@ -419,8 +419,6 @@ export function CheckoutSection({
                 height={160}
                 sizes="(max-width: 768px) 96px, 128px"
                 className="w-full h-auto"
-                priority
-                fetchPriority="high"
               />
             </div>
             <div className="text-center sm:text-left">

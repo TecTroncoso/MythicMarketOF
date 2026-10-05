@@ -71,7 +71,7 @@ export default async function DashboardPage({
 
   return (
     <main className="min-h-screen bg-[#0a0f1a] text-white font-sans pb-20">
-      <Navbar />
+      <Navbar session={session} />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <header className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 flex items-center gap-3">

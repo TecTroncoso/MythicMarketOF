@@ -98,6 +98,8 @@ describe("GET /api/orders/[id]/invoice", () => {
     expect(res.headers.get("Content-Disposition")).toContain(
       `factura-${ORDER.orderNumber}.pdf`
     );
+    // Short private TTL so reprints skip the expensive PDF render.
+    expect(res.headers.get("Cache-Control")).toBe("private, max-age=300");
     expect(await res.text()).toBe("PDF");
     expect(mockFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: expect.anything() })

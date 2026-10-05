@@ -38,6 +38,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={displayFont.variable}>
       <body suppressHydrationWarning>
+        {/* Global backdrop as its own fixed layer instead of
+            `background-attachment: fixed` on <body>: visually identical, but
+            without the full-viewport repaint on every scroll frame that
+            Safari mobile suffers from. Sits below the dark overlay and the
+            scanlines defined in globals.css (same stacking order). */}
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{
+            backgroundImage: "url('/images/bg.webp')",
+            zIndex: -20,
+          }}
+        />
         {children}
         <WhatsAppWidget />
       </body>
