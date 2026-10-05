@@ -13,7 +13,7 @@ Top-up de *Mobile Legends* con verificación de jugador en tiempo real, precios 
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind v4](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-[![Tests 296](https://img.shields.io/badge/tests-296%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
+[![Tests 298](https://img.shields.io/badge/tests-298%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/Turso-LibSQL-4EBBB7?style=for-the-badge&logo=turso&logoColor=white)](https://turso.tech/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
 [![NextAuth v5](https://img.shields.io/badge/NextAuth-v5-7B16D0?style=for-the-badge)](https://authjs.dev/)
@@ -64,7 +64,7 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario (Upstash Redis si se configura; sin ese servicio el límite es por instancia en memoria — ver nota de seguridad). |
 | 🗄️ **Índices en Turso** | Índices reales en las tablas calientes (`orders` userId/createdAt/status/productId/MLBB · `supplier_price_rows` snapshot+position · `supplier_price_snapshots` game+scrapedAt · `store_combos` game); nada de full-scan en el storefront. |
 | ⚡ **Caché del catálogo** | `getStoreProducts` se sirve desde la **Next.js Data Cache** (gratis en Vercel, 60 s, tag `catalog:<game>`) en vez de 4 llamadas HTTPS a Turso por request; las acciones admin la purgan con `revalidateTag`. |
-| 🧾 **Facturas PDF** | A4 con la identidad de marca, generadas on-demand por orden. |
+| 🧾 **Facturas PDF** | A4 con la identidad de marca, generadas on-demand por orden y servidas con `private, max-age=300` (los reprints no vuelven a renderizar el PDF). |
 | 🔎 **Búsqueda en vivo** | El navbar busca **paquetes** del catálogo y lleva a `/topup/mlbb?product=<id>` con el paquete ya preseleccionado; en el home busca **juegos** y lleva a su top-up. Debounce 300 ms + rate limit por IP. |
 | 🖼️ **Assets livianos** | `public/` pesa **1,72 MB** (antes 13,9 MB): imágenes en WebP y redimensionadas al tamaño real de uso, con `Cache-Control` en las rutas públicas. |
 | 📋 **Historial paginado** | El dashboard del comprador trae 20 órdenes por página, apoyándose en el índice `(userId, createdAt)`. |
@@ -251,7 +251,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0010)
 
 ## 🧪 Testing
 
-**296 tests · 28 archivos · todos en verde.**
+**298 tests · 28 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|
@@ -288,6 +288,9 @@ Convenciones: tests colocalizados (`foo.ts` → `foo.test.ts`), entorno global `
 - **Degradación elegante por diseño**: cada dependencia externa (Upstash, Turnstile, los tres upstreams MLBB, el snapshot) tiene un modo de fallo documentado que mantiene el flujo del usuario funcionando.
 - **Módulos puros compartidos**: `markup.ts`, `catalog.ts` y `payments.ts` no importan nada de servidor — seguros en ambos bundles y testeables sin mocks. Los paneles del admin (componentes cliente) nunca importan directamente módulos DB, para no arrastrar libsql al navegador.
 - **Swap de upstreams en un archivo**: `lib/mlbb/client.ts` concentra los 3 endpoints de lookup; migrar a API paga es un cambio acotado con sus tests.
+- **La sesión se resuelve una vez, en el servidor**: las páginas que ya necesitan `auth()` (JWT, sin consulta a Turso) le pasan la sesión al navbar y al checkout. Los componentes mantienen el `fetch` a `/api/auth/session` como *fallback* para páginas que no la pasan, nunca como camino normal.
+- **El fondo global es una capa fija propia** (`z-index: -20` en `layout.tsx`), no un `background-attachment: fixed` sobre `<body>`: mismo resultado visual sin el repaint de viewport completo en cada frame de scroll en Safari móvil. El orden de apilado (fondo → overlay → scanlines → contenido) está fijado por los `z-index` de `globals.css`.
+- **Solo se precarga lo que compite por el LCP**: el héroe del checkout y el del home llevan `priority`; el resto de imágenes (logo del navbar, logo del juego) se cargan por debajo del pliegue con `sizes` explícito.
 
 ## 📄 Licencia
 
