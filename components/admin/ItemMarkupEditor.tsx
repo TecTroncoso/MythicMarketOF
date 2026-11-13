@@ -12,6 +12,7 @@ interface ItemMarkupEditorProps {
   /** Effective markups right now (the item's own, or 0 when unset). */
   markupUsd: number;
   markupEur: number;
+  markupArs: number;
   /** True when this item has markup stored; false = sells AT COST. */
   hasOverride: boolean;
   /** Compact rendering for table cells. */
@@ -19,8 +20,8 @@ interface ItemMarkupEditorProps {
 }
 
 /**
- * Per-item markup editor: USD/LATAM and EUR/EU percentages next to each
- * price-list row. Values are entered in percent (5 = 5%); the server stores
+ * Per-item markup editor: USD/LATAM, EUR/EU and ARS/Argentina percentages
+ * next to each price-list row. Values are entered in percent (5 = 5%); the server stores
  * fractions. There is no game-level default anymore: an item without markup
  * sells at supplier cost, and is flagged as SIN MARKUP here.
  */
@@ -29,12 +30,14 @@ export function ItemMarkupEditor({
   itemKey,
   markupUsd,
   markupEur,
+  markupArs,
   hasOverride,
   compact = false,
 }: ItemMarkupEditorProps) {
   const router = useRouter();
   const [usdPct, setUsdPct] = useState(formatPct(markupUsd));
   const [eurPct, setEurPct] = useState(formatPct(markupEur));
+  const [arsPct, setArsPct] = useState(formatPct(markupArs));
   const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -45,12 +48,19 @@ export function ItemMarkupEditor({
     setFeedback(null);
     const usd = Number(usdPct.replace(",", "."));
     const eur = Number(eurPct.replace(",", "."));
-    if (!Number.isFinite(usd) || !Number.isFinite(eur)) {
+    const ars = Number(arsPct.replace(",", "."));
+    if (!Number.isFinite(usd) || !Number.isFinite(eur) || !Number.isFinite(ars)) {
       setFeedback({ ok: false, text: "Porcentajes inválidos." });
       return;
     }
     startTransition(async () => {
-      const res = await saveItemMarkup({ game, itemKey, markupUsd: usd / 100, markupEur: eur / 100 });
+      const res = await saveItemMarkup({
+        game,
+        itemKey,
+        markupUsd: usd / 100,
+        markupEur: eur / 100,
+        markupArs: ars / 100,
+      });
       setFeedback(
         res.success
           ? { ok: true, text: "Guardado." }
@@ -68,6 +78,7 @@ export function ItemMarkupEditor({
         // No markup row => the item sells at supplier cost (0%).
         setUsdPct("0");
         setEurPct("0");
+        setArsPct("0");
         setFeedback({ ok: true, text: "Markup eliminado: venderá a costo." });
         router.refresh();
       } else {
@@ -78,7 +89,7 @@ export function ItemMarkupEditor({
 
   return (
     <div className={compact ? "flex flex-col items-end gap-1" : "flex flex-col gap-1.5"}>
-      <div className="flex items-center gap-1" title="Markup de este item — USD (LATAM) / EUR (Europa). Sin markup propio el item vende al costo del proveedor.">
+      <div className="flex items-center gap-1" title="Markup de este item — USD (LATAM) / EUR (Europa) / ARS (Argentina). Sin markup propio el item vende al costo del proveedor.">
         <input
           type="number"
           inputMode="decimal"
@@ -105,6 +116,19 @@ export function ItemMarkupEditor({
           className={inputClass}
         />
         <span className="text-[10px] text-gray-500 font-bold">€%</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          min={0}
+          max={100}
+          step="0.1"
+          value={arsPct}
+          onChange={(e) => setArsPct(e.target.value)}
+          aria-label="Markup ARS %"
+          placeholder="0"
+          className={inputClass}
+        />
+        <span className="text-[10px] text-gray-500 font-bold">AR%</span>
         <button
           type="button"
           onClick={handleSave}

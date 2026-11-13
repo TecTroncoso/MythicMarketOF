@@ -14,6 +14,7 @@ interface ComboPackageRow {
   packageName: string;
   checkoutUsdCents: number | null;
   checkoutEurCents: number | null;
+  checkoutArsCents: number | null;
 }
 
 interface ExistingCombo {
@@ -72,6 +73,11 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
     packages,
     (p) => p.checkoutEurCents
   );
+  const previewArs = comboCents(
+    pickedPackages.map(([packageName, qty]) => ({ packageName, qty })),
+    packages,
+    (p) => p.checkoutArsCents
+  );
 
   const setQty = (packageName: string, qty: number) =>
     setSelected((prev) => ({ ...prev, [packageName]: Math.max(0, Math.min(10, qty)) }));
@@ -122,7 +128,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
           Combina paquetes del proveedor (con cantidades) para crear items nuevos de la tienda.
           El coste del combo es la <span className="text-gray-200 font-semibold">suma de los checkout</span> de
           sus paquetes y se revalúa solo cada vez que se actualizan los precios del proveedor.
-          Cada combo lleva su <span className="text-gray-200 font-semibold">propio markup USD/EUR</span> —
+          Cada combo lleva su <span className="text-gray-200 font-semibold">propio markup USD/EUR/ARS</span> —
           asígnalo tras crearlo, o venderá a costo.
         </p>
       </div>
@@ -133,10 +139,12 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
           {combos.map((combo) => {
             const costUsd = comboCents(combo.components, packages, (p) => p.checkoutUsdCents);
             const costEur = comboCents(combo.components, packages, (p) => p.checkoutEurCents);
+            const costArs = comboCents(combo.components, packages, (p) => p.checkoutArsCents);
             // Per-combo markup; without one the combo sells at supplier cost.
             const override = itemMarkups[`combo-${combo.id}`];
             const comboMarkupUsd = override?.markupUsd ?? 0;
             const comboMarkupEur = override?.markupEur ?? 0;
+            const comboMarkupArs = override?.markupArs ?? 0;
             return (
               <li
                 key={combo.id}
@@ -150,6 +158,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
                   {([
                     { cost: costUsd, markup: comboMarkupUsd, currency: "USD" },
                     { cost: costEur, markup: comboMarkupEur, currency: "EUR" },
+                    { cost: costArs, markup: comboMarkupArs, currency: "ARS" },
                   ] as const).map(({ cost, markup, currency }) => (
                     <div key={currency} className="text-right">
                       <p className="text-[10px] uppercase tracking-wider text-gray-500">{currency}</p>
@@ -168,6 +177,7 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
                     itemKey={`combo-${combo.id}`}
                     markupUsd={comboMarkupUsd}
                     markupEur={comboMarkupEur}
+                    markupArs={comboMarkupArs}
                     hasOverride={Boolean(override)}
                     compact
                   />
@@ -203,6 +213,8 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
                     Chk {pkg.checkoutUsdCents !== null ? formatAmount(pkg.checkoutUsdCents, "USD") : "—"}
                     {" · "}
                     {pkg.checkoutEurCents !== null ? formatAmount(pkg.checkoutEurCents, "EUR") : "—"}
+                    {" · "}
+                    {pkg.checkoutArsCents !== null ? formatAmount(pkg.checkoutArsCents, "ARS") : "—"}
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -241,6 +253,10 @@ export function StoreCombosPanel({ game, packages, combos, itemMarkups }: StoreC
             <span className="text-xs text-gray-300">
               EUR:{" "}
               {previewEur === null ? <span className="text-gray-500">s/ precio</span> : formatAmount(previewEur, "EUR")}
+            </span>
+            <span className="text-xs text-gray-300">
+              ARS:{" "}
+              {previewArs === null ? <span className="text-gray-500">s/ precio</span> : formatAmount(previewArs, "ARS")}
             </span>
             <span className="text-[11px] text-gray-500 italic">
               El markup se asigna al combo una vez creado (sin markup vende a costo).

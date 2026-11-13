@@ -47,10 +47,16 @@ function PriceCatalogGroup({
   return (
     <>
       <td className="px-3 py-3 text-right text-gray-300">
-        <PriceCell cents={row.catalogBrlCents} currency="BRL" />
+        <PriceCell cents={row.catalogArsCents} currency="ARS" />
       </td>
       <td className="px-3 py-3 text-right text-white font-semibold">
-        <PriceCell cents={row.checkoutBrlCents} currency="BRL" />
+        <PriceCell cents={row.checkoutArsCents} currency="ARS" />
+      </td>
+      <td className="px-3 py-3 text-right text-emerald-400 font-semibold bg-emerald-500/[0.05]">
+        <PriceCell
+          cents={row.checkoutArsCents === null ? null : applyMarkupCents(row.checkoutArsCents, markup.markupArs)}
+          currency="ARS"
+        />
       </td>
       <td className="px-3 py-3 text-right text-gray-300">
         <PriceCell cents={row.catalogUsdCents} currency="USD" />
@@ -175,6 +181,7 @@ export default async function AdminGamePricesPage({
               packageName: row.packageName,
               checkoutUsdCents: row.checkoutUsdCents,
               checkoutEurCents: row.checkoutEurCents,
+              checkoutArsCents: row.checkoutArsCents,
             }))}
             combos={combos}
             itemMarkups={Object.fromEntries(itemMarkups)}
@@ -207,8 +214,8 @@ export default async function AdminGamePricesPage({
                       <th rowSpan={2} className="px-4 py-3 text-left align-bottom">
                         Paquete
                       </th>
-                      <th colSpan={2} className="px-3 py-2 text-center border-l border-purple-900/40">
-                        BRL
+                      <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
+                        ARS
                       </th>
                       <th colSpan={3} className="px-3 py-2 text-center border-l border-purple-900/40">
                         USD
@@ -226,6 +233,7 @@ export default async function AdminGamePricesPage({
                     <tr className="border-b border-purple-900/40 text-gray-600 text-[10px] uppercase tracking-wider">
                       <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
                       <th className="px-3 py-2 text-right">Chk.</th>
+                      <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
                       <th className="px-3 py-2 text-right border-l border-purple-900/40">Cat.</th>
                       <th className="px-3 py-2 text-right">Chk.</th>
                       <th className="px-3 py-2 text-right text-emerald-500/80 bg-emerald-500/[0.05]">Venta</th>
@@ -250,6 +258,7 @@ export default async function AdminGamePricesPage({
                               itemKey={itemKey}
                               markupUsd={rowMarkup.markupUsd}
                               markupEur={rowMarkup.markupEur}
+                              markupArs={rowMarkup.markupArs}
                               hasOverride={itemMarkups.has(itemKey)}
                               compact
                             />
@@ -267,9 +276,9 @@ export default async function AdminGamePricesPage({
               </div>
               <p className="px-4 py-3 text-xs text-gray-600 border-t border-purple-900/40">
                 Cat. = precio de lista en el proveedor · Chk. = total real en
-                checkout · Venta = Chk. × (1 + markup del item) — el precio que ve
-                el comprador en la tienda (USD en LATAM, EUR en Europa). Sin markup
-                propio el item se vende a costo.
+                checkout · Venta = Chk. × (1 + markup del item) por moneda
+                (ARS, USD en LATAM, EUR en Europa). Sin markup propio el item se
+                vende a costo.
                 {scraper
                   ? ` Scraper: ${scraper.description} (corre en esta máquina vía el botón de arriba).`
                   : " Este juego aún no tiene scraper automatizado."}

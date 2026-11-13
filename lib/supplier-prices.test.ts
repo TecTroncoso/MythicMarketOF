@@ -17,10 +17,14 @@ function buildPayload(results: unknown[] = [{}], metadata: unknown = {}) {
 function validRow(overrides: Record<string, unknown> = {}) {
   return {
     Paquete: "78 Diamonds + 8 Bonus",
-    Precio_Catalogo_BRL: "6.65",
+    Precio_Catalogo_ARS: "2090.01",
     Precio_Catalogo_USD: "1.35",
     Precio_Catalogo_EUR: "1.41",
     "Cashback_%": "10",
+    Precio_Checkout_ARS: "2090.01",
+    Cashback_Checkout_ARS: "209.00",
+    // Legacy BRL keys still parse for historical scraper outputs.
+    Precio_Catalogo_BRL: "6.65",
     Precio_Checkout_BRL: "6.65",
     Cashback_Checkout_BRL: "0.67",
     Precio_Checkout_USD: "1.29",
@@ -48,6 +52,9 @@ describe("parseEnebaResultsPayload()", () => {
     expect(parsed.rows[0]).toMatchObject({
       packageName: "Weekly Diamond Pass",
       position: 0,
+      catalogArsCents: 209001,
+      checkoutArsCents: 209001,
+      cashbackArsCents: 20900,
       catalogBrlCents: 665,
       checkoutBrlCents: 665,
       cashbackBrlCents: 67,
@@ -64,6 +71,8 @@ describe("parseEnebaResultsPayload()", () => {
 
   it("maps failed checkouts (empty strings) to null, not NaN", () => {
     const row = validRow({
+      Precio_Checkout_ARS: "",
+      Cashback_Checkout_ARS: "",
       Precio_Checkout_BRL: "",
       Cashback_Checkout_BRL: "",
       "Cashback_%": "",
@@ -71,10 +80,13 @@ describe("parseEnebaResultsPayload()", () => {
 
     const [parsed] = parseEnebaResultsPayload(buildPayload([row])).rows;
 
+    expect(parsed.checkoutArsCents).toBeNull();
+    expect(parsed.cashbackArsCents).toBeNull();
     expect(parsed.checkoutBrlCents).toBeNull();
     expect(parsed.cashbackBrlCents).toBeNull();
     expect(parsed.cashbackPercent).toBeNull();
     // Catalog prices still parse fine.
+    expect(parsed.catalogArsCents).toBe(209001);
     expect(parsed.catalogBrlCents).toBe(665);
   });
 
@@ -92,15 +104,15 @@ describe("parseEnebaResultsPayload()", () => {
     const parsed = parseEnebaResultsPayload(
       buildPayload([validRow()], {
         provider: "ScrapingAnt",
-        checkout_region: "BR",
-        currencies: ["BRL", "USD", 42],
+        checkout_region: "AR",
+        currencies: ["ARS", "USD", 42],
         timestamp_utc: "2026-09-19T06:37:41.654481+00:00",
       })
     );
 
     expect(parsed.provider).toBe("ScrapingAnt");
-    expect(parsed.region).toBe("BR");
-    expect(parsed.currencies).toEqual(["BRL", "USD"]);
+    expect(parsed.region).toBe("AR");
+    expect(parsed.currencies).toEqual(["ARS", "USD"]);
     expect(parsed.scrapedAt.toISOString()).toBe("2026-09-19T06:37:41.654Z");
   });
 

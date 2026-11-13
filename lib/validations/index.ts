@@ -46,6 +46,10 @@ export const PricingSettingsSchema = z.object({
     .number()
     .min(0, "El markup no puede ser negativo.")
     .max(1, "El markup no puede superar el 100%."),
+  markupArs: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
 });
 export type PricingSettingsInput = z.infer<typeof PricingSettingsSchema>;
 
@@ -80,6 +84,10 @@ export const ItemMarkupSchema = z.object({
     .min(0, "El markup no puede ser negativo.")
     .max(1, "El markup no puede superar el 100%."),
   markupEur: z
+    .number()
+    .min(0, "El markup no puede ser negativo.")
+    .max(1, "El markup no puede superar el 100%."),
+  markupArs: z
     .number()
     .min(0, "El markup no puede ser negativo.")
     .max(1, "El markup no puede superar el 100%."),

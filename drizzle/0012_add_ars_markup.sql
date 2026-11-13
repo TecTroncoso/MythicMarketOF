@@ -1,0 +1,1 @@
+ALTER TABLE `item_markups` ADD `markupArs` real DEFAULT 0 NOT NULL;

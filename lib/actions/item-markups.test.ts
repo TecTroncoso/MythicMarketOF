@@ -34,7 +34,7 @@ describe("saveItemMarkup()", () => {
   it("rejects non-admins", async () => {
     mockAuth.mockResolvedValueOnce({ user: { id: "u1", role: "user" } });
     const result = await saveItemMarkup({
-      game: "mlbb", itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.03,
+      game: "mlbb", itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.03, markupArs: 0.03,
     });
     expect(result).toEqual({ success: false, error: "No autorizado." });
     expect(mockInsert).not.toHaveBeenCalled();
@@ -42,7 +42,7 @@ describe("saveItemMarkup()", () => {
 
   it("rejects invalid values", async () => {
     const result = await saveItemMarkup({
-      game: "mlbb", itemKey: "p", markupUsd: 2, markupEur: 0.05,
+      game: "mlbb", itemKey: "p", markupUsd: 2, markupEur: 0.05, markupArs: 0.05,
     });
     expect(result).toEqual({ success: false, error: "El markup no puede superar el 100%." });
     expect(mockInsert).not.toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe("saveItemMarkup()", () => {
 
   it("upserts the override keyed by (game, itemKey) and revalidates", async () => {
     const result = await saveItemMarkup({
-      game: "mlbb", itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.07,
+      game: "mlbb", itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.07, markupArs: 0.09,
     });
     expect(result).toEqual({ success: true });
 
@@ -60,12 +60,13 @@ describe("saveItemMarkup()", () => {
         itemKey: "78-diamonds-8-bonus",
         markupUsd: 0.03,
         markupEur: 0.07,
+        markupArs: 0.09,
         updatedBy: "admin@x.com",
       })
     );
     expect(mockOnConflictDoUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
-        set: expect.objectContaining({ markupUsd: 0.03, markupEur: 0.07 }),
+        set: expect.objectContaining({ markupUsd: 0.03, markupEur: 0.07, markupArs: 0.09 }),
       })
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/admin/precios/mlbb");
@@ -77,7 +78,7 @@ describe("saveItemMarkup()", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockOnConflictDoUpdate.mockRejectedValueOnce(new Error("no such table"));
     const result = await saveItemMarkup({
-      game: "mlbb", itemKey: "p", markupUsd: 0.05, markupEur: 0.05,
+      game: "mlbb", itemKey: "p", markupUsd: 0.05, markupEur: 0.05, markupArs: 0.05,
     });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error).toContain("db:push");

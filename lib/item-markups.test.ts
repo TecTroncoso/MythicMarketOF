@@ -22,12 +22,16 @@ afterEach(() => {
 describe("getItemMarkups()", () => {
   it("keyes overrides by itemKey", async () => {
     mockWhere.mockResolvedValueOnce([
-      { itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.04 },
-      { itemKey: "combo-abc", markupUsd: 0.1, markupEur: 0.1 },
+      { itemKey: "78-diamonds-8-bonus", markupUsd: 0.03, markupEur: 0.04, markupArs: 0.05 },
+      { itemKey: "combo-abc", markupUsd: 0.1, markupEur: 0.1, markupArs: 0.08 },
     ]);
     const map = await getItemMarkups("mlbb");
-    expect(map.get("78-diamonds-8-bonus")).toEqual({ markupUsd: 0.03, markupEur: 0.04 });
-    expect(map.get("combo-abc")).toEqual({ markupUsd: 0.1, markupEur: 0.1 });
+    expect(map.get("78-diamonds-8-bonus")).toEqual({
+      markupUsd: 0.03,
+      markupEur: 0.04,
+      markupArs: 0.05,
+    });
+    expect(map.get("combo-abc")).toEqual({ markupUsd: 0.1, markupEur: 0.1, markupArs: 0.08 });
     expect(map.size).toBe(2);
   });
 
@@ -42,12 +46,16 @@ describe("getItemMarkups()", () => {
 
 describe("itemMarkupFor()", () => {
   it("returns the item's own markup when present", () => {
-    const map = new Map([["p1", { markupUsd: 0.02, markupEur: 0.09 }]]);
-    expect(itemMarkupFor("p1", map)).toEqual({ markupUsd: 0.02, markupEur: 0.09 });
+    const map = new Map([["p1", { markupUsd: 0.02, markupEur: 0.09, markupArs: 0.07 }]]);
+    expect(itemMarkupFor("p1", map)).toEqual({
+      markupUsd: 0.02,
+      markupEur: 0.09,
+      markupArs: 0.07,
+    });
   });
 
   it("falls back to ZERO (sell at cost) when the item has no markup", () => {
-    expect(itemMarkupFor("p1", new Map())).toEqual({ markupUsd: 0, markupEur: 0 });
-    expect(itemMarkupFor("p1", undefined)).toEqual({ markupUsd: 0, markupEur: 0 });
+    expect(itemMarkupFor("p1", new Map())).toEqual({ markupUsd: 0, markupEur: 0, markupArs: 0 });
+    expect(itemMarkupFor("p1", undefined)).toEqual({ markupUsd: 0, markupEur: 0, markupArs: 0 });
   });
 });

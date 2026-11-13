@@ -38,8 +38,10 @@ vi.mock("@/lib/supplier-prices", () => ({ getLatestSupplierSnapshot: mockGetLate
 vi.mock("@/lib/store-combos", () => ({ getStoreCombos: mockGetCombos }));
 vi.mock("@/lib/item-markups", () => ({
   getItemMarkups: mockGetMarkups,
-  itemMarkupFor: (key: string, m?: Map<string, { markupUsd: number; markupEur: number }>) =>
-    m?.get(key) ?? { markupUsd: 0, markupEur: 0 },
+  itemMarkupFor: (
+    key: string,
+    m?: Map<string, { markupUsd: number; markupEur: number; markupArs: number }>
+  ) => m?.get(key) ?? { markupUsd: 0, markupEur: 0, markupArs: 0 },
 }));
 
 const { getStoreProducts, invalidateStoreCatalog } = await import("@/lib/store-catalog");
@@ -52,6 +54,9 @@ const SNAPSHOT = {
       snapshotId: "s1",
       packageName: "78 Diamonds + 8 Bonus",
       position: 0,
+      catalogArsCents: null,
+      checkoutArsCents: null,
+      cashbackArsCents: null,
       catalogBrlCents: null,
       checkoutBrlCents: null,
       cashbackBrlCents: null,

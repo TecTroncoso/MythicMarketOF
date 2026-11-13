@@ -19,6 +19,10 @@ const DEFAULT_GAME = "mlbb";
 export interface ParsedSupplierRow {
   packageName: string;
   position: number;
+  catalogArsCents: number | null;
+  checkoutArsCents: number | null;
+  cashbackArsCents: number | null;
+  // Legacy BRL columns, kept for snapshots created before the ARS switch.
   catalogBrlCents: number | null;
   checkoutBrlCents: number | null;
   cashbackBrlCents: number | null;
@@ -99,6 +103,9 @@ export function parseEnebaResultsPayload(raw: unknown): ParsedSupplierSnapshot {
     const row: ParsedSupplierRow = {
       packageName,
       position: rows.length,
+      catalogArsCents: toCents(record["Precio_Catalogo_ARS"]),
+      checkoutArsCents: toCents(record["Precio_Checkout_ARS"]),
+      cashbackArsCents: toCents(record["Cashback_Checkout_ARS"]),
       catalogBrlCents: toCents(record["Precio_Catalogo_BRL"]),
       checkoutBrlCents: toCents(record["Precio_Checkout_BRL"]),
       cashbackBrlCents: toCents(record["Cashback_Checkout_BRL"]),
@@ -112,6 +119,8 @@ export function parseEnebaResultsPayload(raw: unknown): ParsedSupplierSnapshot {
     };
 
     const hasAnyPrice = [
+      row.catalogArsCents,
+      row.checkoutArsCents,
       row.catalogBrlCents,
       row.checkoutBrlCents,
       row.catalogUsdCents,

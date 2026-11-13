@@ -55,7 +55,7 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | Área | Detalle |
 |---|---|
 | 🛒 **Catálogo vivo** | El grid "Select Top-Up" se alimenta del **último snapshot del proveedor** (Eneba) con markups por item; sin snapshot cae al catálogo estático sin romperse. El cliente jamás envía precios. |
-| 🏷️ **Markup por item** | Cada paquete y cada combo define su USD (LATAM) y EUR (Europa) en `/admin/precios/mlbb`. Sin markup → vende a costo y el panel lo marca "SIN MARKUP". |
+| 🏷️ **Markup por item** | Cada paquete y cada combo define su USD (LATAM), EUR (Europa) y ARS (Argentina) en `/admin/precios/mlbb`. Sin markup → vende a costo y el panel lo marca "SIN MARKUP". |
 | 🧩 **Combos** | El admin combina paquetes con cantidades (ej. `3x Weekly Diamond Pass`); el coste se resuelve en vivo contra el último snapshot. |
 | 🌎 **Checkout regional** | País detectado vía headers del edge → región **EU (€)** o **LATAM (US$)**; la moneda la decide el servidor, nunca el cliente. |
 | 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM), con validación regex por método en cliente y servidor. |
@@ -92,9 +92,9 @@ El corazón del negocio. Tres fuentes componen el catálogo que ve el comprador:
 
 ```
 scrapers/eneba_mlbb.py ──► supplier_price_snapshots ─┐
-   (Eneba: Cat/Chk en BRL/USD/EUR)                   ├─► lib/store-catalog.ts ──► /topup/mlbb
+   (Eneba: Cat/Chk en ARS/USD/EUR)                   ├─► lib/store-catalog.ts ──► /topup/mlbb
 store_combos (admin: sumas con cantidades) ──────────┤        ▲
-item_markups (admin: % USD y EUR por item) ──────────┘   precio autoritativo
+item_markups (admin: % USD, EUR y ARS por item) ─────┘   precio autoritativo
                                                   en el servidor (checkout)
 ```
 
@@ -159,7 +159,7 @@ Ruta protegida en tres niveles (`role = "admin"`):
 
 - `/admin` — órdenes con stats agregadas, filtros sanitizados, cambio de estado (`pending` → `paid`/`cancelled`).
 - `/admin/precios` — catálogo de juegos con fecha del último scrape.
-- `/admin/precios/mlbb` — tabla Cat/Chk BRL/USD/EUR del proveedor, columna **Venta**, editor de **markup por item**, gestión de **combos** y botón **"Actualizar precios"**.
+- `/admin/precios/mlbb` — tabla Cat/Chk ARS/USD/EUR del proveedor, columna **Venta**, editor de **markup por item**, gestión de **combos** y botón **"Actualizar precios"**.
 
 Para promover un admin: `npm run set-admin -- usuario@email.com`.
 
@@ -229,7 +229,7 @@ lib/
 scrapers/                       # Python + output/ (JSON del último scrape, ignorado por git)
 scripts/                        # set-admin.ts · import-eneba-prices.ts
 .github/workflows/              # scrape-prices.yml
-drizzle/                        # Migraciones SQL versionadas (0000–0010)
+drizzle/                        # Migraciones SQL versionadas (0000–0012)
 ```
 
 ## 🔑 Variables de entorno

@@ -30,7 +30,7 @@ export async function saveItemMarkup(
     return { success: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
   }
 
-  const { game, itemKey, markupUsd, markupEur } = parsed.data;
+  const { game, itemKey, markupUsd, markupEur, markupArs } = parsed.data;
 
   try {
     await db
@@ -40,6 +40,7 @@ export async function saveItemMarkup(
         itemKey,
         markupUsd,
         markupEur,
+        markupArs,
         updatedAt: new Date(),
         updatedBy: session.user.email ?? session.user.id ?? null,
       })
@@ -48,6 +49,7 @@ export async function saveItemMarkup(
         set: {
           markupUsd,
           markupEur,
+          markupArs,
           updatedAt: new Date(),
           updatedBy: session.user.email ?? session.user.id ?? null,
         },

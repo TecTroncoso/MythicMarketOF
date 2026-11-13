@@ -117,7 +117,7 @@ export const supplierPriceSnapshots = sqliteTable("supplier_price_snapshots", {
   source: text("source").notNull().default("eneba"),
   provider: text("provider"),
   region: text("region"),
-  // JSON array of currency codes, e.g. ["BRL","USD","EUR"]
+  // JSON array of currency codes, e.g. ["ARS","USD","EUR"]
   currencies: text("currencies").notNull(),
   totalPackages: integer("totalPackages").notNull(),
 }, (table) => [
@@ -137,6 +137,11 @@ export const supplierPriceRows = sqliteTable("supplier_price_rows", {
   packageName: text("packageName").notNull(),
   // Stable order within the snapshot (scraper emits packages by ascending price)
   position: integer("position").notNull(),
+  catalogArsCents: integer("catalogArsCents"),
+  checkoutArsCents: integer("checkoutArsCents"),
+  cashbackArsCents: integer("cashbackArsCents"),
+  // Legacy BRL quotes from the old Brazil-context scraper. Kept so historical
+  // snapshots stay auditable; new scrapes populate the ARS columns above.
   catalogBrlCents: integer("catalogBrlCents"),
   checkoutBrlCents: integer("checkoutBrlCents"),
   cashbackBrlCents: integer("cashbackBrlCents"),
@@ -183,8 +188,8 @@ export type StoreCombo = typeof storeCombos.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Per-item retail markups: THE source of margin. Each sellable item carries
-// its own USD/EUR markup, so a cheap package and an expensive one never share
-// a flat percentage. Items without a row sell at supplier cost (0%). The
+// its own USD/EUR/ARS markup, so a cheap package and an expensive one never
+// share a flat percentage. Items without a row sell at supplier cost (0%). The
 // itemKey is the storefront product id (package slug like
 // "78-diamonds-8-bonus" or "combo-<uuid>" for combos) — the same id stored
 // on orders.productId.
@@ -200,6 +205,9 @@ export const itemMarkups = sqliteTable(
     itemKey: text("itemKey").notNull(),
     markupUsd: real("markupUsd").notNull(),
     markupEur: real("markupEur").notNull(),
+    // Existing rows default to 0 when the column is added; new writes always
+    // send an explicit value.
+    markupArs: real("markupArs").notNull().default(0),
     updatedAt: integer("updatedAt", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),

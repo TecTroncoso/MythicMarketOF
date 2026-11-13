@@ -27,11 +27,11 @@ const ROWS: SupplierCostRow[] = [
 // No game-level default markup anymore: items without an explicit override
 // sell AT COST. The 5% used across these fixtures is an item override map.
 const PER_ITEM_5 = new Map([
-  ["78-diamonds-8-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
-  ["weekly-diamond-pass", { markupUsd: 0.05, markupEur: 0.05 }],
-  ["156-diamonds-16-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
-  ["twilight-pass", { markupUsd: 0.05, markupEur: 0.05 }],
-  ["7740-diamonds-1548-bonus", { markupUsd: 0.05, markupEur: 0.05 }],
+  ["78-diamonds-8-bonus", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }],
+  ["weekly-diamond-pass", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }],
+  ["156-diamonds-16-bonus", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }],
+  ["twilight-pass", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }],
+  ["7740-diamonds-1548-bonus", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }],
 ]);
 
 describe("applyMarkupCents()", () => {
@@ -99,7 +99,7 @@ describe("buildStoreProducts()", () => {
   it("applies a per-item markup override only to that package", () => {
     // "78 Diamonds": 2% USD / 10% EUR for this package only.
     const overrides = new Map([
-      ["78-diamonds-8-bonus", { markupUsd: 0.02, markupEur: 0.1 }],
+      ["78-diamonds-8-bonus", { markupUsd: 0.02, markupEur: 0.1, markupArs: 0 }],
     ]);
     const withOverrides = buildStoreProducts(ROWS, overrides);
     const tuned = withOverrides.find((p) => p.id === "78-diamonds-8-bonus");
@@ -151,7 +151,7 @@ describe("buildComboProducts()", () => {
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly Diamond Pass")],
-      new Map([["combo-abc123", { markupUsd: 0.05, markupEur: 0.05 }]])
+      new Map([["combo-abc123", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }]])
     );
     expect(combo).toMatchObject({
       id: "combo-abc123",
@@ -212,7 +212,7 @@ describe("buildComboProducts()", () => {
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly")],
-      new Map([["combo-abc123", { markupUsd: 0.1, markupEur: 0.1 }]])
+      new Map([["combo-abc123", { markupUsd: 0.1, markupEur: 0.1, markupArs: 0 }]])
     );
     expect(combo.priceUsdCents).toBe(545); // 495 * 1.10 = 544.5 -> 545
     expect(combo.priceEurCents).toBe(475); // 432 * 1.10 = 475.2 -> 475

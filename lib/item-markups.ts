@@ -1,5 +1,5 @@
 // Per-item retail markups (server-side). THE source of margin: every sellable
-// item carries its own USD/EUR markup, so cheap and expensive packages never
+// item carries its own USD/EUR/ARS markup, so cheap and expensive packages never
 // share one flat percentage. The key is the storefront product id: the
 // package slug ("78-diamonds-8-bonus") for supplier rows, or "combo-<uuid>"
 // for admin combos — the same id that lands on orders.productId.
@@ -26,7 +26,11 @@ export async function getItemMarkups(game: string): Promise<ItemMarkupMap> {
     return new Map(
       rows.map((row) => [
         row.itemKey,
-        { markupUsd: row.markupUsd, markupEur: row.markupEur },
+        {
+          markupUsd: row.markupUsd,
+          markupEur: row.markupEur,
+          markupArs: row.markupArs,
+        },
       ])
     );
   } catch (error) {

@@ -5,6 +5,7 @@
 export interface GamePricingSettings {
   markupUsd: number;
   markupEur: number;
+  markupArs: number;
 }
 
 // There is NO game-level default anymore: every sellable item carries its own
@@ -13,6 +14,7 @@ export interface GamePricingSettings {
 export const ZERO_MARKUP: GamePricingSettings = {
   markupUsd: 0,
   markupEur: 0,
+  markupArs: 0,
 };
 
 /**

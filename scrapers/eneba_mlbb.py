@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Eneba ML Diamonds Scraper - Checkout Multi-Moneda (BRL, USD, EUR) vía ScrapingAnt
+Eneba ML Diamonds Scraper - Checkout Multi-Moneda (ARS, USD, EUR) vía ScrapingAnt (proxy BR)
 - Catálogo (Cat): Precio de lista íntegro (sin restar cashback).
 - Checkout (Chk): Total real cobrado en carrito (sin restar cashback).
 - Cashback (%): Dato informativo de recompensa en cuenta.
@@ -69,8 +69,8 @@ ENEBA_USER_ID = _require_env("ENEBA_USER_ID")   # Tu User ID de ML (ej: "1234567
 ENEBA_ZONE_ID = _require_env("ENEBA_ZONE_ID")   # Tu Zone ID de ML (ej: "1234")
 SIMULATE_CHECKOUT = True
 
-# 3. Monedas a procesar
-CURRENCIES = ["BRL", "USD", "EUR"]
+# 3. Monedas a procesar (ARS = precio de Argentina, consultado desde Brasil)
+CURRENCIES = ["ARS", "USD", "EUR"]
 
 # 4. Ajustes de ejecución
 CHECKOUT_LIMIT = 0                       # 0 = todos los paquetes
@@ -428,7 +428,7 @@ def main() -> int:
     log.info("\n" + "=" * 110)
     header = (
         f"{'Paquete':<28} | "
-        f"{'R$ Cat':>7} | {'R$ Chk':>7} | "
+        f"{'AR$ Cat':>7} | {'AR$ Chk':>7} | "
         f"{'$ Cat':>6} | {'$ Chk':>6} | "
         f"{'€ Cat':>6} | {'€ Chk':>6} | "
         f"{'CB %':>5}"
@@ -437,8 +437,8 @@ def main() -> int:
     log.info("-" * 110)
 
     for r in results:
-        p_brl_cat = r.get("Precio_Catalogo_BRL") or "-"
-        p_brl_chk = r.get("Precio_Checkout_BRL") or "-"
+        p_ars_cat = r.get("Precio_Catalogo_ARS") or "-"
+        p_ars_chk = r.get("Precio_Checkout_ARS") or "-"
         p_usd_cat = r.get("Precio_Catalogo_USD") or "-"
         p_usd_chk = r.get("Precio_Checkout_USD") or "-"
         p_eur_cat = r.get("Precio_Catalogo_EUR") or "-"
@@ -447,7 +447,7 @@ def main() -> int:
 
         line = (
             f"{r['Paquete'][:28]:<28} | "
-            f"{p_brl_cat:>7} | {p_brl_chk:>7} | "
+            f"{p_ars_cat:>7} | {p_ars_chk:>7} | "
             f"{p_usd_cat:>6} | {p_usd_chk:>6} | "
             f"{p_eur_cat:>6} | {p_eur_chk:>6} | "
             f"{cb:>5}"
