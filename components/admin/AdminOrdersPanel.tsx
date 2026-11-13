@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { PRODUCTS } from '@/lib/catalog';
 import { formatAmount, ORDER_STATUS_LABELS } from '@/lib/orders';
-import { PAYMENT_METHOD_LABELS, buildComprobanteUrl } from '@/lib/payments';
+import { PAYMENT_METHOD_LABELS, buildComprobanteUrl, type Currency } from '@/lib/payments';
 import { searchAdminOrders, setOrderStatus, deleteOrder } from '@/lib/actions/admin';
 import type { AdminOrderFilters, AdminOrderRow, AdminStats } from '@/lib/admin-orders';
 
@@ -221,7 +221,7 @@ export function AdminOrdersPanel({
         orderNumber: order.orderNumber,
         productName: order.productName,
         amountCents: order.amountCents,
-        currency: order.currency as "EUR" | "USD",
+        currency: order.currency as Currency,
         mlbbUserId: order.mlbbUserId,
         zoneId: order.zoneId,
         buyerPhone: withDetail.paymentDetail ?? "",
@@ -249,7 +249,7 @@ export function AdminOrdersPanel({
           delta={<PercentDelta today={stats.today.totalCount} yesterday={stats.yesterday.totalCount} />}
         />
         <StatCard
-          label="Monto total"
+          label="Monto total (USD)"
           value={formatAmount(stats.totalAmountCents, "USD")}
           icon={CircleDollarSign}
           iconClass="border-fuchsia-500/50 text-fuchsia-400"

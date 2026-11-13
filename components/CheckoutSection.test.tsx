@@ -55,14 +55,14 @@ vi.mock("@/lib/actions/checkout", () => ({
       },
     ],
     products: [
-      { id: "1", name: "78 Diamonds", bonus: "8 Diamonds", image: "/products/diamantes.png", category: "diamonds", price: 1.49 },
-      { id: "2", name: "156 Diamonds", bonus: "16 Diamonds", image: "/products/baul.png", category: "diamonds", price: 2.99 },
-      { id: "3", name: "234 Diamonds", bonus: "23 Diamonds", image: "/products/baul1.png", category: "diamonds", price: 4.49 },
-      { id: "4", name: "390 Diamonds", bonus: "39 Diamonds", image: "/products/baul2.png", category: "diamonds", price: 7.49 },
-      { id: "5", name: "625 Diamonds", bonus: "81 Diamonds", image: "/products/baul3.png", category: "diamonds", price: 11.99 },
-      { id: "6", name: "2195 Diamonds", bonus: "305 Diamonds", image: "/products/baul5.png", category: "diamonds", price: 34.99 },
-      { id: "7", name: "Twilight Pass", bonus: "", image: "/products/pass5.png", category: "twilight-pass", price: 9.99 },
-      { id: "8", name: "Weekly Diamond Pass", bonus: "Save 60%", image: "/products/pass1.png", category: "weekly-pass", price: 1.99 },
+      { id: "1", name: "78 Diamonds", bonus: "8 Diamonds", image: "/products/diamantes.png", category: "diamonds", prices: { eu: 1.49, latam: 1.49, ar: 2309.5 } },
+      { id: "2", name: "156 Diamonds", bonus: "16 Diamonds", image: "/products/baul.png", category: "diamonds", prices: { eu: 2.99, latam: 2.99, ar: 4634.5 } },
+      { id: "3", name: "234 Diamonds", bonus: "23 Diamonds", image: "/products/baul1.png", category: "diamonds", prices: { eu: 4.49, latam: 4.49, ar: 6959.5 } },
+      { id: "4", name: "390 Diamonds", bonus: "39 Diamonds", image: "/products/baul2.png", category: "diamonds", prices: { eu: 7.49, latam: 7.49, ar: 11609.5 } },
+      { id: "5", name: "625 Diamonds", bonus: "81 Diamonds", image: "/products/baul3.png", category: "diamonds", prices: { eu: 11.99, latam: 11.99, ar: 18584.5 } },
+      { id: "6", name: "2195 Diamonds", bonus: "305 Diamonds", image: "/products/baul5.png", category: "diamonds", prices: { eu: 34.99, latam: 34.99, ar: 54234.5 } },
+      { id: "7", name: "Twilight Pass", bonus: "", image: "/products/pass5.png", category: "twilight-pass", prices: { eu: 9.99, latam: 9.99, ar: 15484.5 } },
+      { id: "8", name: "Weekly Diamond Pass", bonus: "Save 60%", image: "/products/pass1.png", category: "weekly-pass", prices: { eu: 1.99, latam: 1.99, ar: 3084.5 } },
     ],
   })),
 }));
@@ -428,6 +428,45 @@ describe("CheckoutSection payment modal flow", () => {
     expect(alertSpy).not.toHaveBeenCalled();
     alertSpy.mockRestore();
     openSpy.mockRestore();
+  });
+
+  it("submits Argentina as the payment region and shows the ARS price", async () => {
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+    stubLocation();
+
+    vi.mocked(processCheckout).mockResolvedValueOnce({
+      success: true,
+      message: "¡Pedido confirmado! Te enviamos el link de pago a tu email de Mercado Pago.",
+      orderNumber: "MM-TEST1234",
+      redirectUrl: "/dashboard",
+      buyerName: "Test User",
+    });
+
+    render(<CheckoutSection isLoggedIn={true} />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText(/156 Diamonds/));
+    fireEvent.change(userIdInput(), { target: { value: "12345678" } });
+    fireEvent.change(zoneIdInput(), { target: { value: "10012" } });
+    fireEvent.click(screen.getByRole("button", { name: /Buy now/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Argentina \(AR\$\)/i }));
+    // Flush the microtask that resets the payment selection on region change.
+    await act(async () => {});
+    // The grid re-prices in pesos right away (2.99 USD -> 4634.50 ARS).
+    // Regex matcher: the currency format uses a non-breaking space.
+    expect(screen.getAllByText(/4\.634,50/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Mercado Pago/ }));
+    fireEvent.change(screen.getByPlaceholderText("tucorreo@ejemplo.com"), {
+      target: { value: "compra@ejemplo.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Confirmar pago/i }));
+
+    await act(async () => {});
+
+    const formData = vi.mocked(processCheckout).mock.calls[0][0];
+    expect(formData.get("paymentRegion")).toBe("ar");
+    expect(formData.get("paymentMethod")).toBe("mercadopago");
+    alertSpy.mockRestore();
   });
 
   it("opens the Bizum receipt wa.me link on a successful bizum checkout", async () => {

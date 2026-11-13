@@ -13,7 +13,7 @@ Top-up de *Mobile Legends* con verificación de jugador en tiempo real, precios 
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind v4](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-[![Tests 298](https://img.shields.io/badge/tests-298%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
+[![Tests 310](https://img.shields.io/badge/tests-310%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/Turso-LibSQL-4EBBB7?style=for-the-badge&logo=turso&logoColor=white)](https://turso.tech/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
 [![NextAuth v5](https://img.shields.io/badge/NextAuth-v5-7B16D0?style=for-the-badge)](https://authjs.dev/)
@@ -57,8 +57,8 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | 🛒 **Catálogo vivo** | El grid "Select Top-Up" se alimenta del **último snapshot del proveedor** (Eneba) con markups por item; sin snapshot cae al catálogo estático sin romperse. El cliente jamás envía precios. |
 | 🏷️ **Markup por item** | Cada paquete y cada combo define su USD (LATAM), EUR (Europa) y ARS (Argentina) en `/admin/precios/mlbb`. Sin markup → vende a costo y el panel lo marca "SIN MARKUP". |
 | 🧩 **Combos** | El admin combina paquetes con cantidades (ej. `3x Weekly Diamond Pass`); el coste se resuelve en vivo contra el último snapshot. |
-| 🌎 **Checkout regional** | País detectado vía headers del edge → región **EU (€)** o **LATAM (US$)**; la moneda la decide el servidor, nunca el cliente. |
-| 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM), con validación regex por método en cliente y servidor. |
+| 🌎 **Checkout regional** | País detectado vía headers del edge → región **EU (€)**, **LATAM (US$)** o **Argentina (AR$)**; la moneda la decide el servidor, nunca el cliente. Un comprador argentino ve los precios en pesos desde el primer render. |
+| 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM/AR), con validación regex por método en cliente y servidor. |
 | 🔍 **Verificación MLBB en vivo** | Nickname y país antes de pagar; 3 upstreams en paralelo con `Promise.any`, timeout 12 s y caché 24 h / 5 min. |
 | 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro y login. |
 | 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario (Upstash Redis si se configura; sin ese servicio el límite es por instancia en memoria — ver nota de seguridad). |
@@ -100,10 +100,10 @@ item_markups (admin: % USD, EUR y ARS por item) ─────┘   precio auto
 
 | Regla | Detalle |
 |---|---|
-| Paquete del proveedor | `venta = checkoutProveedor × (1 + markupDelItem)` por moneda. |
+| Paquete del proveedor | `venta = checkoutProveedor × (1 + markupDelItem)` por moneda (USD · EUR · ARS). |
 | Combo | `venta = Σ(checkout × cantidad) × (1 + markupDelCombo)` — los markups de los componentes **no** se heredan. |
 | Item sin markup | Vende **a costo** (0%) y el panel lo marca en rojo "SIN MARKUP". |
-| Moneda faltante | Un paquete sin checkout EUR no se muestra a compradores EU (en vez de cobrar con la moneda equivocada). |
+| Moneda faltante | Un paquete sin checkout EUR/ARS no se muestra a compradores EU/AR (en vez de cobrar con la moneda equivocada). |
 | Snapshot nuevo | Los precios se revalúan solos: costos y combos siguen el último scrape. |
 
 Dashboard: [localhost:3000/dashboard](http://localhost:3000/dashboard) muestra al comprador sus órdenes `pending` con factura descargable.
@@ -114,8 +114,17 @@ Dashboard: [localhost:3000/dashboard](http://localhost:3000/dashboard) muestra a
 |---|---|---|
 | 🇪🇺 Europa | EUR € | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut |
 | 🌎 LATAM | USD $ | Mercado Pago · PayPal · Pix · Binance USDT |
+| 🇦🇷 Argentina | ARS $ | Mercado Pago · Tarjeta · PayPal · Binance USDT (sin Pix) |
 
 Región auto-detectada (`x-vercel-ip-country` / `cf-ipcountry`), sobrescribible en el modal. Cada método exige su campo (email, IBAN, teléfono, clave Pix…) con regex validada en ambos lados. Al confirmar, la orden queda `pending` con instrucciones de pago + comprobante WhatsApp pre-armado (`wa.me`) + factura PDF.
+
+### 🇦🇷 Argentina en pesos (ARS)
+
+- **Detección por IP**: `countryToRegion("AR")` devuelve la región `ar` **antes** de evaluar LATAM, así que un cliente argentino nunca cae en USD. La IP se lee de los headers del edge (`x-vercel-ip-country` en Vercel, `cf-ipcountry` en Cloudflare); si no hay header, la región por defecto sigue siendo LATAM.
+- **Precios en ARS de punta a punta**: el grid, el resumen y el checkout usan `priceArsCents` del snapshot del proveedor (`checkoutArsCents × (1 + markupArs)`). El contexto del servidor devuelve el precio de **las tres regiones** por producto, así que cambiar de región en el modal re-precia al instante, sin refetch y sin refetch de la página.
+- **Fallback**: sin snapshot (o sin precio ARS) se usa el catálogo estático con una tasa fija simulada (`USD_ARS_RATE = 1550`); con snapshot, manda el precio real del scraper.
+- **Formato local**: los importes se muestran con `Intl.NumberFormat("es-AR")` (`$ 4.634,50`), en el grid, el resumen, la factura PDF y el comprobante de WhatsApp.
+- **Stats del admin**: "Monto total" suma órdenes de EUR/ARS/USD mezcladas, por eso el agregado normaliza cada importe a USD (tasa EUR→USD y USD→ARS fijas) antes de sumar.
 
 > [!NOTE]
 > El cobro real está pendiente de integración (Stripe / PayPal API / Mercado Pago). Los puntos de extensión están marcados en `lib/actions/checkout.ts`.
@@ -157,7 +166,7 @@ Si los tres fallan → fallo suave `LOOKUP_FAILED` y la compra sigue habilitada.
 
 Ruta protegida en tres niveles (`role = "admin"`):
 
-- `/admin` — órdenes con stats agregadas, filtros sanitizados, cambio de estado (`pending` → `paid`/`cancelled`).
+- `/admin` — órdenes con stats agregadas (normalizadas a USD para mezclar monedas), filtros sanitizados, cambio de estado (`pending` → `paid`/`cancelled`).
 - `/admin/precios` — catálogo de juegos con fecha del último scrape.
 - `/admin/precios/mlbb` — tabla Cat/Chk ARS/USD/EUR del proveedor, columna **Venta**, editor de **markup por item**, gestión de **combos** y botón **"Actualizar precios"**.
 
@@ -210,12 +219,12 @@ components/
 
 lib/
 ├── actions/                    # Server Actions: auth · checkout · admin · search · combos · item-markups
-├── store-catalog.ts            # Catálogo live (Data Cache 60s): snapshot + combos + markups → productos
+├── store-catalog.ts            # Catálogo live (Data Cache 60s): snapshot + combos + markups → productos (USD/EUR/ARS)
 ├── item-markups.ts             # Markup por item (tabla item_markups; 0% si falta)
 ├── store-combos.ts             # Combos del admin (tabla store_combos)
 ├── markup.ts                   # Primitivas de markup PURAS (seguro en cliente)
 ├── catalog.ts                  # Catálogo estático de respaldo
-├── payments.ts                 # Regiones, métodos, validaciones, conversión
+├── payments.ts                 # Regiones (EU/LATAM/AR), métodos, validaciones, conversión
 ├── mlbb/client.ts              # Único punto que conoce los 3 upstreams
 ├── supplier-games.ts           # Registro de juegos con tracking
 ├── scrapers.ts / scrape-jobs.ts# Registro y runner del scraper (local · GitHub Actions)
@@ -251,14 +260,14 @@ drizzle/                        # Migraciones SQL versionadas (0000–0012)
 
 ## 🧪 Testing
 
-**298 tests · 28 archivos · todos en verde.**
+**310 tests · 28 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|
-| Lógica pura | Pagos, catálogo, store-catalog (combo/markup/overrides), parser del scraper, horarios, order-number, caché, rate-limit, IP |
-| Server Actions | auth · checkout · admin · search · combos · item-markups |
+| Lógica pura | Pagos (regiones EU/LATAM/AR, conversión ARS), catálogo, store-catalog (combo/markup/overrides ARS), parser del scraper, horarios, order-number, caché, rate-limit, IP |
+| Server Actions | auth · checkout (contexto por región + orden ARS) · admin · search · combos · item-markups |
 | Route handlers | `/api/mlbb/lookup` · `/api/orders/[id]/invoice` |
-| Componentes | `CheckoutSection` · `WhatsAppWidget` (happy-dom opt-in) |
+| Componentes | `CheckoutSection` (incluye cambio de región a Argentina) · `WhatsAppWidget` (happy-dom opt-in) |
 
 ```bash
 npm run test            # watch

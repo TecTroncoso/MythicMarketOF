@@ -4,10 +4,11 @@
 // sanitizeAdminFilters(), and getAdminOrders re-validates every guard so
 // callers can never inject invalid SQL fragments.
 
-import { and, count, desc, eq, gte, like, lte, or, sql, sum, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, gte, like, lte, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { orders, users } from "@/lib/db/schema";
 import { getProductById } from "@/lib/catalog";
+import { EUR_USD_RATE, USD_ARS_RATE } from "@/lib/payments";
 
 const ADMIN_ORDER_STATUSES = ["pending", "paid", "cancelled"] as const;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -154,11 +155,25 @@ export async function getAdminOrders(filters: AdminOrderFilters): Promise<{
 // sole condition that references users.email). Joining on every keystroke when
 // nobody searches is pure overhead on the three queries that run per filter
 // change, so the join is applied conditionally.
+/**
+ * Normalizes an order amount to USD cents. The store charges in USD, EUR or
+ * ARS, so the raw `amountCents` values are NOT comparable between orders:
+ * summing them as-is would inflate the totals (1 ARS cent is worth far less
+ * than 1 USD cent). Every aggregate below converts first and reports USD.
+ */
+function usdAmountCase(): SQL {
+  return sql`case
+    when ${orders.currency} = 'EUR' then ${orders.amountCents} / ${EUR_USD_RATE}
+    when ${orders.currency} = 'ARS' then ${orders.amountCents} / ${USD_ARS_RATE}
+    else ${orders.amountCents}
+  end`;
+}
+
 const STATS_SELECTION = {
   totalCount: count(),
   // Drizzle types sqlite sum() as string | null; SQLite returns a number
   // for integer columns, so coerce defensively.
-  totalAmount: sum(orders.amountCents),
+  totalAmount: sql<number>`coalesce(sum(${usdAmountCase()}), 0)`,
   pendingCount: sql<number>`count(*) filter (where ${eq(orders.status, "pending")})`,
   paidCount: sql<number>`count(*) filter (where ${eq(orders.status, "paid")})`,
   cancelledCount: sql<number>`count(*) filter (where ${eq(orders.status, "cancelled")})`,
@@ -167,8 +182,8 @@ const STATS_SELECTION = {
 const DAY_SELECTION = {
   todayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()})`,
   yesterdayTotal: sql<number>`count(*) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()})`,
-  todayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfToday.getTime()}), 0)`,
-  yesterdayAmount: sql<number>`coalesce(sum(${orders.amountCents}) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()}), 0)`,
+  todayAmount: sql<number>`coalesce(sum(${usdAmountCase()}) filter (where createdAt >= ${startOfToday.getTime()}), 0)`,
+  yesterdayAmount: sql<number>`coalesce(sum(${usdAmountCase()}) filter (where createdAt >= ${startOfYesterday.getTime()} and createdAt < ${startOfToday.getTime()}), 0)`,
   todayPending: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "pending")})`,
   todayPaid: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "paid")})`,
   todayCancelled: sql<number>`count(*) filter (where createdAt >= ${startOfToday.getTime()} and ${eq(orders.status, "cancelled")})`,

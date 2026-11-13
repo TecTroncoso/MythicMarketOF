@@ -13,8 +13,8 @@ export default async function MobileLegendsStore({
 }: {
   searchParams: Promise<{ product?: string }>;
 }) {
-  // Currency shown in the navbar = the visitor's region (EU -> EUR, LATAM -> USD),
-  // same detection the checkout uses (edge geo headers).
+  // Currency shown in the navbar = the visitor's region (EU -> EUR, LATAM -> USD,
+  // Argentina -> ARS), same detection the checkout uses (edge geo headers).
   const h = await headers();
   const country = h.get('x-vercel-ip-country') ?? h.get('cf-ipcountry');
   const region = countryToRegion(country);

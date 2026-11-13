@@ -5,7 +5,10 @@
 
 import { formatAmount } from "@/lib/orders";
 
-export type PaymentRegion = "eu" | "latam";
+export type PaymentRegion = "eu" | "latam" | "ar";
+
+/** Currencies the store can charge in (one per payment region). */
+export type Currency = "EUR" | "USD" | "ARS";
 
 export interface PaymentMethodDef {
   id: string;
@@ -22,13 +25,17 @@ export interface PaymentMethodDef {
 
 export interface PaymentRegionConfig {
   region: PaymentRegion;
-  currency: "EUR" | "USD";
+  currency: Currency;
   symbol: string;
   methods: PaymentMethodDef[];
 }
 
-// Simulated fixed conversion rate until a real FX provider is integrated.
+// Simulated fixed conversion rates until a real FX provider is integrated.
+// The live storefront does NOT use these for supplier packages: it prices them
+// from the scraper's per-currency checkout costs. They are only the fallback
+// for the static catalog when no supplier snapshot exists yet.
 export const EUR_USD_RATE = 0.92;
+export const USD_ARS_RATE = 1550;
 
 const EU_COUNTRIES = new Set([
   "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
@@ -43,10 +50,22 @@ const LATAM_COUNTRIES = new Set([
 
 export function countryToRegion(countryCode?: string | null): PaymentRegion {
   const code = countryCode?.trim().toUpperCase();
+  // Argentina gets its own ARS region; the rest of LATAM keeps USD.
+  if (code === "AR") return "ar";
   if (code && EU_COUNTRIES.has(code)) return "eu";
   // Anything unknown or missing defaults to latam (the store's primary market).
   return "latam";
 }
+
+export function isPaymentRegion(value: unknown): value is PaymentRegion {
+  return value === "eu" || value === "latam" || value === "ar";
+}
+
+export const PAYMENT_REGION_LABELS: Record<PaymentRegion, string> = {
+  eu: "Europa",
+  latam: "Latinoamérica",
+  ar: "Argentina",
+};
 
 export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
   eu: {
@@ -173,18 +192,73 @@ export const PAYMENT_REGIONS: Record<PaymentRegion, PaymentRegionConfig> = {
       },
     ],
   },
+  ar: {
+    region: "ar",
+    currency: "ARS",
+    symbol: "AR$",
+    // Argentina keeps Mercado Pago, cards and PayPal, and pays in ARS.
+    // Pix is Brazil-only and therefore excluded.
+    methods: [
+      {
+        id: "mercadopago",
+        logo: "/logos/mercadopago.svg",
+        label: "Mercado Pago",
+        description: "Pagá en pesos con saldo, tarjeta o efectivo vía Mercado Pago.",
+        needsField: true,
+        fieldLabel: "Email de Mercado Pago",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
+      },
+      {
+        id: "card",
+        logo: "/logos/card.svg",
+        label: "Tarjeta de crédito/débito",
+        description: "Pagá en pesos con tarjeta VISA o Mastercard.",
+        needsField: true,
+        fieldLabel: "Número de tarjeta",
+        fieldPlaceholder: "4111111111111111",
+        pattern: "^\\d{13,19}$",
+        patternHint: "Ingresá un número de tarjeta válido (13-19 dígitos).",
+      },
+      {
+        id: "paypal",
+        logo: "/logos/paypal.svg",
+        label: "PayPal",
+        description: "Pagá con tu cuenta de PayPal al instante.",
+        needsField: true,
+        fieldLabel: "Email de PayPal",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
+      },
+      {
+        id: "binance",
+        logo: "/logos/binance.svg",
+        label: "Binance (USDT)",
+        description: "Pagá con USDT (TRC20) desde tu cuenta de Binance.",
+        needsField: true,
+        fieldLabel: "Email de Binance",
+        fieldPlaceholder: "tucorreo@ejemplo.com",
+        pattern: "^\\S+@\\S+\\.\\S+$",
+        patternHint: "Ingresá un email válido.",
+      },
+    ],
+  },
 };
 
 export function getMethod(methodId: string): PaymentMethodDef | undefined {
   return (
     PAYMENT_REGIONS.eu.methods.find((m) => m.id === methodId) ??
-    PAYMENT_REGIONS.latam.methods.find((m) => m.id === methodId)
+    PAYMENT_REGIONS.latam.methods.find((m) => m.id === methodId) ??
+    PAYMENT_REGIONS.ar.methods.find((m) => m.id === methodId)
   );
 }
 
 export function regionForMethod(methodId: string): PaymentRegion | undefined {
   if (PAYMENT_REGIONS.eu.methods.some((m) => m.id === methodId)) return "eu";
   if (PAYMENT_REGIONS.latam.methods.some((m) => m.id === methodId)) return "latam";
+  if (PAYMENT_REGIONS.ar.methods.some((m) => m.id === methodId)) return "ar";
   return undefined;
 }
 
@@ -201,9 +275,14 @@ export function validatePaymentDetail(methodId: string, detail: string): string 
   return null;
 }
 
-export function convertPrice(usd: number, currency: "EUR" | "USD"): number {
+/**
+ * Fallback conversion for the STATIC catalog (no supplier snapshot yet).
+ * Live packages always come from the scraper's per-currency checkout costs.
+ */
+export function convertPrice(usd: number, currency: Currency): number {
   if (currency === "USD") return usd;
-  return Math.round(usd * EUR_USD_RATE * 100) / 100;
+  if (currency === "EUR") return Math.round(usd * EUR_USD_RATE * 100) / 100;
+  return Math.round(usd * USD_ARS_RATE * 100) / 100;
 }
 
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -221,7 +300,7 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
 export function paymentInstructions(
   methodId: string,
   amount: number,
-  currency: "EUR" | "USD",
+  currency: Currency,
   orderNumber: string
 ): string {
   const formatted = formatAmount(Math.round(amount * 100), currency);
@@ -278,7 +357,7 @@ export interface BizumComprobanteParams {
   orderNumber: string;
   productName: string;
   amountCents: number;
-  currency: "EUR" | "USD";
+  currency: Currency;
   mlbbUserId: string;
   zoneId: string;
   buyerPhone: string;

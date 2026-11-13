@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS, type ProductCategory } from '@/lib/catalog';
-import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL } from '@/lib/payments';
+import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL, convertPrice } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
+import { formatAmount } from '@/lib/orders';
 import { PaymentModal } from './PaymentModal';
 import { ShareButton } from './ShareButton';
 
@@ -39,18 +40,28 @@ interface GridProduct {
   bonus: string;
   image: string;
   category: ProductCategory;
-  price: number;
+  /** Sale price per payment region (units). Null = not sellable in that region. */
+  prices: Record<PaymentRegion, number | null>;
+}
+
+/** Price of a product in one region, or null when it is not sold there. */
+function priceFor(product: GridProduct, region: PaymentRegion): number | null {
+  return product.prices[region] ?? null;
 }
 
 // Fallback estático mientras carga el contexto del servidor (o si falla):
-// mismo catálogo de siempre con precios base en USD.
+// mismo catálogo de siempre con precios base en USD convertidos a cada moneda.
 const STATIC_GRID_PRODUCTS: GridProduct[] = PRODUCTS.map((p) => ({
   id: p.id,
   name: p.name,
   bonus: p.bonus,
   image: p.image,
   category: p.category,
-  price: p.price,
+  prices: {
+    eu: convertPrice(p.price, "EUR"),
+    latam: convertPrice(p.price, "USD"),
+    ar: convertPrice(p.price, "ARS"),
+  },
 }));
 
 const CATEGORY_ORDER: ProductCategory[] = [
@@ -95,7 +106,7 @@ export function CheckoutSection({
   // Region-aware payment context: fetched once on mount from the server action.
   // On failure the rest of the flow stays usable; only the payment step degrades.
   const [context, setContext] = useState<Awaited<ReturnType<typeof getCheckoutContext>> | null>(null);
-  const [regionOverride, setRegionOverride] = useState<"auto" | "eu" | "latam">("auto");
+  const [regionOverride, setRegionOverride] = useState<"auto" | PaymentRegion>("auto");
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [paymentDetail, setPaymentDetail] = useState("");
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -302,7 +313,11 @@ export function CheckoutSection({
 
   // Grid source: the server context (live supplier snapshot prices, per
   // region) when loaded; otherwise the static catalog as a visual fallback.
-  const gridProducts: GridProduct[] = context?.products ?? STATIC_GRID_PRODUCTS;
+  // Packages that are not sold in the effective region are filtered out.
+  const allGridProducts: GridProduct[] = context?.products ?? STATIC_GRID_PRODUCTS;
+  const gridProducts: GridProduct[] = allGridProducts.filter(
+    (p) => priceFor(p, effectiveRegion) !== null
+  );
 
   const selectedProductData = gridProducts.find(p => p.id === selectedProduct);
 
@@ -319,6 +334,16 @@ export function CheckoutSection({
     // The live catalog may drop the active category when the snapshot changes.
     if (activeCategory !== "all" && !gridProducts.some((p) => p.category === activeCategory)) {
       queueMicrotask(() => setActiveCategory("all"));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gridProducts]);
+
+  useEffect(() => {
+    // Changing the region can make the selected package unavailable (it is not
+    // sold in that currency): clear the selection so the summary cannot show
+    // a price from another region.
+    if (selectedProduct && !gridProducts.some((p) => p.id === selectedProduct)) {
+      queueMicrotask(() => setSelectedProduct(null));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gridProducts]);
@@ -359,9 +384,9 @@ export function CheckoutSection({
     window.open(url, "_blank");
   }
 
-  // The server context bakes the region price into each product, so the
-  // summary is just the selected product's price.
-  const summaryPrice = selectedProductData?.price ?? 0;
+  // The server context bakes every region's price into each product, so the
+  // summary is just the selected product's price in the effective region.
+  const summaryPrice = (selectedProductData ? priceFor(selectedProductData, effectiveRegion) : null) ?? 0;
 
   // Grid filtrado por la pestaña activa del selector de categorías.
   const visibleProducts =
@@ -374,8 +399,16 @@ export function CheckoutSection({
 
   // Botón secundario rápido de PayPal: abre el enlace PayPal.Me con el monto
   // real del paquete seleccionado pre-cargado (mismo flujo manual que EU).
+  // El monto NO se precarga en Argentina: PayPal.Me cobra en la moneda de la
+  // cuenta (EUR) y precargar un importe en pesos haría que el comprador
+  // pagara 4.634 EUR en vez de 4.634 ARS.
   const handleQuickPaypal = () => {
-    window.open(summaryPrice > 0 ? buildPaypalMeUrl(summaryPrice) : PAYPAL_ME_URL, "_blank");
+    window.open(
+      effectiveRegion !== "ar" && summaryPrice > 0
+        ? buildPaypalMeUrl(summaryPrice)
+        : PAYPAL_ME_URL,
+      "_blank"
+    );
   };
 
   return (
@@ -560,7 +593,7 @@ export function CheckoutSection({
                 {selectedProductData && (
                   <div className="mb-3">
                     <div className="text-3xl font-black text-white tracking-tight">
-                      {effectiveCfg.symbol}{summaryPrice.toFixed(2)}
+                      {formatAmount(Math.round(summaryPrice * 100), effectiveCfg.currency)}
                     </div>
                   </div>
                 )}
@@ -683,7 +716,7 @@ export function CheckoutSection({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {visibleProducts.map((prod) => {
               const isSelected = selectedProduct === prod.id;
-              const shownPrice = prod.price;
+              const shownPrice = priceFor(prod, effectiveRegion) ?? 0;
               return (
                 <button
                   key={prod.id}
@@ -716,7 +749,7 @@ export function CheckoutSection({
                   {/* Pie: solo el precio */}
                   <div className="flex items-end justify-between w-full">
                     <span className="text-lg font-black text-white whitespace-nowrap">
-                      {effectiveCfg.symbol}{shownPrice.toFixed(2)}
+                      {formatAmount(Math.round(shownPrice * 100), effectiveCfg.currency)}
                     </span>
                   </div>
                 </button>

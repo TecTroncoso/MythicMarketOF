@@ -15,13 +15,13 @@ import type { StoreComboDef } from "@/lib/store-combos";
 // Fixture shaped like the real scraper output (scrapers/output/*.json after
 // parsing), with checkout prices in integer cents.
 const ROWS: SupplierCostRow[] = [
-  { packageName: "78 Diamonds + 8 Bonus", checkoutUsdCents: 129, checkoutEurCents: 113 },
-  { packageName: "Weekly Diamond Pass", checkoutUsdCents: 165, checkoutEurCents: 144 },
-  { packageName: "156 Diamonds + 16 Bonus", checkoutUsdCents: 258, checkoutEurCents: 225 },
-  { packageName: "Twilight Pass", checkoutUsdCents: 852, checkoutEurCents: 742 },
-  { packageName: "7740 Diamonds + 1548 Bonus", checkoutUsdCents: 12912, checkoutEurCents: 11246 },
+  { packageName: "78 Diamonds + 8 Bonus", checkoutUsdCents: 129, checkoutEurCents: 113, checkoutArsCents: 200000 },
+  { packageName: "Weekly Diamond Pass", checkoutUsdCents: 165, checkoutEurCents: 144, checkoutArsCents: 255000 },
+  { packageName: "156 Diamonds + 16 Bonus", checkoutUsdCents: 258, checkoutEurCents: 225, checkoutArsCents: 400000 },
+  { packageName: "Twilight Pass", checkoutUsdCents: 852, checkoutEurCents: 742, checkoutArsCents: 1320000 },
+  { packageName: "7740 Diamonds + 1548 Bonus", checkoutUsdCents: 12912, checkoutEurCents: 11246, checkoutArsCents: 20000000 },
   // No checkout price at all: the package cannot be sold in any region.
-  { packageName: "Starlight Member", checkoutUsdCents: null, checkoutEurCents: null },
+  { packageName: "Starlight Member", checkoutUsdCents: null, checkoutEurCents: null, checkoutArsCents: null },
 ];
 
 // No game-level default markup anymore: items without an explicit override
@@ -87,6 +87,16 @@ describe("buildStoreProducts()", () => {
     const diamonds = products.find((p) => p.id === "78-diamonds-8-bonus");
     expect(diamonds?.priceUsdCents).toBe(135); // LATAM sale price
     expect(diamonds?.priceEurCents).toBe(119); // EU sale price
+    expect(diamonds?.priceArsCents).toBe(200000); // ARS sale price (no markup)
+  });
+
+  it("applies the ARS markup to the Argentine sale price", () => {
+    const withArsMarkup = buildStoreProducts(
+      ROWS,
+      new Map([["78-diamonds-8-bonus", { markupUsd: 0, markupEur: 0, markupArs: 0.05 }]])
+    );
+    const diamonds = withArsMarkup.find((p) => p.id === "78-diamonds-8-bonus");
+    expect(diamonds?.priceArsCents).toBe(210000); // 200000 * 1.05
   });
 
   it("sells AT COST for any item without its own markup", () => {
@@ -94,6 +104,7 @@ describe("buildStoreProducts()", () => {
     const diamonds = noMarkups.find((p) => p.id === "78-diamonds-8-bonus");
     expect(diamonds?.priceUsdCents).toBe(129); // == supplier checkout cost
     expect(diamonds?.priceEurCents).toBe(113);
+    expect(diamonds?.priceArsCents).toBe(200000);
   });
 
   it("applies a per-item markup override only to that package", () => {
@@ -112,10 +123,20 @@ describe("buildStoreProducts()", () => {
 
   it("keeps a region unsellable when its checkout price is missing", () => {
     const usdOnly = buildStoreProducts(
-      [{ packageName: "100 Diamonds", checkoutUsdCents: 200, checkoutEurCents: null }]
+      [{ packageName: "100 Diamonds", checkoutUsdCents: 200, checkoutEurCents: null, checkoutArsCents: null }]
     );
     expect(usdOnly[0]?.priceUsdCents).toBe(200); // no markup -> at cost
     expect(usdOnly[0]?.priceEurCents).toBeNull();
+    expect(usdOnly[0]?.priceArsCents).toBeNull();
+  });
+
+  it("keeps selling a package that only has an ARS checkout price", () => {
+    const arsOnly = buildStoreProducts(
+      [{ packageName: "100 Diamonds", checkoutUsdCents: null, checkoutEurCents: null, checkoutArsCents: 310000 }]
+    );
+    expect(arsOnly).toHaveLength(1);
+    expect(arsOnly[0]?.priceArsCents).toBe(310000);
+    expect(arsOnly[0]?.priceUsdCents).toBeNull();
   });
 
   it("generates unique ids when two packages share a name", () => {
@@ -146,12 +167,13 @@ describe("buildComboProducts()", () => {
   });
 
   it("sums component checkout costs with quantities, then applies the combo's markup", () => {
-    // 3x Weekly Diamond Pass (165 USD / 144 EUR each) = 495 USD / 432 EUR
+    // 3x Weekly Diamond Pass (165 USD / 144 EUR / 255000 ARS each)
+    // = 495 USD / 432 EUR / 765000 ARS
     // With the combo's own 5%: 495*1.05 = 519.75 -> 520 ; 432*1.05 = 453.6 -> 454
     const [combo] = buildComboProducts(
       ROWS,
       [makeCombo([{ packageName: "Weekly Diamond Pass", qty: 3 }], "3x Weekly Diamond Pass")],
-      new Map([["combo-abc123", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0 }]])
+      new Map([["combo-abc123", { markupUsd: 0.05, markupEur: 0.05, markupArs: 0.05 }]])
     );
     expect(combo).toMatchObject({
       id: "combo-abc123",
@@ -159,6 +181,7 @@ describe("buildComboProducts()", () => {
       label: "3x Weekly Diamond Pass",
       priceUsdCents: 520,
       priceEurCents: 454,
+      priceArsCents: 803250, // 765000 * 1.05 = 803250
     });
   });
 
@@ -188,11 +211,12 @@ describe("buildComboProducts()", () => {
 
   it("is unsellable in a currency when a component lacks that price", () => {
     const rows: SupplierCostRow[] = [
-      { packageName: "USD only pack", checkoutUsdCents: 500, checkoutEurCents: null },
+      { packageName: "USD only pack", checkoutUsdCents: 500, checkoutEurCents: null, checkoutArsCents: null },
     ];
     const [combo] = buildComboProducts(rows, [makeCombo([{ packageName: "USD only pack", qty: 2 }])]);
     expect(combo.priceUsdCents).toBe(1000); // 500 * 2, no markup
     expect(combo.priceEurCents).toBeNull();
+    expect(combo.priceArsCents).toBeNull();
   });
 
   it("drops combos whose components are not in the latest snapshot", () => {

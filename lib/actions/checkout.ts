@@ -12,9 +12,11 @@ import { getStoreProducts, type StoreProduct } from "@/lib/store-catalog"
 import {
   convertPrice,
   countryToRegion,
+  isPaymentRegion,
   PAYMENT_REGIONS,
   paymentInstructions,
   validatePaymentDetail,
+  type PaymentRegion,
 } from "@/lib/payments"
 
 // Single result contract for the checkout flow: callers branch on `success`
@@ -36,9 +38,23 @@ const failure = (error: string): CheckoutResult => ({ success: false, error });
 const STORE_GAME_ID = "mlbb";
 
 /** Sale price (units, 2 decimals) of a live product for the buyer's region. */
-function livePriceFor(product: StoreProduct, region: "eu" | "latam"): number | null {
-  const cents = region === "eu" ? product.priceEurCents : product.priceUsdCents;
+function livePriceFor(product: StoreProduct, region: PaymentRegion): number | null {
+  const cents =
+    region === "eu"
+      ? product.priceEurCents
+      : region === "ar"
+        ? product.priceArsCents
+        : product.priceUsdCents;
   return cents === null ? null : cents / 100;
+}
+
+/** Every region's price of one product (null = not sellable in that region). */
+function livePricesFor(product: StoreProduct): Record<PaymentRegion, number | null> {
+  return {
+    eu: livePriceFor(product, "eu"),
+    latam: livePriceFor(product, "latam"),
+    ar: livePriceFor(product, "ar"),
+  };
 }
 
 // Region + pricing context for the checkout UI. The client never decides the
@@ -46,6 +62,8 @@ function livePriceFor(product: StoreProduct, region: "eu" | "latam"): number | n
 // every product itself. With an imported supplier snapshot the grid shows the
 // live packages (checkout cost + admin markup, per region currency); without
 // one it falls back to the static catalog priced through convertPrice.
+// Each product carries the price of EVERY region so the client can re-price
+// instantly when the buyer overrides the region in the payment modal.
 export async function getCheckoutContext() {
   const h = await headers()
   const country = h.get("x-vercel-ip-country") ?? h.get("cf-ipcountry")
@@ -55,27 +73,25 @@ export async function getCheckoutContext() {
   const storeProducts = await getStoreProducts(STORE_GAME_ID)
 
   const products = storeProducts
-    ? storeProducts.flatMap((p) => {
-        const price = livePriceFor(p, region)
-        // Packages without a checkout price in this region's currency are not
-        // sellable there, so they are hidden from the grid entirely.
-        if (price === null) return []
-        return [{
-          id: p.id,
-          name: p.name,
-          bonus: p.bonus,
-          image: p.image,
-          category: p.category,
-          price,
-        }]
-      })
+    ? storeProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        bonus: p.bonus,
+        image: p.image,
+        category: p.category,
+        prices: livePricesFor(p),
+      }))
     : PRODUCTS.map((p) => ({
         id: p.id,
         name: p.name,
         bonus: p.bonus,
         image: p.image,
         category: p.category,
-        price: convertPrice(p.price, cfg.currency),
+        prices: {
+          eu: convertPrice(p.price, "EUR"),
+          latam: convertPrice(p.price, "USD"),
+          ar: convertPrice(p.price, "ARS"),
+        } satisfies Record<PaymentRegion, number>,
       }))
 
   return {
@@ -123,7 +139,7 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
   }
 
   // 3. Validate the region and that the method belongs to it
-  const region = paymentRegion === "eu" || paymentRegion === "latam" ? paymentRegion : null
+  const region = isPaymentRegion(paymentRegion) ? paymentRegion : null
   if (!region) {
     return failure("La región de pago no es válida.")
   }
@@ -153,12 +169,12 @@ export async function processCheckout(formData: FormData): Promise<CheckoutResul
     if (!liveProduct) {
       return failure("El producto seleccionado no es válido o ya no existe.")
     }
-    const cents = region === "eu" ? liveProduct.priceEurCents : liveProduct.priceUsdCents
-    if (cents === null) {
+    const price = livePriceFor(liveProduct, region)
+    if (price === null) {
       return failure("Este paquete no está disponible en tu región.")
     }
     productName = liveProduct.label
-    amountCents = cents
+    amountCents = Math.round(price * 100)
   } else {
     const secureProduct = getProductById(productId)
     if (!secureProduct) {

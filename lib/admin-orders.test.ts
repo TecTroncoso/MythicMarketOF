@@ -295,6 +295,29 @@ describe("getAdminOrders()", () => {
     expect(asNull.stats.totalAmountCents).toBe(0);
   });
 
+  it("normalizes the amount aggregates to USD across EUR/ARS/USD orders", async () => {
+    // The store charges in three currencies: summing raw amountCents would
+    // inflate the totals (1 ARS cent is worth far less than 1 USD cent), so
+    // the aggregates convert every amount to USD before summing.
+    await getAdminOrders({});
+
+    const statsConfig = mockSelect.mock.calls.map(([config]) => config as Record<string, unknown>);
+    const statsSelection = statsConfig.find((config) => "totalCount" in config);
+    const daySelection = statsConfig.find((config) => "todayTotal" in config);
+    expect(statsSelection).toBeDefined();
+    expect(daySelection).toBeDefined();
+
+    const totalSql = serialize(statsSelection?.totalAmount as SQL);
+    expect(totalSql.sql).toContain("EUR");
+    expect(totalSql.sql).toContain("ARS");
+    expect(totalSql.params).toContain(0.92);
+    expect(totalSql.params).toContain(1550);
+
+    const todaySql = serialize(daySelection?.todayAmount as SQL);
+    expect(todaySql.sql).toContain("EUR");
+    expect(todaySql.sql).toContain("ARS");
+  });
+
   it("applies the same where to the list and the stats queries", async () => {
     await getAdminOrders({ status: "paid" });
 

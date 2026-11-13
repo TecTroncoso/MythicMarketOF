@@ -35,14 +35,17 @@ describe("countryToRegion", () => {
   });
 
   it("maps LatAm country codes to 'latam'", () => {
-    expect(countryToRegion("AR")).toBe("latam");
     expect(countryToRegion("MX")).toBe("latam");
     expect(countryToRegion("BR")).toBe("latam");
   });
 
+  it("maps Argentina to its own 'ar' region (ARS)", () => {
+    expect(countryToRegion("AR")).toBe("ar");
+  });
+
   it("is case-insensitive", () => {
     expect(countryToRegion("de")).toBe("eu");
-    expect(countryToRegion("ar")).toBe("latam");
+    expect(countryToRegion("ar")).toBe("ar");
   });
 
   it("falls back to 'latam' for missing or unknown codes", () => {
@@ -66,10 +69,16 @@ describe("convertPrice", () => {
     expect(convertPrice(1.49, "EUR")).toBe(1.37);
     expect(convertPrice(9.99, "EUR")).toBe(9.19);
   });
+
+  it("converts USD to ARS at the simulated rate with 2-decimal rounding", () => {
+    // 1.49 * 1550 = 2309.5; 9.99 * 1550 = 15484.5
+    expect(convertPrice(1.49, "ARS")).toBe(2309.5);
+    expect(convertPrice(9.99, "ARS")).toBe(15484.5);
+  });
 });
 
 describe("getMethod / regionForMethod", () => {
-  it("finds methods across both regions", () => {
+  it("finds methods across every region", () => {
     expect(getMethod("paypal")?.label).toBe("PayPal");
     expect(getMethod("card")?.label).toBe("Tarjeta de crédito/débito");
     expect(getMethod("sepa")?.label).toBe("SEPA (Transferencia)");
@@ -92,6 +101,22 @@ describe("getMethod / regionForMethod", () => {
     expect(regionForMethod("pix")).toBe("latam");
     expect(regionForMethod("binance")).toBe("latam");
     expect(regionForMethod("bitcoin")).toBeUndefined();
+  });
+});
+
+describe("PAYMENT_REGIONS", () => {
+  it("charges Argentina in ARS with Mercado Pago, card, PayPal and Binance", () => {
+    expect(PAYMENT_REGIONS.ar.currency).toBe("ARS");
+    expect(PAYMENT_REGIONS.ar.methods.map((m) => m.id)).toEqual([
+      "mercadopago",
+      "card",
+      "paypal",
+      "binance",
+    ]);
+  });
+
+  it("does not offer Pix in Argentina", () => {
+    expect(PAYMENT_REGIONS.ar.methods.some((m) => m.id === "pix")).toBe(false);
   });
 });
 

@@ -2,13 +2,13 @@
 
 import { useEffect } from 'react';
 import { Loader2, Send, X } from 'lucide-react';
-import { BINANCE_RECIPIENT_ADDRESS, BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME, PAYPAL_ME_URL } from '@/lib/payments';
-import type { PaymentRegionConfig } from '@/lib/payments';
+import { BINANCE_RECIPIENT_ADDRESS, BIZUM_RECIPIENT_DISPLAY, BIZUM_RECIPIENT_NAME, PAYPAL_ME_URL, PAYMENT_REGION_LABELS } from '@/lib/payments';
+import type { PaymentRegion, PaymentRegionConfig } from '@/lib/payments';
 
 interface PaymentModalProps {
   cfg: PaymentRegionConfig;
-  regionOverride: 'auto' | 'eu' | 'latam';
-  onRegionChange: (region: 'auto' | 'eu' | 'latam') => void;
+  regionOverride: 'auto' | PaymentRegion;
+  onRegionChange: (region: 'auto' | PaymentRegion) => void;
   selectedMethod: string | null;
   onSelectMethod: (id: string) => void;
   paymentDetail: string;
@@ -73,34 +73,32 @@ export function PaymentModal({
         <div className="mb-6">
           {regionOverride === 'auto' ? (
             <p className="text-sm text-gray-400 mb-3">
-              Detectamos tu región: {cfg.region === 'eu' ? 'Europa' : 'Latinoamérica'}. Podés cambiarla:
+              Detectamos tu región: {PAYMENT_REGION_LABELS[cfg.region]}. Podés cambiarla:
             </p>
           ) : (
             <p className="text-sm text-gray-400 mb-3">Elegí tu región:</p>
           )}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onRegionChange('eu')}
-              className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                cfg.region === 'eu'
-                  ? 'border-[#ffaa00] bg-[#ffaa00]/10'
-                  : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
-              }`}
-            >
-              Europa (€)
-            </button>
-            <button
-              type="button"
-              onClick={() => onRegionChange('latam')}
-              className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                cfg.region === 'latam'
-                  ? 'border-[#ffaa00] bg-[#ffaa00]/10'
-                  : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
-              }`}
-            >
-              Latinoamérica (US$)
-            </button>
+            {(
+              [
+                { region: 'eu', label: 'Europa (€)' },
+                { region: 'latam', label: 'Latinoamérica (US$)' },
+                { region: 'ar', label: 'Argentina (AR$)' },
+              ] as const
+            ).map(({ region, label }) => (
+              <button
+                key={region}
+                type="button"
+                onClick={() => onRegionChange(region)}
+                className={`border-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                  cfg.region === region
+                    ? 'border-[#ffaa00] bg-[#ffaa00]/10'
+                    : 'border-[#2a3441] bg-[#0a0f1a] hover:border-gray-500'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
             {regionOverride !== 'auto' && (
               <button
                 type="button"

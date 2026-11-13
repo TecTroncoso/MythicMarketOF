@@ -5,6 +5,7 @@
 // per-currency markup (lib/item-markups.ts; no markup => sells at cost):
 //
 //   LATAM buyers see checkoutUsdCents * (1 + markupUsd)  — charged in USD
+//   AR buyers    see checkoutArsCents * (1 + markupArs)  — charged in ARS
 //   EU buyers    see checkoutEurCents * (1 + markupEur)  — charged in EUR
 //
 // buildStoreProducts() is pure so Vitest can exercise it without a DB;
@@ -23,6 +24,8 @@ export interface SupplierCostRow {
   packageName: string;
   checkoutUsdCents: number | null;
   checkoutEurCents: number | null;
+  /** Missing on legacy fixtures/snapshots: treated as "not sellable in ARS". */
+  checkoutArsCents?: number | null;
 }
 
 export interface StoreProduct {
@@ -39,6 +42,7 @@ export interface StoreProduct {
   /** Sale price in integer cents, markup already applied. Null = not for sale in that currency. */
   priceUsdCents: number | null;
   priceEurCents: number | null;
+  priceArsCents: number | null;
 }
 
 const PASS_IMAGES: Partial<Record<ProductCategory, string>> = {
@@ -107,8 +111,8 @@ function slugify(packageName: string, taken: Set<string>): string {
 
 /**
  * Maps supplier rows to sellable products. Rows without any checkout price
- * (neither USD nor EUR) are dropped: there is no way to sell them in either
- * region. Markup is applied at build time so the UI and the checkout share
+ * (neither USD, EUR nor ARS) are dropped: there is no way to sell them in
+ * any region. Markup is applied at build time so the UI and the checkout share
  * the exact same cent amounts.
  */
 export function buildStoreProducts(
@@ -119,7 +123,13 @@ export function buildStoreProducts(
   const products: StoreProduct[] = [];
 
   for (const row of rows) {
-    if (row.checkoutUsdCents === null && row.checkoutEurCents === null) continue;
+    if (
+      row.checkoutUsdCents === null &&
+      row.checkoutEurCents === null &&
+      (row.checkoutArsCents ?? null) === null
+    ) {
+      continue;
+    }
 
     const [name, rawBonus] = row.packageName.split("+").map((part) => part.trim());
     const category = categorize(row.packageName);
@@ -144,6 +154,10 @@ export function buildStoreProducts(
         row.checkoutEurCents === null
           ? null
           : applyMarkupCents(row.checkoutEurCents, markup.markupEur),
+      priceArsCents:
+        (row.checkoutArsCents ?? null) === null
+          ? null
+          : applyMarkupCents(row.checkoutArsCents as number, markup.markupArs),
     });
   }
 
@@ -188,7 +202,8 @@ export function buildComboProducts(
 
     const costUsd = comboCostCents(combo.components, rows, (r) => r.checkoutUsdCents);
     const costEur = comboCostCents(combo.components, rows, (r) => r.checkoutEurCents);
-    if (costUsd === null && costEur === null) continue;
+    const costArs = comboCostCents(combo.components, rows, (r) => r.checkoutArsCents ?? null);
+    if (costUsd === null && costEur === null && costArs === null) continue;
 
     const id = `combo-${combo.id}`;
     const markup = itemMarkupFor(id, itemMarkups);
@@ -215,6 +230,8 @@ export function buildComboProducts(
         costUsd === null ? null : applyMarkupCents(costUsd, markup.markupUsd),
       priceEurCents:
         costEur === null ? null : applyMarkupCents(costEur, markup.markupEur),
+      priceArsCents:
+        costArs === null ? null : applyMarkupCents(costArs, markup.markupArs),
     });
   }
 

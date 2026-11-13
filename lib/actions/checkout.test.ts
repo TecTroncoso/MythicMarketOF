@@ -298,7 +298,7 @@ describe("getCheckoutContext()", () => {
       fieldLabel: "Email de PayPal",
       pattern: "^\\S+@\\S+\\.\\S+$",
     });
-    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.24);
+    expect(ctx.products.find((p) => p.id === "1")?.prices.eu).toBe(1.24);
     // Static fallback also exposes the visual fields the grid needs.
     expect(ctx.products.find((p) => p.id === "1")).toMatchObject({
       name: "78 Diamonds",
@@ -314,7 +314,19 @@ describe("getCheckoutContext()", () => {
     expect(ctx.currency).toBe("USD");
     expect(ctx.symbol).toBe("US$");
     expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "paypal", "pix", "binance"]);
-    expect(ctx.products.find((p) => p.id === "1")?.price).toBe(1.35);
+    expect(ctx.products.find((p) => p.id === "1")?.prices.latam).toBe(1.35);
+  });
+
+  it("detects Argentina from the country header and returns ARS prices", async () => {
+    mockHeadersGet.mockReturnValueOnce("AR");
+
+    const ctx = await getCheckoutContext();
+    expect(ctx.region).toBe("ar");
+    expect(ctx.currency).toBe("ARS");
+    expect(ctx.symbol).toBe("AR$");
+    expect(ctx.methods.map((m) => m.id)).toEqual(["mercadopago", "card", "paypal", "binance"]);
+    // 1.35 USD * 1550 = 2092.5 ARS (static fallback rate)
+    expect(ctx.products.find((p) => p.id === "1")?.prices.ar).toBe(2092.5);
   });
 });
 
@@ -324,7 +336,7 @@ describe("getCheckoutContext()", () => {
 
 // Shaped like lib/store-catalog StoreProduct; prices below mirror the real
 // snapshot with the default 5% markup ("78 Diamonds + 8 Bonus": 129¢ USD /
-// 113¢ EUR cost → 135¢ / 119¢ sale).
+// 113¢ EUR / 2000¢ ARS cost → 135¢ / 119¢ / 2100¢ sale).
 const LIVE_PRODUCTS = [
   {
     id: "78-diamonds-8-bonus",
@@ -335,6 +347,7 @@ const LIVE_PRODUCTS = [
     category: "diamonds" as const,
     priceUsdCents: 135,
     priceEurCents: 119,
+    priceArsCents: 2100,
   },
   {
     id: "weekly-diamond-pass",
@@ -345,6 +358,7 @@ const LIVE_PRODUCTS = [
     category: "weekly-pass" as const,
     priceUsdCents: 173,
     priceEurCents: null, // EUR checkout missing -> unsellable in the EU
+    priceArsCents: null, // ARS checkout missing -> unsellable in Argentina
   },
 ];
 
@@ -420,10 +434,54 @@ describe("processCheckout() with a live supplier catalog", () => {
     });
     expect(mockInsert).not.toHaveBeenCalled();
   });
+
+  it("charges the ARS sale price to Argentine buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    const promise = processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "78-diamonds-8-bonus",
+        paymentMethod: "mercadopago",
+        paymentDetail: "compra@ejemplo.com",
+        paymentRegion: "ar",
+      })
+    );
+    const result = assertSuccess(await promise);
+
+    const rowArg = mockInsertValues.mock.calls[0]?.[0];
+    expect(rowArg).toMatchObject({
+      productId: "78-diamonds-8-bonus",
+      productName: "78 Diamonds + 8 Bonus",
+      amountCents: 2100,
+      currency: "ARS",
+      status: "pending",
+    });
+    expect(result.orderNumber).toMatch(/^MM-/);
+  });
+
+  it("rejects a package without an ARS price for Argentine buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    const result = await processCheckout(
+      fd({
+        userId: "12345678",
+        zoneId: "10012",
+        productId: "weekly-diamond-pass",
+        paymentMethod: "mercadopago",
+        paymentDetail: "compra@ejemplo.com",
+        paymentRegion: "ar",
+      })
+    );
+    expect(result).toEqual({
+      success: false,
+      error: "Este paquete no está disponible en tu región.",
+    });
+    expect(mockInsert).not.toHaveBeenCalled();
+  });
 });
 
 describe("getCheckoutContext() with a live supplier catalog", () => {
-  it("prices products in EUR for eu buyers and hides unsellable packages", async () => {
+  it("prices products in EUR for eu buyers and keeps unsellable packages out of EUR", async () => {
     mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
     mockHeadersGet.mockReturnValueOnce("ES");
 
@@ -431,17 +489,16 @@ describe("getCheckoutContext() with a live supplier catalog", () => {
     expect(ctx.region).toBe("eu");
     expect(ctx.currency).toBe("EUR");
 
-    const ids = ctx.products.map((p) => p.id);
-    expect(ids).not.toContain("weekly-diamond-pass"); // no EUR checkout price
-
     const diamonds = ctx.products.find((p) => p.id === "78-diamonds-8-bonus");
     expect(diamonds).toMatchObject({
       name: "78 Diamonds",
       bonus: "8 Diamonds",
       image: "/products/diamantes.png",
       category: "diamonds",
-      price: 1.19,
     });
+    expect(diamonds?.prices.eu).toBe(1.19);
+    // The weekly pass has no EUR price: it is not sellable in Europe.
+    expect(ctx.products.find((p) => p.id === "weekly-diamond-pass")?.prices.eu).toBeNull();
   });
 
   it("prices products in USD for latam buyers", async () => {
@@ -450,8 +507,19 @@ describe("getCheckoutContext() with a live supplier catalog", () => {
     const ctx = await getCheckoutContext();
     expect(ctx.region).toBe("latam");
     const diamonds = ctx.products.find((p) => p.id === "78-diamonds-8-bonus");
-    expect(diamonds?.price).toBe(1.35);
+    expect(diamonds?.prices.latam).toBe(1.35);
     // Weekly pass keeps its USD price in latam even without an EUR price.
-    expect(ctx.products.find((p) => p.id === "weekly-diamond-pass")?.price).toBe(1.73);
+    expect(ctx.products.find((p) => p.id === "weekly-diamond-pass")?.prices.latam).toBe(1.73);
+  });
+
+  it("exposes the ARS price for Argentine buyers", async () => {
+    mockGetStoreProducts.mockResolvedValue(LIVE_PRODUCTS);
+    mockHeadersGet.mockReturnValueOnce("AR");
+
+    const ctx = await getCheckoutContext();
+    expect(ctx.region).toBe("ar");
+    expect(ctx.currency).toBe("ARS");
+    expect(ctx.products.find((p) => p.id === "78-diamonds-8-bonus")?.prices.ar).toBe(21);
+    expect(ctx.products.find((p) => p.id === "weekly-diamond-pass")?.prices.ar).toBeNull();
   });
 });
