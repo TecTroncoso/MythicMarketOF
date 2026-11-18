@@ -256,6 +256,33 @@ describe("CheckoutSection MLBB lookup UX", () => {
     expect(screen.getByText(/Elegí un paquete abajo/)).toBeInTheDocument();
     expect(screen.queryByText(/Mobile Legends · Global/)).not.toBeInTheDocument();
   });
+
+  it("orders the grid: passes first, then diamonds by total base + bonus", async () => {
+    render(<CheckoutSection isLoggedIn={false} />);
+    // Let the mocked getCheckoutContext resolve with its product list.
+    await act(async () => {});
+
+    const section = screen
+      .getByRole("heading", { name: /Select Top-Up/i })
+      .closest("section");
+    expect(section).not.toBeNull();
+
+    // Product cards are the buttons that render package art; the category
+    // tabs are buttons too but have no image.
+    const cards = within(section as HTMLElement)
+      .getAllByRole("button")
+      .filter((button) => button.querySelector("img"));
+    const texts = cards.map((card) => card.textContent ?? "");
+
+    expect(texts).toHaveLength(8);
+    // Passes first (Weekly before Twilight on a quantity tie)...
+    expect(texts[0]).toContain("Weekly Diamond Pass");
+    expect(texts[1]).toContain("Twilight Pass");
+    // ...then diamonds from lowest to highest total (78 + 8 = 86 first).
+    expect(texts[2]).toContain("78 Diamonds");
+    expect(texts[3]).toContain("156 Diamonds");
+    expect(texts[7]).toContain("2195 Diamonds");
+  });
 });
 
 describe("CheckoutSection payment modal flow", () => {

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { getCheckoutContext, processCheckout } from '@/lib/actions/checkout';
 import { PRODUCTS, type ProductCategory } from '@/lib/catalog';
+import { sortStorefrontProducts } from '@/lib/product-order';
 import { PAYMENT_REGIONS, validatePaymentDetail, buildComprobanteUrl, buildPaypalMeUrl, PAYPAL_ME_URL, convertPrice } from '@/lib/payments';
 import type { PaymentRegion } from '@/lib/payments';
 import { formatAmount } from '@/lib/orders';
@@ -315,8 +316,10 @@ export function CheckoutSection({
   // region) when loaded; otherwise the static catalog as a visual fallback.
   // Packages that are not sold in the effective region are filtered out.
   const allGridProducts: GridProduct[] = context?.products ?? STATIC_GRID_PRODUCTS;
-  const gridProducts: GridProduct[] = allGridProducts.filter(
-    (p) => priceFor(p, effectiveRegion) !== null
+  // Storefront order: passes first (ascending quantity), then diamonds by
+  // total base + bonus, then bundles. Supplier snapshots arrive unsorted.
+  const gridProducts: GridProduct[] = sortStorefrontProducts(
+    allGridProducts.filter((p) => priceFor(p, effectiveRegion) !== null)
   );
 
   const selectedProductData = gridProducts.find(p => p.id === selectedProduct);
