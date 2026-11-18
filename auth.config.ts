@@ -8,6 +8,8 @@ import type { NextAuthConfig } from "next-auth"
 export const authConfig = {
   pages: {
     signIn: '/login',
+    verifyRequest: '/auth/verify-request',
+    error: '/auth/error',
   },
   providers: [], // Se rellenan en auth.ts con el spread
   callbacks: {

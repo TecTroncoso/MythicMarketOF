@@ -15,6 +15,11 @@ export const LoginSchema = z.object({
   password: z.string().min(1, "La contraseña es requerida"),
 });
 
+// Magic link: solo se valida el email (no hay contraseña).
+export const EmailSchema = z.object({
+  email: z.string().email("Correo electrónico inválido"),
+});
+
 export const CheckoutSchema = z.object({
   userId: z.string()
     .min(5, "El User ID es inválido")

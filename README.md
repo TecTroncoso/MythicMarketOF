@@ -60,7 +60,8 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | 🌎 **Checkout regional** | País detectado vía headers del edge → región **EU (€)**, **LATAM (US$)** o **Argentina (AR$)**; la moneda la decide el servidor, nunca el cliente. Un comprador argentino ve los precios en pesos desde el primer render. |
 | 💳 **9 métodos de pago** | PayPal · Tarjeta · SEPA · Bizum · N26 · Revolut (EU) · Mercado Pago · Pix · Binance USDT (LATAM/AR), con validación regex por método en cliente y servidor. |
 | 🔍 **Verificación MLBB en vivo** | Nickname y país antes de pagar; 3 upstreams en paralelo con `Promise.any`, timeout 12 s y caché 24 h / 5 min. |
-| 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro y login. |
+| 🤖 **Anti-bot** | Cloudflare Turnstile verificado server-side en registro, login y pedido de magic link. |
+| 🔐 **Login sin contraseña** | Magic link por email vía Resend (enlace de 10 min, un solo uso, rate limit por email **y** por IP). Google OAuth queda opcional: si no hay credenciales o el cliente está deshabilitado, el botón ni se muestra. |
 | 🚦 **Rate limiting** | Ventanas deslizantes por IP/usuario (Upstash Redis si se configura; sin ese servicio el límite es por instancia en memoria — ver nota de seguridad). |
 | 🗄️ **Índices en Turso** | Índices reales en las tablas calientes (`orders` userId/createdAt/status/productId/MLBB · `supplier_price_rows` snapshot+position · `supplier_price_snapshots` game+scrapedAt · `store_combos` game); nada de full-scan en el storefront. |
 | ⚡ **Caché del catálogo** | `getStoreProducts` se sirve desde la **Next.js Data Cache** (gratis en Vercel, 60 s, tag `catalog:<game>`) en vez de 4 llamadas HTTPS a Turso por request; las acciones admin la purgan con `revalidateTag`. |
@@ -78,7 +79,7 @@ Sin DOM lento ni JS pesado de más: **Server Components por defecto**, cliente s
 | Framework | Next.js 15 · App Router · React 19 · Server Components por defecto |
 | Lenguaje | TypeScript 5.9 `strict` |
 | Datos | Turso (LibSQL) · Drizzle ORM · migraciones versionadas en `drizzle/` |
-| Auth | NextAuth v5 · Google OAuth + credenciales (bcrypt) · JWT con rol |
+| Auth | NextAuth v5 · magic link por email (Resend) + credenciales (bcrypt) · Google OAuth opcional · JWT con rol |
 | Infra edge | Next.js Data Cache (catálogo, gratis en Vercel) · Cloudflare Turnstile · Upstash Redis *opcional* (rate limit compartido) |
 | Validación | Zod v4 en cada frontera |
 | Estilos | Tailwind CSS v4 · contraste WCAG AAA |
@@ -246,7 +247,11 @@ drizzle/                        # Migraciones SQL versionadas (0000–0012)
 | Variable | Requerida | Propósito |
 |---|---|---|
 | `AUTH_SECRET` | ✅ | Firma de sesiones (`npx auth secret` genera una). |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ✅ | OAuth de Google. |
+| `RESEND_API_KEY` | ✅ | Magic link por email. Sin esta variable el provider Email no se registra (el login por contraseña sigue funcionando). |
+| `RESEND_FROM_EMAIL` | Recomendada | Remitente del magic link. Para probar: `MythicMarket <onboarding@resend.dev>` (solo entrega al email de la cuenta Resend). En producción, un dominio verificado en Resend. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Opcional | OAuth de Google. Sin ambas, el provider no se registra. |
+| `NEXT_PUBLIC_GOOGLE_ENABLED` | Opcional | `"true"` muestra el botón de Google en login/registro (requiere un cliente OAuth habilitado). Se inlinea en build: cambiarla exige redeploy. |
+| `AUTH_URL` / `AUTH_TRUST_HOST` | Opcional | En Vercel Auth.js detecta el host solo. Fijar `AUTH_URL` si querés que los enlaces del magic link apunten siempre al dominio final. |
 | `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | ✅ | Base de datos. |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | ✅ | Anti-bot (`.env.example` trae claves de prueba). |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Opcional | Rate limit compartido. **Sin este servicio el límite queda por instancia en memoria**, y en Vercel eso no comparte estado entre lambdas. El catálogo **no** depende de él: usa la Next.js Data Cache. |
@@ -260,11 +265,11 @@ drizzle/                        # Migraciones SQL versionadas (0000–0012)
 
 ## 🧪 Testing
 
-**310 tests · 28 archivos · todos en verde.**
+**330 tests · 30 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|
-| Lógica pura | Pagos (regiones EU/LATAM/AR, conversión ARS), catálogo, store-catalog (combo/markup/overrides ARS), parser del scraper, horarios, order-number, caché, rate-limit, IP |
+| Lógica pura | Pagos (regiones EU/LATAM/AR, conversión ARS), catálogo, store-catalog (combo/markup/overrides ARS), parser del scraper, horarios, order-number, caché, rate-limit, IP, errores de Auth.js y plantilla del magic link |
 | Server Actions | auth · checkout (contexto por región + orden ARS) · admin · search · combos · item-markups |
 | Route handlers | `/api/mlbb/lookup` · `/api/orders/[id]/invoice` |
 | Componentes | `CheckoutSection` (incluye cambio de región a Argentina) · `WhatsAppWidget` (happy-dom opt-in) |

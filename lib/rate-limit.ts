@@ -45,6 +45,10 @@ function getLimiter(requests: number, windowSeconds: number): RateLimiter {
 
 export const checkoutRateLimiter = getLimiter(5, 60);
 export const authRateLimiter = getLimiter(5, 60);
+// Magic link: 10 pedidos por minuto por IP. Va aparte de authRateLimiter para
+// que un usuario que pide el enlace no consuma la cuota de registro, y para
+// que nadie pueda quemar los 3.000 emails/mes de Resend desde una sola IP.
+export const magicLinkRateLimiter = getLimiter(10, 60);
 // Login recibe un presupuesto mayor (10/min) porque los intentos válidos —
 // incluídos los exitosos — también consumen cuota; 5/min bloqueaba a usuarios
 // legítimos con varios dispositivos. El registro mantiene 5/min.

@@ -92,7 +92,9 @@ export function RegisterForm() {
         setError(res.error);
         setLoading(false);
       } else if (res.success) {
-        router.push("/login");
+        // register() ya inició sesión en el servidor: entramos directo.
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch {
       setError("Algo salió mal. Por favor intenta de nuevo.");

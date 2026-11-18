@@ -33,10 +33,18 @@ vi.mock("@/lib/turnstile", () => ({
 }));
 
 const mockAuthRateLimiterLimit = vi.fn();
+const mockMagicLinkRateLimiterLimit = vi.fn();
 vi.mock("@/lib/rate-limit", () => ({
   authRateLimiter: { limit: mockAuthRateLimiterLimit },
   loginRateLimiter: { limit: mockAuthRateLimiterLimit },
+  magicLinkRateLimiter: { limit: mockMagicLinkRateLimiterLimit },
   checkoutRateLimiter: { limit: vi.fn() },
+}));
+
+// `loginWithEmail` lee la IP de los headers del request. En tests alcanza con
+// una IP fija: lo que importa es que el limiter reciba un identificador.
+vi.mock("next/headers", () => ({
+  headers: vi.fn(async () => new Headers({ "x-real-ip": "203.0.113.7" })),
 }));
 
 const mockFindFirst = vi.fn();
@@ -50,7 +58,7 @@ vi.mock("@/lib/db", () => ({
 }));
 
 // Import after mocks.
-const { login, register } = await import("@/lib/actions/auth");
+const { login, loginWithEmail, register } = await import("@/lib/actions/auth");
 const { LoginSchema, RegisterSchema } = await import("@/lib/validations");
 
 // ---------------------------------------------------------------------------
@@ -85,6 +93,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockVerifyTurnstileToken.mockResolvedValue(true);
   mockAuthRateLimiterLimit.mockResolvedValue({ success: true, reset: 0 });
+  mockMagicLinkRateLimiterLimit.mockResolvedValue({ success: true, reset: 0 });
   mockFindFirst.mockResolvedValue(undefined);
   mockInsertValues.mockResolvedValue(undefined);
   mockSignIn.mockResolvedValue(undefined);
@@ -224,6 +233,131 @@ describe("register()", () => {
     expect(rowArg).toMatchObject({
       name: "Ana",
       email: "ana@x.com",
+    });
+  });
+
+  it("normalizes the email to lowercase before storing and signing in", async () => {
+    const result = await register(
+      fd({
+        name: "Ana",
+        email: "  Ana@X.COM  ",
+        password: "abcdef",
+        confirmPassword: "abcdef",
+        "cf-turnstile-response": "tok",
+      }),
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(mockInsertValues.mock.calls[0]?.[0]).toMatchObject({
+      email: "ana@x.com",
+    });
+    expect(mockSignIn).toHaveBeenCalledWith("credentials", {
+      email: "ana@x.com",
+      password: "abcdef",
+      redirect: false,
+    });
+  });
+
+  it("auto-logs in after a successful registration", async () => {
+    await register(defaultRegisterForm());
+
+    expect(mockSignIn).toHaveBeenCalledTimes(1);
+    expect(mockSignIn).toHaveBeenCalledWith("credentials", {
+      email: "ana@x.com",
+      password: "abcdef",
+      redirect: false,
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// loginWithEmail() — magic link
+// ---------------------------------------------------------------------------
+
+describe("loginWithEmail()", () => {
+  const magicForm = () =>
+    fd({ email: "ana@x.com", "cf-turnstile-response": "tok" });
+
+  it("returns the Turnstile failure and skips signIn", async () => {
+    setTurnstile(false);
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({
+      error: "Verificación de seguridad fallida. Por favor intenta de nuevo.",
+    });
+    expect(mockSignIn).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid email", async () => {
+    const result = await loginWithEmail(
+      fd({ email: "nope", "cf-turnstile-response": "tok" }),
+    );
+    expect(result).toEqual({ error: "Correo electrónico inválido" });
+    expect(mockSignIn).not.toHaveBeenCalled();
+  });
+
+  it("normalizes the email and calls signIn('email')", async () => {
+    const result = await loginWithEmail(
+      fd({ email: "  Ana@X.COM ", "cf-turnstile-response": "tok" }),
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(mockAuthRateLimiterLimit).toHaveBeenCalledWith("magic:ana@x.com");
+    expect(mockMagicLinkRateLimiterLimit).toHaveBeenCalledWith(
+      "magic-ip:203.0.113.7",
+    );
+    expect(mockSignIn).toHaveBeenCalledWith("email", {
+      email: "ana@x.com",
+      redirect: false,
+      redirectTo: "/dashboard",
+    });
+  });
+
+  it("returns the rate-limit message when the per-email limiter rejects", async () => {
+    mockAuthRateLimiterLimit.mockResolvedValueOnce({ success: false, reset: 0 });
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({
+      error: "Demasiados intentos. Intenta de nuevo más tarde.",
+    });
+    expect(mockSignIn).not.toHaveBeenCalled();
+  });
+
+  it("returns the per-IP message when the IP limiter rejects", async () => {
+    mockMagicLinkRateLimiterLimit.mockResolvedValueOnce({
+      success: false,
+      reset: 0,
+    });
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({
+      error:
+        "Demasiados pedidos desde tu conexión. Esperá un minuto e intentá de nuevo.",
+    });
+    expect(mockSignIn).not.toHaveBeenCalled();
+  });
+
+  it("returns success when Auth.js redirects to verify-request", async () => {
+    mockSignIn.mockResolvedValueOnce(
+      "https://mythicmarket.vercel.app/api/auth/verify-request?provider=email&type=email",
+    );
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({ success: true });
+  });
+
+  it("returns an error when Auth.js redirects to the error page", async () => {
+    mockSignIn.mockResolvedValueOnce(
+      "https://mythicmarket.vercel.app/api/auth/error?error=EmailSignin",
+    );
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({
+      error: "No pudimos enviar el enlace. Revisá el email e intentá de nuevo.",
+    });
+  });
+
+  it("maps an AuthError to a Spanish message", async () => {
+    mockSignIn.mockRejectedValueOnce(new AuthError("EmailSignin"));
+    const result = await loginWithEmail(magicForm());
+    expect(result).toEqual({
+      error:
+        "No pudimos enviar el enlace de acceso. Revisá el email e intentá de nuevo.",
     });
   });
 });
