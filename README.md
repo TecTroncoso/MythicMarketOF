@@ -265,7 +265,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0012)
 
 ## 🧪 Testing
 
-**330 tests · 30 archivos · todos en verde.**
+**331 tests · 30 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|

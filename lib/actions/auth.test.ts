@@ -91,6 +91,9 @@ const defaultRegisterForm = () =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // `loginWithEmail` corta si falta la key (el provider Email no existiría).
+  // La fijamos para que los tests no dependan de si Vitest cargó `.env`.
+  process.env.RESEND_API_KEY = "re_test_key";
   mockVerifyTurnstileToken.mockResolvedValue(true);
   mockAuthRateLimiterLimit.mockResolvedValue({ success: true, reset: 0 });
   mockMagicLinkRateLimiterLimit.mockResolvedValue({ success: true, reset: 0 });
@@ -277,6 +280,23 @@ describe("register()", () => {
 describe("loginWithEmail()", () => {
   const magicForm = () =>
     fd({ email: "ana@x.com", "cf-turnstile-response": "tok" });
+
+  it("returns a clear error when RESEND_API_KEY is missing", async () => {
+    const original = process.env.RESEND_API_KEY;
+    delete process.env.RESEND_API_KEY;
+    try {
+      const result = await loginWithEmail(magicForm());
+      expect(result).toEqual({
+        error:
+          "El acceso con enlace por email no está disponible. Iniciá sesión con tu contraseña.",
+      });
+      expect(mockSignIn).not.toHaveBeenCalled();
+      expect(mockVerifyTurnstileToken).not.toHaveBeenCalled();
+    } finally {
+      if (original === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = original;
+    }
+  });
 
   it("returns the Turnstile failure and skips signIn", async () => {
     setTurnstile(false);

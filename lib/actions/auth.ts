@@ -70,6 +70,15 @@ export async function login(formData: FormData) {
  * la primera vez que se usa, así que también sirve como registro.
  */
 export async function loginWithEmail(formData: FormData) {
+  // Sin la API key el provider Email no se registra (ver auth.ts) y
+  // signIn("email") devolvería una URL de éxito falsa. Fallamos claro.
+  if (!process.env.RESEND_API_KEY) {
+    return {
+      error:
+        "El acceso con enlace por email no está disponible. Iniciá sesión con tu contraseña.",
+    }
+  }
+
   const email = normalizeEmail(formData.get("email"))
   const turnstileResponse = String(formData.get("cf-turnstile-response") ?? "")
 
