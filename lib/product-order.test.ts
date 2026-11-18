@@ -43,6 +43,12 @@ describe("diamondTotal()", () => {
     expect(diamondTotal(product("156 Diamonds", "diamonds", "16"))).toBe(172);
   });
 
+  it("applies a package multiplier to the whole diamond total", () => {
+    expect(diamondTotal(product("2x 78 Diamonds", "diamonds"))).toBe(156);
+    expect(diamondTotal(product("3x 78 Diamonds", "diamonds", "8 Diamonds"))).toBe(258);
+    expect(diamondTotal(product("78 Diamonds x2", "diamonds"))).toBe(156);
+  });
+
   it("ignores promo text that is not a diamond amount", () => {
     expect(diamondTotal(product("Weekly Diamond Pass", "weekly-pass", "Save 60%"))).toBe(0);
   });

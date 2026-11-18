@@ -52,17 +52,32 @@ export function passQuantity(product: OrderableProduct): number {
 }
 
 /**
- * Total diamonds granted by a package: base + bonus. Promo text such as
- * "Save 60%" is not a diamond amount and is ignored; "8 Diamonds" or
- * "8 Bonus" counts as 8.
+ * Total diamonds granted by a package: base + bonus. A leading/trailing
+ * multiplier is applied to the whole package ("2x 78 Diamonds" -> 156).
+ * Promo text such as "Save 60%" is not a diamond amount and is ignored;
+ * "8 Diamonds" or "8 Bonus" counts as 8.
  */
 export function diamondTotal(product: OrderableProduct): number {
-  const base = firstNumber(product.name) ?? 0;
+  const name = product.name.trim();
+  let quantity = 1;
+  let baseText = name;
+
+  const leading = name.match(/^(\d+)\s*x\s*(.+)$/i);
+  const trailing = leading ? null : name.match(/^(.*?)\s*x\s*(\d+)$/i);
+  if (leading) {
+    quantity = Number(leading[1]);
+    baseText = leading[2];
+  } else if (trailing) {
+    quantity = Number(trailing[2]);
+    baseText = trailing[1];
+  }
+
+  const base = firstNumber(baseText) ?? 0;
   const bonusText = product.bonus.trim();
   const hasBonusAmount =
     /\d/.test(bonusText) && !/%|save|off|discount/i.test(bonusText);
   const bonus = hasBonusAmount ? firstNumber(bonusText) ?? 0 : 0;
-  return base + bonus;
+  return (base + bonus) * quantity;
 }
 
 function rank(product: OrderableProduct): number {
