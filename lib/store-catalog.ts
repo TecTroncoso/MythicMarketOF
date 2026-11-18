@@ -78,7 +78,10 @@ function imageFor(category: ProductCategory, name: string): string {
   if (category !== "diamonds") {
     return PASS_IMAGES[category] ?? "/products/diamantes.png";
   }
-  const base = Number(name.match(/[\d\s]+/)?.[0]?.replace(/\s/g, ""));
+  // Dots/commas are thousands separators in supplier names: "10.080" -> 10080.
+  const base = Number(
+    name.match(/\d[\d.,]*/)?.[0]?.replace(/[.,]/g, "")
+  );
   const tier = DIAMOND_ART.find((t) => Number.isFinite(base) && base <= t.maxPieces);
   return tier?.image ?? "/products/baul6.png";
 }

@@ -49,6 +49,12 @@ describe("diamondTotal()", () => {
     expect(diamondTotal(product("78 Diamonds x2", "diamonds"))).toBe(156);
   });
 
+  it("reads dots and commas as thousands separators", () => {
+    expect(diamondTotal(product("10.080 Diamonds", "diamonds", "2.016 Diamonds"))).toBe(12096);
+    expect(diamondTotal(product("18.576 Diamonds", "diamonds", "3.715 Diamonds"))).toBe(22291);
+    expect(diamondTotal(product("1,080 Diamonds", "diamonds", "216 Diamonds"))).toBe(1296);
+  });
+
   it("ignores promo text that is not a diamond amount", () => {
     expect(diamondTotal(product("Weekly Diamond Pass", "weekly-pass", "Save 60%"))).toBe(0);
   });
@@ -94,6 +100,23 @@ describe("sortStorefrontProducts()", () => {
       "90 Diamonds",
       "100 Diamonds",
       "156 Diamonds",
+    ]);
+  });
+
+  it("does not put 10.080 first: the dot is a thousands separator", () => {
+    const sorted = sortStorefrontProducts([
+      product("10.080 Diamonds", "diamonds", "2.016 Diamonds"),
+      product("5532 Diamonds", "diamonds", "843 Diamonds"),
+      product("18.576 Diamonds", "diamonds", "3.715 Diamonds"),
+      product("78 Diamonds", "diamonds", "8 Diamonds"),
+    ]);
+
+    // 86 < 6375 < 12096 < 22291
+    expect(sorted.map((p) => p.name)).toEqual([
+      "78 Diamonds",
+      "5532 Diamonds",
+      "10.080 Diamonds",
+      "18.576 Diamonds",
     ]);
   });
 

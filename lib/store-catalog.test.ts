@@ -83,6 +83,19 @@ describe("buildStoreProducts()", () => {
     expect(products.find((p) => p.id === "twilight-pass")?.image).toBe("/products/pass5.png");
   });
 
+  it("reads thousands separators when picking art for big packages", () => {
+    const [big] = buildStoreProducts([
+      {
+        packageName: "10.080 Diamonds + 2.016 Bonus",
+        checkoutUsdCents: 1000,
+        checkoutEurCents: 900,
+        checkoutArsCents: 100000,
+      },
+    ]);
+    expect(big?.name).toBe("10.080 Diamonds");
+    expect(big?.image).toBe("/products/baul6.png");
+  });
+
   it("applies the per-currency markup to the checkout costs", () => {
     const diamonds = products.find((p) => p.id === "78-diamonds-8-bonus");
     expect(diamonds?.priceUsdCents).toBe(135); // LATAM sale price

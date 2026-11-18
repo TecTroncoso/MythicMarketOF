@@ -13,7 +13,7 @@ Top-up de *Mobile Legends* con verificación de jugador en tiempo real, precios 
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript%205.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind v4](https://img.shields.io/badge/Tailwind%20v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-[![Tests 344](https://img.shields.io/badge/tests-344%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
+[![Tests 347](https://img.shields.io/badge/tests-347%20passing-success?style=for-the-badge&logo=vitest&logoColor=white)](#-testing)
 [![Turso](https://img.shields.io/badge/Turso-LibSQL-4EBBB7?style=for-the-badge&logo=turso&logoColor=white)](https://turso.tech/)
 [![Drizzle](https://img.shields.io/badge/Drizzle-ORM-C5F74F?style=for-the-badge&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
 [![NextAuth v5](https://img.shields.io/badge/NextAuth-v5-7B16D0?style=for-the-badge)](https://authjs.dev/)
@@ -265,7 +265,7 @@ drizzle/                        # Migraciones SQL versionadas (0000–0012)
 
 ## 🧪 Testing
 
-**344 tests · 31 archivos · todos en verde.**
+**347 tests · 31 archivos · todos en verde.**
 
 | Capa | Cubierto |
 |---|---|

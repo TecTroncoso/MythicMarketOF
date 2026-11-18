@@ -29,9 +29,22 @@ const PASS_CATEGORY_RANK: Partial<Record<ProductCategory, number>> = {
   starlight: 2,
 };
 
-function firstNumber(text: string): number | null {
-  const match = text.match(/\d+/);
-  return match ? Number(match[0]) : null;
+/**
+ * Parses a quantity token, accepting "." / "," as thousands separators:
+ * "10.080" -> 10080, "18,576" -> 18576, "78" -> 78. Diamond counts are
+ * integers, so separators are removed instead of treated as decimals.
+ */
+function parseQuantityToken(token: string): number | null {
+  const digits = token.replace(/[.,]/g, "");
+  if (!digits) return null;
+  const value = Number(digits);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** First quantity in a label: "10.080 Diamonds" -> 10080. */
+function firstQuantity(text: string): number | null {
+  const match = text.match(/\d[\d.,]*/);
+  return match ? parseQuantityToken(match[0]) : null;
 }
 
 function isPass(category: ProductCategory): boolean {
@@ -44,11 +57,11 @@ function isPass(category: ProductCategory): boolean {
  * ("3x ...") and after it ("... x3").
  */
 export function passQuantity(product: OrderableProduct): number {
-  const leading = product.name.match(/^\s*(\d+)\s*x\b/i);
-  if (leading) return Number(leading[1]);
-  const trailing = product.name.match(/\bx\s*(\d+)\b/i);
-  if (trailing) return Number(trailing[1]);
-  return firstNumber(product.name) ?? 1;
+  const leading = product.name.match(/^\s*([\d.,]+)\s*x\s*(.+)$/i);
+  if (leading) return parseQuantityToken(leading[1]) ?? 1;
+  const trailing = product.name.match(/\bx\s*([\d.,]+)\s*$/i);
+  if (trailing) return parseQuantityToken(trailing[1]) ?? 1;
+  return firstQuantity(product.name) ?? 1;
 }
 
 /**
@@ -62,21 +75,21 @@ export function diamondTotal(product: OrderableProduct): number {
   let quantity = 1;
   let baseText = name;
 
-  const leading = name.match(/^(\d+)\s*x\s*(.+)$/i);
-  const trailing = leading ? null : name.match(/^(.*?)\s*x\s*(\d+)$/i);
+  const leading = name.match(/^([\d.,]+)\s*x\s*(.+)$/i);
+  const trailing = leading ? null : name.match(/^(.*?)\s*x\s*([\d.,]+)$/i);
   if (leading) {
-    quantity = Number(leading[1]);
+    quantity = parseQuantityToken(leading[1]) ?? 1;
     baseText = leading[2];
   } else if (trailing) {
-    quantity = Number(trailing[2]);
+    quantity = parseQuantityToken(trailing[2]) ?? 1;
     baseText = trailing[1];
   }
 
-  const base = firstNumber(baseText) ?? 0;
+  const base = firstQuantity(baseText) ?? 0;
   const bonusText = product.bonus.trim();
   const hasBonusAmount =
     /\d/.test(bonusText) && !/%|save|off|discount/i.test(bonusText);
-  const bonus = hasBonusAmount ? firstNumber(bonusText) ?? 0 : 0;
+  const bonus = hasBonusAmount ? firstQuantity(bonusText) ?? 0 : 0;
   return (base + bonus) * quantity;
 }
 
